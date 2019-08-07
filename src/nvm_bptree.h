@@ -103,7 +103,7 @@ class header{
         pmem_memcpy_persist(&sibling_ptr, &sibling_ptr_, sizeof(char *));
     }
 
-    void Set_level(uint32_t level) {
+    void Set_level(uint32_t level_) {
         pmem_memcpy_persist(&level, &level_, sizeof(uint32_t));
     }
 
@@ -174,7 +174,7 @@ class bpnode{
     }
 
     void Set_Key(int i, entry_key_t key_) {
-        records[i].SetKey(key);
+        records[i].SetKey(key_);
     }
 
     void Set_Ptr(int i, char* ptr_) {
@@ -334,7 +334,7 @@ class bpnode{
                 }
             }
             if(inserted==0){
-                Set_Ptr(0, hdr.leftmost_ptr);
+                Set_Ptr(0, (char *)(hdr.leftmost_ptr));
                 Set_Key(0, key);
                 Set_Ptr(0, ptr);
                 // records[0].ptr =(char*) hdr.leftmost_ptr;

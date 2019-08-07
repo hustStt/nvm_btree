@@ -1,3 +1,9 @@
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <thread>
+
 #include "nvm_bptree.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"

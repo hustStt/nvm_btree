@@ -62,7 +62,7 @@ namespace scaledkv {
         }
 
         void PrintStorage(void) {
-             printf("Storage capacity is %lldG %lldM %lldK %lldB\n", capacity_ >> 30, capacity_ >> 20 & (1024 - 1),
+            printf("Storage capacity is %lldG %lldM %lldK %lldB\n", capacity_ >> 30, capacity_ >> 20 & (1024 - 1),
                          capacity_ >> 10 & (1024 - 1), capacity_ & (1024 - 1));
             printf("Storage used is %lldG %lldM %lldK %lldB\n", memused >> 30, memused >> 20 & (1024 - 1), 
                         memused >> 10 & (1024 - 1), memused & (1024 - 1));
@@ -82,7 +82,7 @@ namespace scaledkv {
         uint64_t capacity_;
         uint64_t memused;
         int is_pmem_;
-        mutex mut;
+        std::mutex mut;
         char* cur_index_;
     };
 }
