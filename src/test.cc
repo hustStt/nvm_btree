@@ -34,7 +34,7 @@ void function_test(btree *bt, uint64_t ops) {
     char valuebuf[NVM_ValueSize + 1];
     printf("******B+ tree function test start.******\n");
     rocksdb::Random rnd_put(0xdeadbeef); 
-    for(uint64_t i; i < ops; i ++) {
+    for(uint64_t i = 0; i < ops; i ++) {
         auto key = rnd_put.Next();
         snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
         string value(valuebuf, NVM_ValueSize);
