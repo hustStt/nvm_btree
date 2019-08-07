@@ -141,12 +141,14 @@ class entry{
 };
 
 const int cardinality = (NODESIZE-sizeof(header))/sizeof(entry);
+const int reserved = NODESIZE - cardinality * sizeof(entry) - sizeof(header);
 const int count_in_line = CACHE_LINE_SIZE / sizeof(entry);
 
 class bpnode{
   private:
     header hdr;  // header in persistent memory, 16 bytes
     entry records[cardinality]; // slots in persistent memory, 16 bytes * n
+    uint8_t reserve[reserved];
 
   public:
     friend class btree;
