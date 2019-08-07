@@ -140,7 +140,7 @@ bool bpnode::remove_rebalancing(btree* bt, entry_key_t key, bool only_rebalance,
 
                 parent_key = left_sibling->records[m].key; 
 
-                hdr.Set_leftmost(left_sibling->records[m].ptr);
+                hdr.Set_leftmost((bpnode *)(left_sibling->records[m].ptr));
                 left_sibling->Set_Ptr(m, nullptr);
                 left_sibling->hdr.Set_last_index(m-1);
 
@@ -653,7 +653,7 @@ void btree::Initial(const std::string &nodepath, uint64_t nodesize,
         node_alloc = nullptr;
         assert(0);
     } 
-    root = new (AllocNode())bpnode();
+    root = (char *)(new (AllocNode())bpnode());
 }
 
 char *btree::AllocNode() {
@@ -835,23 +835,3 @@ void btree::PrintInfo() {
     printf("Tree height is %d.\n", height);
 
 }
-
-// typedef struct LNode_ {
-//     int data;
-//     struct LNode_ *next;
-// } LNode;
-
-// typedef struct LinkList_ {
-//     *next;
-// } LinkList;
-
-// void reverseList(LinkList *h) {
-//     LNode *p = h->next;  //把 p 置为 LinkList 的头节点
-//     h->next = null;      //把 LinkList 的头节点置为null
-//     while(p) {
-//         LNode *q = p;      //把 p 赋值给q
-//         p = p->next;       //把 p 指向 p 的下一个节点
-//         q->next = h->next; //把 q 的下一个节点 置为 LinkList 的头节点
-//         h->next = q;       //把 LinkList 的头节点置为q
-//     }
-// }
