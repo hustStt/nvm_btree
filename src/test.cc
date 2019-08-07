@@ -30,7 +30,7 @@ void function_test(btree *bt, uint64_t ops) {
     rocksdb::Random rnd_put(0xdeadbeef); 
     for(uint64_t i; i < ops; i ++) {
         auto key = rnd_put.Next();
-        bt->btree_insert(key, (char*) keys);
+        bt->btree_insert(key, (char*) key);
     } 
     printf("******Insert test finished.******\n");
     bt->printAll();
