@@ -4,7 +4,7 @@
 #include <cstring>
 #include <thread>
 
-#include "nvm_comman.h"
+#include "nvm_common.h"
 #include "nvm_bptree.h"
 #include "random.h"
 

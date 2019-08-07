@@ -689,11 +689,11 @@ std::string& btree::btree_search(entry_key_t key) {
         return std::string("", 0);
     }
 
-    return std::string(t, NVM_ValueSize);
+    return std::string((char *)t, NVM_ValueSize);
 }
 
 // insert the key in the leaf node
-void btree::btree_insert(entry_key_t key, const std::string &value);//need to be string
+void btree::btree_insert(entry_key_t key, const std::string &value)//need to be string
     bpnode* p = (bpnode*)root;
     char *pvalue = value_alloc->Allocate(value.size());
     pmem_memcpy_persist(pvalue, value.c_str(), value.size());
