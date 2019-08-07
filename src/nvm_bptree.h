@@ -20,7 +20,7 @@
 #include <future>
 #include <mutex>
 
-#include "libpmeme.h"
+#include "libpmem.h"
 #include "nvm_allocator.h"
 
 using namespace scaledkv;
