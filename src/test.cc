@@ -7,6 +7,7 @@
 #include "nvm_common.h"
 #include "nvm_bptree.h"
 #include "random.h"
+#include "debug.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
