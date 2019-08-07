@@ -49,11 +49,9 @@ class btree{
   public:
     btree();
     ~btree();
-    void Initial(const std::string &nodepath, uint64_t nodesize, 
-            const std::string &valuepath, uint64_t valuesize);
+    void Initial(const std::string &nodepath, uint64_t nodesize, const std::string &valuepath, uint64_t valuesize);
     char *AllocNode();
     void setNewRoot(char *);
-    void getNumberOfNodes();
     void btree_insert(entry_key_t, char*);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
@@ -91,7 +89,7 @@ class header{
     }
 
     ~header() {
-      delete mtx;
+        delete mtx;
     }
 
     void Set_leftmost(bpnode *leftmost_ptr_) {
@@ -125,7 +123,7 @@ class entry{
     entry_key_t key; // 8 bytes
     char* ptr; // 8 bytes
 
-  public :
+  public:
     entry(){
       key = LONG_MAX;
       ptr = NULL;
