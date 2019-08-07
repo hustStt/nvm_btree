@@ -44,13 +44,11 @@ void function_test(btree *bt, uint64_t ops) {
 
     rocksdb::Random rnd_get(0xdeadbeef);
     for(uint64_t i = 0; i < ops; i ++) {
-        memset(valuebuf, 0, sizeof(valuebuf));
-        // snprintf(keybuf, sizeof(keybuf), "%07d", i);
+        // memset(valuebuf, 0, sizeof(valuebuf));
         auto key = rnd_get.Next();
         snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
         string value(valuebuf, NVM_ValueSize);
         const string tmp_value = bt->btree_search(key);
-        printf("value size is %d\n", tmp_value.size());
         if(tmp_value.size() == 0) {
             printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
         } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
@@ -58,6 +56,13 @@ void function_test(btree *bt, uint64_t ops) {
         }
     }
     printf("******Get test finished.*****\n");
+
+    rocksdb::Random rnd_delete(0xdeadbeef);
+    for(i = 0; i < ops; i ++) {
+        auto key = rnd_delete.Next();
+        bt->btree_delete(key);
+    }
+    printf("******Delete test finished.******\n");
     printf("******B+ tree function test finished.******\n");
     bt->printAll();
     bt->PrintInfo();
