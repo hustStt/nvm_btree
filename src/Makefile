@@ -1,7 +1,7 @@
 CXX = g++
 LDFLAGS = -pthread -lpmemobj -lpmem
 DEFS = # -DMULT_SERVER # -DCAL_ACCESS_COUNT
-WFLAGS = -Wall -Wno-format -Wno-unused-variable
+WFLAGS = -Wall #-Wno-format -Wno-unused-variable
 CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
