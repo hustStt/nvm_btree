@@ -99,5 +99,4 @@ void function_test(btree *bt, uint64_t ops) {
     printf("******B+ tree function test finished.******\n");
     bt->printAll();
     bt->PrintInfo();
-
 }

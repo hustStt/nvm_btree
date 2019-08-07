@@ -58,7 +58,7 @@ class btree{
     void btree_delete(entry_key_t);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
     const std::string btree_search(entry_key_t);
-    void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
+    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void printAll();
     void PrintInfo();
 
@@ -190,7 +190,7 @@ class bpnode{
     bpnode *store(btree* bt, char* left, entry_key_t key, char* right,
                 bool flush, bool with_lock, bpnode *invalid_sibling = NULL);
     char *linear_search(entry_key_t key);
-    void linear_search_range(entry_key_t min, entry_key_t max, unsigned long *buf);
+    void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size);
     void print();
     void printAll();
 
