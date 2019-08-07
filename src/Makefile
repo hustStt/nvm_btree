@@ -25,4 +25,4 @@ clean:
 	rm -f test
 
 test:
-	$(CXX) $(CXXFLAGS) test.cc $(LIB_SOURCES) -o test $(LDFLAGS);
+	$(CXX) $(CXXFLAGS) test.cc $(LIB_SOURCES) -o test $(LDFLAGS)
