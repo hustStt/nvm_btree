@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     bt->Initial(NODEPATH, NVM_NODE_SIZE, VALUEPATH, NVM_VALUE_SIZE);
 
     // bt->PrintInfo();
-    function_test(100);
+    function_test(bt, 100);
 
     delete bt;
 }
