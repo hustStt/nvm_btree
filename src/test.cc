@@ -17,17 +17,48 @@ using namespace scaledkv;
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
 
+int using_existing_data = 0;
+int test_type = 1;
+uint64_t ops_num = 1000;
+
 void function_test(btree *bt, uint64_t ops);
+int parse_input(int num, char **para);
 
 int main(int argc, char *argv[]) {
+    if(parse_input(argc, argv) != 0) {
+        return 0;
+    }
+
     btree *bt = new btree();
 
     bt->Initial(NODEPATH, NVM_NODE_SIZE, VALUEPATH, NVM_VALUE_SIZE);
 
     // bt->PrintInfo();
-    function_test(bt, 100);
+    if(test_type == 0) {
+        ;
+    } else if(test_type == 1) {
+        function_test(bt, ops_num);
+    }
 
     delete bt;
+    return 0;
+}
+
+int parse_input(int num, char **para)
+{
+    if(num != 4) {
+        cout << "input parameter nums incorrect! " << num << endl;
+        return -1; 
+    }
+
+    using_existing_data = atoi(para[1]);
+    test_type = atoi(para[2]);
+    ops_num = atoi(para[3]);
+
+    SBH_PRINT("using_existing_data: %d(0:no, 1:yes)", using_existing_data);
+    SBH_PRINT("test_type:%d(0:Motivation test, 1:Function test)", test_type);
+    SBH_PRINT("ops_num:%llu", ops_num);
+    return 0;
 }
 
 void function_test(btree *bt, uint64_t ops) {
