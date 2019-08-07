@@ -685,8 +685,8 @@ const std::string& btree::btree_search(entry_key_t key) {
     }
 
     if(!t || (char *)t != (char *)key) {
-        printf("NOT FOUND %lu, t = %x\n", key, t);
-        return string("", 0);;
+        printf("NOT FOUND %lu, t = %p\n", key, t);
+        return string("", 0);
     }
 
     return string((char *)t, NVM_ValueSize);
