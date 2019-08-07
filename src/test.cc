@@ -50,7 +50,7 @@ void function_test(btree *bt, uint64_t ops) {
         snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
         string value(valuebuf, NVM_ValueSize);
         const string tmp_value = bt->btree_search(key);
-        printf("value size is %d", tmp_value.size());
+        printf("value size is %d\n", tmp_value.size());
         if(tmp_value.size() == 0) {
             printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
         } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
