@@ -122,17 +122,16 @@ void function_test(btree *bt, uint64_t ops) {
     bt->PrintInfo();
 }
 
-const uint64_t PutOps = 200000000;
-const uint64_t GetOps = 1000000;
-const uint64_t DeleteOps = 1000000;
-const uint64_t ScanOps = 100000;
-const uint64_t ScanCount = 1000;
+const uint64_t PutOps = 2000000;
+const uint64_t GetOps = 100000;
+const uint64_t DeleteOps = 100000;
+const uint64_t ScanOps = 1000;
+const uint64_t ScanCount = 100;
 
 void motivationtest(btree *bt) {
     uint64_t i;
     Statistic stats;
     string value("value", NVM_ValueSize);
-    memset(buf, 0, sizeof(buf));
     printf("Value size is %d\n", value.size());
     //* 随机插入测试
     rocksdb::Random rnd_insert(0xdeadbeef);

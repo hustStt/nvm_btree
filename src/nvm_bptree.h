@@ -63,10 +63,12 @@ class btree{
     void PrintInfo();
 
     void PrintStorage(void) {
-        allocator_->PrintStorage();
-        valueAllocator_->PrintStorage();
+        printf("Node: \n");
+        node_alloc->PrintStorage();
+        printf("Value: \n");
+        value_alloc->PrintStorage();
     }
-    
+
     bool StorageIsFull() {
         return node_alloc->StorageIsFull() || value_alloc->StorageIsFull();
     }
