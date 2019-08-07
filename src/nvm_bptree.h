@@ -57,7 +57,7 @@ class btree{
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
-    const std::string& btree_search(entry_key_t);
+    const std::string btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void printAll();
     void PrintInfo();
