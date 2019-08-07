@@ -311,7 +311,7 @@ bpnode * bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
             sibling->hdr.leftmost_ptr = (bpnode*) records[m].ptr;
         }
         sibling->hdr.Set_sibling(hdr.sibling_ptr);
-        hdr.Set_sibling(sibling)
+        hdr.Set_sibling(sibling);
         // sibling->hdr.sibling_ptr = hdr.sibling_ptr;
         // clflush((char *)sibling, sizeof(bpnode));
 
@@ -642,12 +642,12 @@ btree::~btree() {
 }
 
 void btree::Initial(const std::string &nodepath, uint64_t nodesize, 
-            const std::string &valuepath, uint64_t valuepath) {
+            const std::string &valuepath, uint64_t valuesize) {
     node_alloc = new NVMAllocator(nodepath, nodesize);
     if(node_alloc == nullptr) {
         assert(0);
     }
-    value_alloc = new NVMAllocator(valuepath, valuepath);
+    value_alloc = new NVMAllocator(valuepath, valuesize);
     if(value_alloc == nullptr) {
         delete node_alloc;
         node_alloc = nullptr;
