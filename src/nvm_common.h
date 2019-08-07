@@ -3,7 +3,7 @@
 #include <cstring>
 #include <string>
 #include <libpmem.h>
-#include "statistic.h"
+// #include "statistic.h"
 
 namespace scaledkv {
     const int NVM_NodeSize = 256;
