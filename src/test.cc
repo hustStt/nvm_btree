@@ -1,4 +1,4 @@
-#include "btree.h"
+#include "nvm_bptree.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
