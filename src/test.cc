@@ -41,6 +41,23 @@ void function_test(btree *bt, uint64_t ops) {
         bt->btree_insert(key, value);
     } 
     printf("******Insert test finished.******\n");
+
+    rocksdb::Random rnd_get(0xdeadbeef);
+    for(i = 0; i < ops; i ++) {
+        memset(valuebuf, 0, sizeof(valuebuf));
+        // snprintf(keybuf, sizeof(keybuf), "%07d", i);
+        auto key = rnd_get.Next();
+        snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+        string value(valuebuf, NVM_ValueSize);
+        const string tmp_value = bt->btree_search(key);
+        if(tmp_value.size() == 0) {
+            printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
+        } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+            printf("Error: Get %llx key-value faild.(Expect:%s, but Get %s)\n", key, value.c_str(), tmp_value.c_str());
+        }
+    }
+    printf("******Get test finished.*****\n");
+    printf("******B+ tree function test finished.******\n");
     bt->printAll();
     bt->PrintInfo();
 
