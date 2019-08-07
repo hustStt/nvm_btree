@@ -669,7 +669,7 @@ void btree::setNewRoot(char *new_root) {
     ++height;
 }
 
-std::string& btree::btree_search(entry_key_t key) {
+std::string btree::btree_search(entry_key_t key) {
     bpnode* p = (bpnode*)root;
 
     while(p->hdr.leftmost_ptr != NULL) {
