@@ -9,8 +9,8 @@
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
 
-const size_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
-const size_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
+const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
+const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
 
 
 int main(int argc, char *argv[]) {
@@ -20,5 +20,5 @@ int main(int argc, char *argv[]) {
 
     bt->PrintInfo();
 
-    delete btree;
+    delete bt;
 }

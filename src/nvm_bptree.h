@@ -95,12 +95,12 @@ class header{
       delete mtx;
     }
 
-    void Set_leftmost(char *leftmost_ptr_) {
-        pmem_memcpy_persist(&leftmost_ptr, &leftmost_ptr_, sizeof(char *));
+    void Set_leftmost(bpnode *leftmost_ptr_) {
+        pmem_memcpy_persist(&leftmost_ptr, &leftmost_ptr_, sizeof(bpnode *));
     }
 
-    void Set_sibling(char *sibling_ptr_) {
-        pmem_memcpy_persist(&sibling_ptr, &sibling_ptr_, sizeof(char *));
+    void Set_sibling(bpnode *sibling_ptr_) {
+        pmem_memcpy_persist(&sibling_ptr, &sibling_ptr_, sizeof(bpnode *));
     }
 
     void Set_level(uint32_t level_) {

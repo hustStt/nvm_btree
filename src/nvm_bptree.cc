@@ -5,7 +5,7 @@ pthread_mutex_t print_mtx;
 /*
  * class bpnode
  */
-bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true) {
+bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock) {
     hdr.mtx->lock();
     bool ret = remove_key(key);
     hdr.mtx->unlock();
@@ -13,7 +13,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance = false, boo
     return ret;
 }
 
-bool bpnode::remove_rebalancing(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true) {
+bool bpnode::remove_rebalancing(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock) {
     if(with_lock) {
         hdr.mtx->lock();
     }
@@ -140,7 +140,7 @@ bool bpnode::remove_rebalancing(btree* bt, entry_key_t key, bool only_rebalance 
 
                 parent_key = left_sibling->records[m].key; 
 
-                Set_leftmost(left_sibling->records[m].ptr);
+                hdr.Set_leftmost(left_sibling->records[m].ptr);
                 left_sibling->Set_Ptr(m, nullptr);
                 left_sibling->hdr.Set_last_index(m-1);
 
@@ -255,7 +255,7 @@ bool bpnode::remove_rebalancing(btree* bt, entry_key_t key, bool only_rebalance 
 }
 
 bpnode * bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
-            bool flush, bool with_lock, bpnode *invalid_sibling = NULL) {
+            bool flush, bool with_lock, bpnode *invalid_sibling) {
     if(with_lock) {
         hdr.mtx->lock(); // Lock the write lock
     }
@@ -631,7 +631,7 @@ btree::btree(){
     height = 1;
 }
 
-~btree::btree() {
+btree::~btree() {
     if(node_alloc != nullptr) {
         delete node_alloc;
     }
