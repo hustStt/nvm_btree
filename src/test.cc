@@ -17,6 +17,7 @@ using namespace scaledkv;
 
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
+const uint64_t MAX_KEY = ~(0ULL);
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -89,6 +90,22 @@ void function_test(btree *bt, uint64_t ops) {
         }
     }
     printf("******Get test finished.*****\n");
+
+    rocksdb::Random rnd_scan(0xdeadbeef);
+    for(i = 0; i < ops / 100; i ++) {
+        uint64_t key = rnd_scan.Next();
+        std::vector<std::string>::iterator it;
+        std::vector<std::string> values;
+        int getcount = 10;
+        bt->btree_search_range(key, MAX_KEY, values, getcount);
+        int index = 0;
+        for(it=values.begin(); it != values.end(); it++) 
+        {
+            printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
+            index ++;
+        }
+    }
+    printf("******Get range test finished.******\n");
 
     rocksdb::Random rnd_delete(0xdeadbeef);
     for(uint64_t i = 0; i < ops; i ++) {
