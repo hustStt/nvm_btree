@@ -52,11 +52,11 @@ class btree{
     void Initial(const std::string &nodepath, uint64_t nodesize, const std::string &valuepath, uint64_t valuesize);
     char *AllocNode();
     void setNewRoot(char *);
-    void btree_insert(entry_key_t, char*);
+    void btree_insert(entry_key_t, const std::string &value);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
-    char *btree_search(entry_key_t);
+    std::string& btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void printAll();
     void PrintInfo();

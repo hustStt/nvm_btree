@@ -669,7 +669,7 @@ void btree::setNewRoot(char *new_root) {
     ++height;
 }
 
-char *btree::btree_search(entry_key_t key){
+std::string& btree_search(entry_key_t);{
     bpnode* p = (bpnode*)root;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -686,22 +686,24 @@ char *btree::btree_search(entry_key_t key){
 
     if(!t || (char *)t != (char *)key) {
         printf("NOT FOUND %lu, t = %x\n", key, t);
-        return NULL;
+        return string("", 0);
     }
 
-    return (char *)t;
+    return string(t, NVM_ValueSize);
 }
 
 // insert the key in the leaf node
-void btree::btree_insert(entry_key_t key, char* right){ //need to be string
+void btree::btree_insert(entry_key_t key, const std::string &value);//need to be string
     bpnode* p = (bpnode*)root;
+    char *pvalue = value_alloc->Allocate(value.size());
+    pmem_memcpy_persist(pvalue, value.c_str(), value.size());
 
     while(p->hdr.leftmost_ptr != NULL) {
         p = (bpnode*)p->linear_search(key);
     }
 
-    if(!p->store(this, NULL, key, right, true, true)) { // store 
-        btree_insert(key, right);
+    if(!p->store(this, NULL, key, pvalue, true, true)) { // store 
+        btree_insert(key, pvalue);
     }
 }
 
