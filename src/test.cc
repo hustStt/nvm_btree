@@ -28,6 +28,7 @@ uint64_t start_time, end_time, use_time;
 
 void function_test(btree *bt, uint64_t ops);
 void motivationtest(btree *bt);
+void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
 int main(int argc, char *argv[]) {
