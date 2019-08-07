@@ -669,7 +669,7 @@ void btree::setNewRoot(char *new_root) {
     ++height;
 }
 
-std::string& btree_search(entry_key_t key) {
+std::string& btree::btree_search(entry_key_t key) {
     bpnode* p = (bpnode*)root;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -686,10 +686,10 @@ std::string& btree_search(entry_key_t key) {
 
     if(!t || (char *)t != (char *)key) {
         printf("NOT FOUND %lu, t = %x\n", key, t);
-        return string("", 0);
+        return std::string("", 0);
     }
 
-    return string(t, NVM_ValueSize);
+    return std::string(t, NVM_ValueSize);
 }
 
 // insert the key in the leaf node
