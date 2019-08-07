@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
 }
 
 void function_test(btree *bt, uint64_t ops) {
+    uint64_t i = 0;
     char valuebuf[NVM_ValueSize + 1];
     printf("******B+ tree function test start.******\n");
     rocksdb::Random rnd_put(0xdeadbeef); 
