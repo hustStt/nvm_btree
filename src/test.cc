@@ -43,7 +43,7 @@ void function_test(btree *bt, uint64_t ops) {
     printf("******Insert test finished.******\n");
 
     rocksdb::Random rnd_get(0xdeadbeef);
-    for(i = 0; i < ops; i ++) {
+    for(uint64_t i = 0; i < ops; i ++) {
         memset(valuebuf, 0, sizeof(valuebuf));
         // snprintf(keybuf, sizeof(keybuf), "%07d", i);
         auto key = rnd_get.Next();
