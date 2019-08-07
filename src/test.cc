@@ -8,6 +8,7 @@
 #include "nvm_bptree.h"
 #include "random.h"
 #include "debug.h"
+#include "statistic.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
@@ -23,7 +24,10 @@ int using_existing_data = 0;
 int test_type = 1;
 uint64_t ops_num = 1000;
 
+uint64_t start_time, end_time, use_time;
+
 void function_test(btree *bt, uint64_t ops);
+void motivationtest(btree *bt);
 int parse_input(int num, char **para);
 
 int main(int argc, char *argv[]) {
@@ -116,4 +120,126 @@ void function_test(btree *bt, uint64_t ops) {
     printf("******B+ tree function test finished.******\n");
     // bt->printAll();
     bt->PrintInfo();
+}
+
+const uint64_t PutOps = 200000000;
+const uint64_t GetOps = 1000000;
+const uint64_t DeleteOps = 1000000;
+const uint64_t ScanOps = 100000;
+const uint64_t ScanCount = 1000;
+
+void motivationtest(btree *bt) {
+    uint64_t i;
+    Statistic stats;
+    string value("value", NVM_ValueSize);
+    memset(buf, 0, sizeof(buf));
+    printf("Value size is %d\n", value.size());
+    //* 随机插入测试
+    rocksdb::Random rnd_insert(0xdeadbeef);
+    start_time = get_now_micros();
+    for (i = 1; i <= PutOps; i++) {
+        auto key = rnd_insert.Next() & ((1ULL << 40) - 1);
+        stats.start();
+        bt->btree_insert(key, value);
+        stats.end();
+        stats.add_put();
+
+        if ((i % 1000) == 0) {
+            cout<<"Put_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
+
+        if(bt->StorageIsFull()) {
+            break;
+        }
+    }
+    stats.clear_period();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Insert test finished\n");
+    nvm_print(i-1);
+
+    //* 随机读测试
+    rocksdb::Random rnd_get(0xdeadbeef); 
+    start_time = get_now_micros();
+    for (i = 1; i <= GetOps; i++) {
+        auto key = rnd_get.Next() & ((1ULL << 40) - 1);
+        stats.start();
+        const string value = bt->btree_search(key);
+        stats.end();
+        stats.add_get();
+
+        if ((i % 1000) == 0) {
+            cout<<"Get_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
+    }
+    stats.clear_period();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Get test finished\n");
+    nvm_print(i-1);
+
+    //* Scan测试
+    rocksdb::Random rnd_scan(0xdeadbeef); 
+    start_time = get_now_micros();
+    for (i = 1; i <= ScanOps; i++) {
+        auto key = rnd_scan.Next() & ((1ULL << 40) - 1);
+        int size = ScanCount;
+        std::vector<std::string> values;
+        stats.start();
+        bt->btree_search_range(key, MAX_KEY, values, size);
+        stats.end();
+        stats.add_scan();
+
+        if ((i % 100) == 0) {
+            cout<<"Scan_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
+    }
+    stats.clear_period();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Scan test finished\n");
+    nvm_print(i-1);
+
+    //* 删除测试
+    rocksdb::Random rnd_delete(0xdeadbeef);
+    start_time = get_now_micros();
+    for (i = 1; i <= DeleteOps; i++) {
+
+        auto key = rnd_delete.Next() & ((1ULL << 40) - 1);
+        stats.start();
+        bt->btree_delete(key);
+        stats.end();
+        stats.add_delete();
+
+        if ((i % 1000) == 0) {
+            cout<<"Delete_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
+    }
+    stats.clear_period();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Delete test finished\n");
+    nvm_print(i-1);
+    bt->PrintStorage();
+    bt->PrintInfo();
+    print_log(LV_INFO, "end!");
+}
+
+
+void nvm_print(int ops_num)
+{   
+    printf("-------------   write to nvm  start: ----------------------\n");
+    printf("key: %uB, value: %uB, number: %llu\n", NVM_KeySize, NVM_ValueSize, ops_num);
+    printf("time: %.4f s,  speed: %.3f MB/s, IOPS: %.1f IOPS\n", 1.0 * use_time * 1e-6, 
+                1.0 * (NVM_KeySize + NVM_ValueSize) * ops_num * 1e6 / use_time / 1048576, 
+                1.0 * ops_num * 1e6 / use_time);
+    printf("-------------   write to nvm  end: ----------------------\n");
 }

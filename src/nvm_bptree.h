@@ -62,6 +62,15 @@ class btree{
     void printAll();
     void PrintInfo();
 
+    void PrintStorage(void) {
+        allocator_->PrintStorage();
+        valueAllocator_->PrintStorage();
+    }
+    
+    bool StorageIsFull() {
+        return node_alloc->StorageIsFull() || value_alloc->StorageIsFull();
+    }
+
     friend class bpnode;
 };
 
