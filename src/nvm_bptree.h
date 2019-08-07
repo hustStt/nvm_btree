@@ -347,4 +347,4 @@ class bpnode{
         }
         ++(*num_entries);
     }
-}
+};
