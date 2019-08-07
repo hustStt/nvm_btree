@@ -23,6 +23,7 @@
 #include "nvm_allocator.h"
 
 using namespace scaledkv;
+using namespace std;
 
 
 #define NODESIZE 256
