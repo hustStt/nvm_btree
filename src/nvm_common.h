@@ -3,6 +3,7 @@
 #include <cstring>
 #include <string>
 #include <libpmem.h>
+#include <sys/time.h>
 // #include "statistic.h"
 
 namespace scaledkv {
@@ -47,6 +48,12 @@ namespace scaledkv {
         }
         double CDFI = (Double1 * (tmp - min_key)) / (max_key - min_key);
         return CDFI ;
+    }
+
+    static inline uint64_t get_now_micros(){
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return (tv.tv_sec) * 1000000 + tv.tv_usec;
     }
 }
 
