@@ -669,7 +669,7 @@ void btree::setNewRoot(char *new_root) {
     ++height;
 }
 
-std::string btree::btree_search(entry_key_t key) {
+const std::string& btree::btree_search(entry_key_t key) {
     bpnode* p = (bpnode*)root;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -705,7 +705,6 @@ void btree::btree_insert(entry_key_t key, const std::string &value) { //need to 
     if(!p->store(this, NULL, key, pvalue, true, true)) { // store 
         btree_insert(key, pvalue);
     }
-    printAll();
 }
 
 // store the key into the node at the given level 
