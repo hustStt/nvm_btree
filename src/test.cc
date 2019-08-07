@@ -13,6 +13,7 @@
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
 
+void function_test(btree *bt, uint64_t ops);
 
 int main(int argc, char *argv[]) {
     btree *bt = new btree();

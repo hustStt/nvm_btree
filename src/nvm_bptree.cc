@@ -583,9 +583,9 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, unsigned long
 
 void bpnode::print() {
     if(hdr.leftmost_ptr == NULL) 
-        printf("[%d] leaf %x \n", this->hdr.level, this);
+        printf("[%d] leaf %p \n", this->hdr.level, this);
     else 
-        printf("[%d] internal %x \n", this->hdr.level, this);
+        printf("[%d] internal %p \n", this->hdr.level, this);
     printf("last_index: %d\n", hdr.last_index);
     printf("switch_counter: %d\n", hdr.switch_counter);
     printf("search direction: ");
@@ -595,12 +595,12 @@ void bpnode::print() {
         printf("<-\n");
 
     if(hdr.leftmost_ptr!=NULL) 
-        printf("%x ",hdr.leftmost_ptr);
+        printf("%p ",hdr.leftmost_ptr);
 
     for(int i=0;records[i].ptr != NULL;++i)
-        printf("%ld,%x ",records[i].key,records[i].ptr);
+        printf("%ld,%p ",records[i].key,records[i].ptr);
 
-    printf("%x ", hdr.sibling_ptr);
+    printf("%p ", hdr.sibling_ptr);
 
     printf("\n");
 }
@@ -810,7 +810,7 @@ void btree::printAll(){
     pthread_mutex_lock(&print_mtx);
     int total_keys = 0;
     bpnode *leftmost = (bpnode *)root;
-    printf("root: %x\n", root);
+    printf("root: %p\n", root);
     do {
         bpnode *sibling = leftmost;
         while(sibling) {
@@ -831,7 +831,7 @@ void btree::printAll(){
 
 void btree::PrintInfo() {
     printf("This is a b+ tree.\n");
-    printf("Node size is %llu, M path is %d.\n", sizeof(bpnode), cardinality);
+    printf("Node size is %lu, M path is %d.\n", sizeof(bpnode), cardinality);
     printf("Tree height is %d.\n", height);
 
 }

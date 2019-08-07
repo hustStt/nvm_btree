@@ -62,9 +62,9 @@ namespace scaledkv {
         }
 
         void PrintStorage(void) {
-            printf("Storage capacity is %lldG %lldM %lldK %lldB\n", capacity_ >> 30, capacity_ >> 20 & (1024 - 1),
+            printf("Storage capacity is %lluG %lluM %lluK %lluB\n", capacity_ >> 30, capacity_ >> 20 & (1024 - 1),
                          capacity_ >> 10 & (1024 - 1), capacity_ & (1024 - 1));
-            printf("Storage used is %lldG %lldM %lldK %lldB\n", memused >> 30, memused >> 20 & (1024 - 1), 
+            printf("Storage used is %lluG %lluM %lluK %lluB\n", memused >> 30, memused >> 20 & (1024 - 1), 
                         memused >> 10 & (1024 - 1), memused & (1024 - 1));
         }
 
