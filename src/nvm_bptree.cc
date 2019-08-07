@@ -523,7 +523,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
                                     values.push_back(string(tmp_ptr, NVM_VALUE_SIZE));
-                                    off++
+                                    off++;
                                     if(off >= size) {
                                         return ;
                                     }
@@ -545,7 +545,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
                                         values.push_back(string(tmp_ptr, NVM_VALUE_SIZE));
-                                        off++
+                                        off++;
                                         if(off >= size) {
                                             return ;
                                         }
@@ -569,7 +569,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
                                         values.push_back(string(tmp_ptr, NVM_VALUE_SIZE));
-                                        off++
+                                        off++;
                                         if(off >= size) {
                                             return ;
                                         }
@@ -591,7 +591,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
                                     values.push_back(string(tmp_ptr, NVM_VALUE_SIZE));
-                                    off++
+                                    off++;
                                     if(off >= size) {
                                         return ;
                                     }
