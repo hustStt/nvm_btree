@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     // bt->PrintInfo();
     if(test_type == 0) {
-        ;
+        motivationtest(bt);
     } else if(test_type == 1) {
         function_test(bt, ops_num);
     }
