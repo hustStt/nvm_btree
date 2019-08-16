@@ -23,11 +23,9 @@
 using namespace std;
 
 class NVMBtree{
-public::
+public:
     NVMBtree();
     ~NVMBtree();
-private:
-    btree *bt;
 
     void Insert(const unsigned long key, const string &value);
 
@@ -51,6 +49,9 @@ private:
         node_alloc->PrintStorage();
         value_alloc->PrintStorage();
     }
+    
+private:
+    btree *bt;
 }
 
 int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 

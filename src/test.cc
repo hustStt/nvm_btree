@@ -117,7 +117,7 @@ void function_test(NVMBtree *bt, uint64_t ops) {
     rocksdb::Random rnd_delete(0xdeadbeef);
     for(uint64_t i = 0; i < ops; i ++) {
         auto key = rnd_delete.Next();
-        bt->btree_delete(key);
+        bt->Delete(key);
     }
     printf("******Delete test finished.******\n");
     printf("******B+ tree function test finished.******\n");
@@ -215,7 +215,7 @@ void motivationtest(NVMBtree *bt) {
 
         auto key = rnd_delete.Next() & ((1ULL << 40) - 1);
         stats.start();
-        bt->btree_delete(key);
+        bt->Delete(key);
         stats.end();
         stats.add_delete();
 
