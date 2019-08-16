@@ -716,7 +716,7 @@ char *btree::btree_search(entry_key_t key) {
     }
 
     if(!t) {
-        printf("NOT FOUND %lu\n", key);
+        // printf("NOT FOUND %llx\n", key);
         return NULL;
     }
 
