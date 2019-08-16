@@ -57,8 +57,11 @@ void NVMBtree::Delete(const unsigned long  key) {
 
 const string NVMBtree::Get(const unsigned long key) {
     char *pvalue = NULL;
-    if(art) {
-        return bt->btree_search(key);
+    if(bt) {
+        pvalue = bt->btree_search(key);
+    }
+    if(pvalue) {
+        return string(pvalue, NVM_ValueSize);
     }
     return "";
 }
