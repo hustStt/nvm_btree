@@ -359,8 +359,6 @@ class bpnode{
     }
 };
 
-#include "nvmbptree.h"
-
 pthread_mutex_t print_mtx;
 
 /*
