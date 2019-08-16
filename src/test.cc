@@ -114,14 +114,14 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
                 std::vector<std::string> values;
                 int getcount = 10;
                 bt->GetRange(key, 0, values, getcount);
-                // int index = 0;
-                // std::vector<std::string>::iterator it;
-                // printf("Get rang no. %lld, key is %llx.\n", i, key);
-                // for(it=values.begin(); it != values.end(); it++) 
-                // {
-                //     printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
-                //     index ++;
-                // }
+                int index = 0;
+                std::vector<std::string>::iterator it;
+                printf("Get rang no. %lld, key is %llx.\n", i, key);
+                for(it=values.begin(); it != values.end(); it++) 
+                {
+                    printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
+                    index ++;
+                }
             }
         }
         printf("******Get range test finished.******\n");
