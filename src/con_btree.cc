@@ -6,6 +6,118 @@ pthread_mutex_t print_mtx;
 /*
  * class btree
  */
+
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size) {
+    int i, off = 0;
+    uint8_t previous_switch_counter;
+    bpnode *current = this;
+
+    while(current) {
+        int old_off = off;
+        do {
+            previous_switch_counter = current->hdr.switch_counter;
+            off = old_off;
+
+            entry_key_t tmp_key;
+            char *tmp_ptr;
+
+            if(IS_FORWARD(previous_switch_counter)) {
+                if((tmp_key = current->records[0].key) > min) {
+                    if(tmp_key < max) {
+                        if((tmp_ptr = current->records[0].ptr) != NULL) {
+                            if(tmp_key == current->records[0].key) {
+                                if(tmp_ptr) {
+                                    // buf[off++] = (unsigned long)tmp_ptr;
+                                    values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    off++;
+                                    if(off >= size) {
+                                        return ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        size = off;
+                        return;
+                    }
+                }
+
+                for(i=1; current->records[i].ptr != NULL; ++i) { 
+                    if((tmp_key = current->records[i].key) > min) {
+                        if(tmp_key < max) {
+                            if((tmp_ptr = current->records[i].ptr) != current->records[i - 1].ptr) {
+                                if(tmp_key == current->records[i].key) {
+                                    if(tmp_ptr) {
+                                        // buf[off++] = (unsigned long)tmp_ptr;
+                                        values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        off++;
+                                        if(off >= size) {
+                                            return ;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            size = off;
+                            return;
+                        }
+                    }
+                }
+            }
+            else {
+                for(i=count() - 1; i > 0; --i) { 
+                    if((tmp_key = current->records[i].key) > min) {
+                        if(tmp_key < max) {
+                            if((tmp_ptr = current->records[i].ptr) != current->records[i - 1].ptr) {
+                                if(tmp_key == current->records[i].key) {
+                                    if(tmp_ptr) {
+                                        // buf[off++] = (unsigned long)tmp_ptr;
+                                        values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        off++;
+                                        if(off >= size) {
+                                            return ;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            size = off;
+                            return;
+                        }
+                    }
+                }
+
+                if((tmp_key = current->records[0].key) > min) {
+                    if(tmp_key < max) {
+                        if((tmp_ptr = current->records[0].ptr) != NULL) {
+                            if(tmp_key == current->records[0].key) {
+                                if(tmp_ptr) {
+                                    // buf[off++] = (unsigned long)tmp_ptr;
+                                    values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    off++;
+                                    if(off >= size) {
+                                        return ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        size = off;
+                        return;
+                    }
+                }
+            }
+        } while(previous_switch_counter != current->hdr.switch_counter);
+
+        current = current->hdr.sibling_ptr;
+    }
+    size = off;
+}
+
 btree::btree(){
   root = (char*)new bpnode();
   height = 1;
@@ -33,7 +145,7 @@ char *btree::btree_search(entry_key_t key){
   }
 
   if(!t) {
-    printf("NOT FOUND %lu, t = %x\n", key, t);
+    // printf("NOT FOUND %lu, t = %x\n", key, t);
     return NULL;
   }
 
@@ -89,12 +201,12 @@ void btree::btree_delete(entry_key_t key) {
     }
   }
   else {
-    printf("not found the key to delete %lu\n", key);
+      ;
+    // printf("not found the key to delete %lu\n", key);
   }
 }
 
-void btree::btree_delete_internal
-(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+void btree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
  bool *is_leftmost_node, bpnode **left_sibling) {
   if(level > ((bpnode *)this->root)->hdr.level)
     return;
@@ -159,7 +271,18 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, unsigned long *
 
 void btree::btree_search_range(entry_key_t min, entry_key_t max, 
         std::vector<std::string> &values, int &size) {
+    while(p) {
+        if(p->hdr.leftmost_ptr != NULL) {
+        // The current bpnode is internal
+        p = (bpnode *)p->linear_search(min);
+        }
+        else {
+        // Found a leaf
+        p->linear_search_range(min, max, values, size);
 
+        break;
+        }
+    }
 }
 
 void btree::printAll(){
