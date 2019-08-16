@@ -70,55 +70,97 @@ int parse_input(int num, char **para)
     return 0;
 }
 
-void function_test(NVMBtree *bt, uint64_t ops) {
+void function_test(NVMBtree *bt, uint64_t ops_param) {
     uint64_t i = 0;
     char valuebuf[NVM_ValueSize + 1];
+    rocksdb::Random64 rnd_put(0xdeadbeef);
+    rocksdb::Random64 rnd_get(0xdeadbeef);
+    rocksdb::Random64 rnd_scan(0xdeadbeef);
+    rocksdb::Random64 rnd_delete(0xdeadbeef);
+    rocksdb::Random64 rnd_delcheck(0xdeadbeef);
+    rocksdb::Random64 rnd_delall(0xdeadbeef);
     printf("******B+ tree function test start.******\n");
-    rocksdb::Random rnd_put(0xdeadbeef); 
-    for(uint64_t i = 0; i < ops; i ++) {
-        auto key = rnd_put.Next();
-        snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-        string value(valuebuf, NVM_ValueSize);
-        bt->Insert(key, value);
+    uint64_t ops= 1000;
+    if(ops > ops_param) {
+        ops = ops_param;
+    }
+    while(ops <= ops_param){
+        for(uint64_t i = 0; i < ops; i ++) {
+            auto key = rnd_put.Next();
+            snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+            string value(valuebuf, NVM_ValueSize);
+            bt->Insert(key, value);
+        } 
+        printf("******Insert test finished.******\n");
+        // bt->Print();
+
+        for(uint64_t i = 0; i < ops; i ++) {
+            // memset(valuebuf, 0, sizeof(valuebuf));
+            auto key = rnd_get.Next();
+            snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+            string value(valuebuf, NVM_ValueSize);
+            const string tmp_value = bt->Get(key);
+            if(tmp_value.size() == 0) {
+                printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
+            } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+                printf("Error: Get %llx key-value faild.(Expect:%s, but Get %s)\n", key, value.c_str(), tmp_value.c_str());
+            }
+        }
+        printf("******Get test finished.*****\n");
+
+        for(i = 0; i < ops ; i ++) {
+            uint64_t key = rnd_scan.Next();
+            if(i % 100 == 0) {
+                std::vector<std::string> values;
+                int getcount = 10;
+                bt->GetRange(key, 0, values, getcount);
+                // int index = 0;
+                // std::vector<std::string>::iterator it;
+                // printf("Get rang no. %lld, key is %llx.\n", i, key);
+                // for(it=values.begin(); it != values.end(); it++) 
+                // {
+                //     printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
+                //     index ++;
+                // }
+            }
+        }
+        printf("******Get range test finished.******\n");
+
+        for(i = 0; i < ops; i ++) {
+            uint64_t key = rnd_delete.Next();
+            if(i % 5 == 0) {
+                bt->Delete(key);
+            }
+        }
+
+        for(i = 0; i < ops; i ++) {
+            uint64_t key = rnd_delcheck.Next();
+            snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+            string value(valuebuf, NVM_ValueSize);
+            string tmp_value = bt->Get(key);
+            if(tmp_value.size() == 0) {
+                if(i % 5) {
+                    printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
+                }
+            } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+                printf("Error: Get no. %lld key %llx key-value faild.(Expect:%s, but Get %s)\n", i, key, value.c_str(), tmp_value.c_str());
+            }
+        }
+        printf("******Delete test finished.******\n");
+        printf("******Test one loop...\n");
+        ops *= 10;
+    }
+    ops= 1000;
+    if(ops > ops_param) {
+        ops = ops_param;
+    }
+    while(ops <= ops_param) {
+        for(i = 0; i < ops; i ++) {
+            uint64_t key = rnd_delall.Next();
+            bt->Delete(key);
+        }
+        ops *= 10;
     } 
-    printf("******Insert test finished.******\n");
-
-    rocksdb::Random rnd_get(0xdeadbeef);
-    for(uint64_t i = 0; i < ops; i ++) {
-        // memset(valuebuf, 0, sizeof(valuebuf));
-        auto key = rnd_get.Next();
-        snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-        string value(valuebuf, NVM_ValueSize);
-        const string tmp_value = bt->Get(key);
-        if(tmp_value.size() == 0) {
-            printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
-        } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
-            printf("Error: Get %llx key-value faild.(Expect:%s, but Get %s)\n", key, value.c_str(), tmp_value.c_str());
-        }
-    }
-    printf("******Get test finished.*****\n");
-
-    rocksdb::Random rnd_scan(0xdeadbeef);
-    for(i = 0; i < ops / 100; i ++) {
-        uint64_t key = rnd_scan.Next();
-        std::vector<std::string>::iterator it;
-        std::vector<std::string> values;
-        int getcount = 10;
-        bt->GetRange(key, MAX_KEY, values, getcount);
-        int index = 0;
-        for(it=values.begin(); it != values.end(); it++) 
-        {
-            printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
-            index ++;
-        }
-    }
-    printf("******Get range test finished.******\n");
-
-    rocksdb::Random rnd_delete(0xdeadbeef);
-    for(uint64_t i = 0; i < ops; i ++) {
-        auto key = rnd_delete.Next();
-        bt->Delete(key);
-    }
     printf("******Delete test finished.******\n");
     printf("******B+ tree function test finished.******\n");
     // bt->printAll();
@@ -137,7 +179,7 @@ void motivationtest(NVMBtree *bt) {
     string value("value", NVM_ValueSize);
     printf("Value size is %d\n", value.size());
     //* 随机插入测试
-    rocksdb::Random rnd_insert(0xdeadbeef);
+    rocksdb::Random64 rnd_insert(0xdeadbeef);
     start_time = get_now_micros();
     for (i = 1; i <= PutOps; i++) {
         auto key = rnd_insert.Next() & ((1ULL << 40) - 1);
@@ -163,7 +205,7 @@ void motivationtest(NVMBtree *bt) {
     nvm_print(i-1);
 
     //* 随机读测试
-    rocksdb::Random rnd_get(0xdeadbeef); 
+    rocksdb::Random64 rnd_get(0xdeadbeef); 
     start_time = get_now_micros();
     for (i = 1; i <= GetOps; i++) {
         auto key = rnd_get.Next() & ((1ULL << 40) - 1);
@@ -185,7 +227,7 @@ void motivationtest(NVMBtree *bt) {
     nvm_print(i-1);
 
     //* Scan测试
-    rocksdb::Random rnd_scan(0xdeadbeef); 
+    rocksdb::Random64 rnd_scan(0xdeadbeef); 
     start_time = get_now_micros();
     for (i = 1; i <= ScanOps; i++) {
         auto key = rnd_scan.Next() & ((1ULL << 40) - 1);
@@ -209,7 +251,7 @@ void motivationtest(NVMBtree *bt) {
     nvm_print(i-1);
 
     //* 删除测试
-    rocksdb::Random rnd_delete(0xdeadbeef);
+    rocksdb::Random64 rnd_delete(0xdeadbeef);
     start_time = get_now_micros();
     for (i = 1; i <= DeleteOps; i++) {
 
