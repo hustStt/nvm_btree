@@ -157,7 +157,7 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, unsigned long *
   }
 }
 
-void btree::btreebtree_search_range(entry_key_t min, entry_key_t max, 
+void btree::btree_search_range(entry_key_t min, entry_key_t max, 
         std::vector<std::string> &values, int &size) {
 
 }
