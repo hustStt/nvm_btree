@@ -7,6 +7,7 @@
 
 #include "nvm_allocator.h"
 #include "statistic.h"
+#include "debug.h"
 
 const int NVM_NodeSize = 256;
 const int NVM_KeySize = 8;
