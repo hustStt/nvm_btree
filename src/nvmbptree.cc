@@ -765,13 +765,13 @@ void btree::btree_delete(entry_key_t key) {
             break;
     }
 
-    if(!t && p) {  //找到key-value
+    if(t && p) {  //找到key-value
         if(!p->remove(this, key)) {
             btree_delete(key);
         }
     }
     else {
-        printf("not found the key to delete %lu\n", key);
+        printf("Not found the key to delete %llx\n", key);
     }
 }
 
