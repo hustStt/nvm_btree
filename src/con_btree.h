@@ -35,7 +35,7 @@
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
-using entry_key_t = int64_t;
+using entry_key_t = uint64_t;
 
 // static inline void cpu_pause()
 // {

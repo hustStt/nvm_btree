@@ -35,7 +35,7 @@
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
-using entry_key_t = int64_t;
+using entry_key_t = uint64_t;
 
 // static inline void cpu_pause()
 // {
@@ -189,7 +189,7 @@ class bpnode{
     }
 
     void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size);
-    
+
     inline int count() {
       uint8_t previous_switch_counter;
       int count = 0;
