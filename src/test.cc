@@ -164,7 +164,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
     printf("******Delete test finished.******\n");
     printf("******B+ tree function test finished.******\n");
     // bt->printAll();
-    bt->Print();
+    // bt->Print();
     bt->PrintInfo();
 }
 

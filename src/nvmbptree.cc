@@ -753,7 +753,7 @@ void btree::btree_insert_internal(char *left, entry_key_t key, char *right, uint
 
 void btree::btree_delete(entry_key_t key) {
     bpnode* p = (bpnode*)root;
-    print_log(LV_DEBUG, "Delete key %llx", key);
+    // print_log(LV_DEBUG, "Delete key %llx", key);
     while(p->hdr.leftmost_ptr != NULL){
         p = (bpnode*) p->linear_search(key);
     }
@@ -771,7 +771,7 @@ void btree::btree_delete(entry_key_t key) {
         }
     }
     else {
-        printf("Not found the key to delete %llx\n", key);
+        // printf("Not found the key to delete %llx\n", key);
     }
 }
 
