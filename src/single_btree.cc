@@ -30,7 +30,7 @@ char *btree::btree_search(entry_key_t key){
   }
 
   if(!t) {
-    printf("NOT FOUND %lu, t = %x\n", key, t);
+    // printf("NOT FOUND %llx, t = %x\n", key, t);
     return NULL;
   }
 
@@ -86,7 +86,8 @@ void btree::btree_delete(entry_key_t key) {
     }
   }
   else {
-    printf("not found the key to delete %lu\n", key);
+      ;
+    // printf("not found the key to delete %llx\n", key);
   }
 }
 
