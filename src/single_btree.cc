@@ -264,6 +264,8 @@ void btree::btree_search_range
 }
 
 void btree::btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size) {
+    bpnode *p = (bpnode *)root;
+    
     while(p) {
         if(p->hdr.leftmost_ptr != NULL) {
         // The current bpnode is internal
