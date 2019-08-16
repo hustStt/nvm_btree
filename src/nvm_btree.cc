@@ -61,6 +61,7 @@ const string NVMBtree::Get(const unsigned long key) {
         pvalue = bt->btree_search(key);
     }
     if(pvalue) {
+        print_log(LV_DEBUG, "Get pvalue is %p.", pvalue);
         return string(pvalue, NVM_ValueSize);
     }
     return "";
