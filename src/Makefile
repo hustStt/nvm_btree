@@ -6,7 +6,7 @@ CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
 
-LIB_SOURCES = single_btree.cc nvm_btree.cc
+LIB_SOURCES = single_btree.cc con_btree.cc nvm_btree.cc
 
 LIBOBJECTS = $(LIB_SOURCES:.cc=.o)
 

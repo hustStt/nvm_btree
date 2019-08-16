@@ -26,61 +26,67 @@
 
 #include "nvm_common.h"
 
-#define PAGESIZE 512
+#define PAGESIZE 256
 
-#define CPU_FREQ_MHZ (1994)
-#define DELAY_IN_NS (1000)
+// #define CPU_FREQ_MHZ (1994)
+// #define DELAY_IN_NS (1000)
 #define CACHE_LINE_SIZE 64 
-#define QUERY_NUM 25
+// #define QUERY_NUM 25
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
 using entry_key_t = int64_t;
 
-pthread_mutex_t print_mtx;
+// static inline void cpu_pause()
+// {
+//     __asm__ volatile ("pause" ::: "memory");
+// }
 
-static inline void cpu_pause()
-{
-  __asm__ volatile ("pause" ::: "memory");
-}
-static inline unsigned long read_tsc(void)
-{
-  unsigned long var;
-  unsigned int hi, lo;
+// static inline unsigned long read_tsc(void)
+// {
+//     unsigned long var;
+//     unsigned int hi, lo;
 
-  asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
-  var = ((unsigned long long int) hi << 32) | lo;
+//     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+//     var = ((unsigned long long int) hi << 32) | lo;
 
-  return var;
-}
+//     return var;
+// }
 
-unsigned long write_latency_in_ns=0;
-unsigned long long search_time_in_insert=0;
-unsigned int gettime_cnt= 0;
-unsigned long long clflush_time_in_insert=0;
-unsigned long long update_time_in_insert=0;
-int clflush_cnt = 0;
-int node_cnt=0;
+// unsigned long write_latency_in_ns=0;
+// unsigned long long search_time_in_insert=0;
+// unsigned int gettime_cnt= 0;
+// unsigned long long clflush_time_in_insert=0;
+// unsigned long long update_time_in_insert=0;
+// int clflush_cnt = 0;
+// int node_cnt=0;
 
 using namespace std;
 
-inline void mfence()
-{
-  asm volatile("mfence":::"memory");
-}
+// inline void mfence()
+// {
+//   asm volatile("mfence":::"memory");
+// }
 
 inline void clflush(char *data, int len)
 {
-  volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
-  mfence();
-  for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){
-    unsigned long etsc = read_tsc() + 
-      (unsigned long)(write_latency_in_ns*CPU_FREQ_MHZ/1000);
-    asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
-    while (read_tsc() < etsc) cpu_pause();
-    //++clflush_cnt;
-  }
-  mfence();
+    pmem_persist(data, len);
+//   volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
+//   mfence();
+//   for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){
+//     unsigned long etsc = read_tsc() + 
+//       (unsigned long)(write_latency_in_ns*CPU_FREQ_MHZ/1000);
+//     asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
+//     while (read_tsc() < etsc) cpu_pause();
+//     //++clflush_cnt;
+//   }
+//   mfence();
+}
+
+static void alloc_memalign(void **ret, size_t alignment, size_t size) {
+    // posix_memalign(ret, alignment, size);
+    char *mem =  node_alloc->Allocate(size);
+    *ret = mem;
 }
 
 class bpnode;
@@ -98,11 +104,12 @@ class btree{
     void btree_insert(entry_key_t, char*);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
-    void btree_delete_internal
-      (entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
+    void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
     char *btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
+    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void printAll();
+    void PrintInfo();
 
     friend class bpnode;
 };
@@ -182,7 +189,7 @@ class bpnode{
 
     void *operator new(size_t size) {
       void *ret;
-      posix_memalign(&ret,64,size);
+      alloc_memalign(&ret,64,size);
       return ret;
     }
 
