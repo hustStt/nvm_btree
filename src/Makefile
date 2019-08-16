@@ -1,28 +1,37 @@
 CXX = g++
 LDFLAGS = -pthread -lpmemobj -lpmem
 DEFS = -DSINGLE_BTREE
+MULT_DEFS = 
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
-CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
+
+SING_CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
+MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
+
 AR = ar
 ARFLAGS = rs
 
-LIB_SOURCES = single_btree.cc con_btree.cc nvm_btree.cc
+SING_LIB_SOURCES = single_btree.cc nvm_btree.cc
 
-LIBOBJECTS = $(LIB_SOURCES:.cc=.o)
+MULT_LIB_SOURCES = con_btree.cc nvm_btree.cc
 
-TARGET_OBJS = $(LIB_SOURCES:.cc=)
+LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
+
+TARGET_OBJS = $(SING_LIB_SOURCES:.cc=)
 
 LIBRARY = nvm_bptree.a
 
 .PHONY: clean
 default:  all
 
-all:  clean test
+all:  clean single_test mult_test
 
 clean: 
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
 	rm -f test
 
-test:
-	$(CXX) $(CXXFLAGS) test.cc $(LIB_SOURCES) -o test $(LDFLAGS)
+single_test:
+	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o single_test $(LDFLAGS)
+
+mult_test:
+	$(CXX) $(MULT_CXXFLAGS) test.cc $(MULT_LIB_SOURCES) -o mult_test $(LDFLAGS)
