@@ -28,7 +28,7 @@ all:  clean single_test mult_test
 clean: 
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
-	rm -f test
+	rm -f single_test mult_test
 
 single_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o single_test $(LDFLAGS)
