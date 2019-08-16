@@ -30,7 +30,7 @@
 
 // #define CPU_FREQ_MHZ (1994)
 // #define DELAY_IN_NS (1000)
-// #define CACHE_LINE_SIZE 64 
+#define CACHE_LINE_SIZE 64 
 // #define QUERY_NUM 25
 
 #define IS_FORWARD(c) (c % 2 == 0)
