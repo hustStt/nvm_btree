@@ -49,10 +49,10 @@ public:
         node_alloc->PrintStorage();
         value_alloc->PrintStorage();
     }
-    
+
 private:
     btree *bt;
-}
+};
 
 int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 
                 uint64_t valuesize);

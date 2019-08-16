@@ -725,6 +725,8 @@ char *btree::btree_search(entry_key_t key) {
 
 // insert the key in the leaf node
 void btree::btree_insert(entry_key_t key, const char *pvalue) { //need to be string
+    bpnode* p = (bpnode*)root;
+
     while(p->hdr.leftmost_ptr != NULL) {
         p = (bpnode*)p->linear_search(key);
     }
