@@ -113,7 +113,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
             if(i % 100 == 0) {
                 std::vector<std::string> values;
                 int getcount = 10;
-                bt->GetRange(key, 0, values, getcount);
+                bt->GetRange(key, MAX_KEY, values, getcount);
                 int index = 0;
                 std::vector<std::string>::iterator it;
                 printf("Get rang no. %lld, key is %llx.\n", i, key);
