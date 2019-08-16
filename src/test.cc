@@ -4,16 +4,13 @@
 #include <cstring>
 #include <thread>
 
-#include "nvm_common.h"
-#include "nvm_bptree.h"
+#include "nvm_btree.h"
 #include "random.h"
 #include "debug.h"
 #include "statistic.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
-
-using namespace scaledkv;
 
 
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
@@ -26,8 +23,8 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-void function_test(btree *bt, uint64_t ops);
-void motivationtest(btree *bt);
+void function_test(NVMBtree *bt, uint64_t ops);
+void motivationtest(NVMBtree *bt);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
@@ -36,9 +33,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    btree *bt = new btree();
+    if(AllocatorInit(NODEPATH, NVM_NODE_SIZE, VALUEPATH, NVM_VALUE_SIZE) < 0) {
+        print_log(LV_ERR, "Initial allocator failed");
+        return 0;
+    }
 
-    bt->Initial(NODEPATH, NVM_NODE_SIZE, VALUEPATH, NVM_VALUE_SIZE);
+
+    NVMBtree *bt = new NVMBtree();
 
     // bt->PrintInfo();
     if(test_type == 0) {
@@ -48,6 +49,7 @@ int main(int argc, char *argv[]) {
     }
 
     delete bt;
+    AllocatorExit();
     return 0;
 }
 
@@ -68,7 +70,7 @@ int parse_input(int num, char **para)
     return 0;
 }
 
-void function_test(btree *bt, uint64_t ops) {
+void function_test(NVMBtree *bt, uint64_t ops) {
     uint64_t i = 0;
     char valuebuf[NVM_ValueSize + 1];
     printf("******B+ tree function test start.******\n");
@@ -77,7 +79,7 @@ void function_test(btree *bt, uint64_t ops) {
         auto key = rnd_put.Next();
         snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
         string value(valuebuf, NVM_ValueSize);
-        bt->btree_insert(key, value);
+        bt->Insert(key, value);
     } 
     printf("******Insert test finished.******\n");
 
@@ -87,7 +89,7 @@ void function_test(btree *bt, uint64_t ops) {
         auto key = rnd_get.Next();
         snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
         string value(valuebuf, NVM_ValueSize);
-        const string tmp_value = bt->btree_search(key);
+        const string tmp_value = bt->Get(key);
         if(tmp_value.size() == 0) {
             printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
         } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
@@ -102,7 +104,7 @@ void function_test(btree *bt, uint64_t ops) {
         std::vector<std::string>::iterator it;
         std::vector<std::string> values;
         int getcount = 10;
-        bt->btree_search_range(key, MAX_KEY, values, getcount);
+        bt->GetRange(key, MAX_KEY, values, getcount);
         int index = 0;
         for(it=values.begin(); it != values.end(); it++) 
         {
@@ -129,7 +131,7 @@ const uint64_t DeleteOps = 100000;
 const uint64_t ScanOps = 1000;
 const uint64_t ScanCount = 100;
 
-void motivationtest(btree *bt) {
+void motivationtest(NVMBtree *bt) {
     uint64_t i;
     Statistic stats;
     string value("value", NVM_ValueSize);
@@ -140,7 +142,7 @@ void motivationtest(btree *bt) {
     for (i = 1; i <= PutOps; i++) {
         auto key = rnd_insert.Next() & ((1ULL << 40) - 1);
         stats.start();
-        bt->btree_insert(key, value);
+        bt->Insert(key, value);
         stats.end();
         stats.add_put();
 
@@ -166,7 +168,7 @@ void motivationtest(btree *bt) {
     for (i = 1; i <= GetOps; i++) {
         auto key = rnd_get.Next() & ((1ULL << 40) - 1);
         stats.start();
-        const string value = bt->btree_search(key);
+        const string value = bt->Get(key);
         stats.end();
         stats.add_get();
 
@@ -190,7 +192,7 @@ void motivationtest(btree *bt) {
         int size = ScanCount;
         std::vector<std::string> values;
         stats.start();
-        bt->btree_search_range(key, MAX_KEY, values, size);
+        bt->GetRange(key, MAX_KEY, values, size);
         stats.end();
         stats.add_scan();
 

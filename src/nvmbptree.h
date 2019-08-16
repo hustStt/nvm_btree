@@ -20,9 +20,8 @@
 #include <future>
 #include <mutex>
 
-#include "nvm_allocator.h"
+#include "nvm_common.h"
 
-using namespace scaledkv;
 using namespace std;
 
 
@@ -44,20 +43,17 @@ class btree{
   private:
     int height;
     char* root;
-    NVMAllocator *node_alloc;
-    NVMAllocator *value_alloc;
-
+    
   public:
     btree();
     ~btree();
-    void Initial(const std::string &nodepath, uint64_t nodesize, const std::string &valuepath, uint64_t valuesize);
     char *AllocNode();
     void setNewRoot(char *);
-    void btree_insert(entry_key_t, const std::string &value);
+    void btree_insert(entry_key_t, const char *value);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
-    const std::string btree_search(entry_key_t);
+    char *btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void printAll();
     void PrintInfo();

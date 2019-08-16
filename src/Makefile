@@ -1,12 +1,12 @@
 CXX = g++
 LDFLAGS = -pthread -lpmemobj -lpmem
-DEFS = # -DMULT_SERVER # -DCAL_ACCESS_COUNT
+DEFS = #-DSINGLE_BTREE
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
 CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
 
-LIB_SOURCES =  nvm_bptree.cc
+LIB_SOURCES =  nvmbptree.cc nvm_btree.cc
 
 LIBOBJECTS = $(LIB_SOURCES:.cc=.o)
 

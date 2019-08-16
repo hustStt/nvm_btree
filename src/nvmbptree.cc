@@ -1,4 +1,4 @@
-#include "nvm_bptree.h"
+#include "nvmbptree.h"
 
 pthread_mutex_t print_mtx;
 
@@ -655,37 +655,37 @@ void bpnode::printAll() {
  * class btree
  */
 btree::btree(){
+    root = new (bt->AllocNode())bpnode();
     // root = (char*)new bpnode();
-    node_alloc = nullptr;
-    value_alloc = nullptr;
-    root = nullptr;
+    // node_alloc = nullptr;
+    // value_alloc = nullptr;
     height = 1;
 }
 
 btree::~btree() {
-    if(node_alloc != nullptr) {
-        delete node_alloc;
-    }
+    // if(node_alloc != nullptr) {
+    //     delete node_alloc;
+    // }
 
-    if(value_alloc != nullptr) {
-        delete value_alloc;
-    }
+    // if(value_alloc != nullptr) {
+    //     delete value_alloc;
+    // }
 }
 
-void btree::Initial(const std::string &nodepath, uint64_t nodesize, 
-            const std::string &valuepath, uint64_t valuesize) {
-    node_alloc = new NVMAllocator(nodepath, nodesize);
-    if(node_alloc == nullptr) {
-        assert(0);
-    }
-    value_alloc = new NVMAllocator(valuepath, valuesize);
-    if(value_alloc == nullptr) {
-        delete node_alloc;
-        node_alloc = nullptr;
-        assert(0);
-    } 
-    root = (char *)(new (AllocNode())bpnode());
-}
+// void btree::Initial(const std::string &nodepath, uint64_t nodesize, 
+//             const std::string &valuepath, uint64_t valuesize) {
+//     node_alloc = new NVMAllocator(nodepath, nodesize);
+//     if(node_alloc == nullptr) {
+//         assert(0);
+//     }
+//     value_alloc = new NVMAllocator(valuepath, valuesize);
+//     if(value_alloc == nullptr) {
+//         delete node_alloc;
+//         node_alloc = nullptr;
+//         assert(0);
+//     } 
+//     root = (char *)(new (AllocNode())bpnode());
+// }
 
 char *btree::AllocNode() {
     if(node_alloc ==  nullptr) {
@@ -700,7 +700,7 @@ void btree::setNewRoot(char *new_root) {
     ++height;
 }
 
-const std::string btree::btree_search(entry_key_t key) {
+char *btree::btree_search(entry_key_t key) {
     bpnode* p = (bpnode*)root;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -720,15 +720,11 @@ const std::string btree::btree_search(entry_key_t key) {
         return "";
     }
 
-    return string((char *)t, NVM_ValueSize);
+    return (char *)t;
 }
 
 // insert the key in the leaf node
-void btree::btree_insert(entry_key_t key, const std::string &value) { //need to be string
-    bpnode* p = (bpnode*)root;
-    char *pvalue = value_alloc->Allocate(value.size());
-    pmem_memcpy_persist(pvalue, value.c_str(), value.size());
-
+void btree::btree_insert(entry_key_t key, const char *pvalue) { //need to be string
     while(p->hdr.leftmost_ptr != NULL) {
         p = (bpnode*)p->linear_search(key);
     }
@@ -847,11 +843,11 @@ void btree::printAll(){
     do {
         bpnode *sibling = leftmost;
         while(sibling) {
-        if(sibling->hdr.level == 0) {
-            total_keys += sibling->hdr.last_index + 1;
-        }
-        sibling->print();
-        sibling = sibling->hdr.sibling_ptr;
+            if(sibling->hdr.level == 0) {
+                total_keys += sibling->hdr.last_index + 1;
+            }
+            sibling->print();
+            sibling = sibling->hdr.sibling_ptr;
         }
         printf("-----------------------------------------\n");
         leftmost = leftmost->hdr.leftmost_ptr;
