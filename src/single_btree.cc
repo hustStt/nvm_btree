@@ -263,17 +263,17 @@ void btree::btree_search_range
   }
 }
 
-void btree::btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size) {
+void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size) {
     bpnode *p = (bpnode *)root;
-    
+
     while(p) {
         if(p->hdr.leftmost_ptr != NULL) {
         // The current bpnode is internal
-        p = (bpnode *)p->linear_search(min);
+            p = (bpnode *)p->linear_search(min);
         }
         else {
         // Found a leaf
-        p->linear_search_range(min, max, values, size);
+            p->linear_search_range(min, max, values, size);
 
         break;
         }
