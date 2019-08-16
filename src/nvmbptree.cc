@@ -655,7 +655,7 @@ void bpnode::printAll() {
  * class btree
  */
 btree::btree(){
-    root = new (AllocNode())bpnode();
+    root = (char*)new (AllocNode())bpnode();
     // root = (char*)new bpnode();
     // node_alloc = nullptr;
     // value_alloc = nullptr;
