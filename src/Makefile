@@ -1,6 +1,6 @@
 CXX = g++
 LDFLAGS = -pthread -lpmemobj -lpmem
-DEFS = #-DSINGLE_BTREE
+DEFS = -DSINGLE_BTREE
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
 CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
