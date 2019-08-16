@@ -49,7 +49,7 @@ class btree{
     ~btree();
     char *AllocNode();
     void setNewRoot(char *);
-    void btree_insert(entry_key_t, const char *value);
+    void btree_insert(entry_key_t, char *value);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);

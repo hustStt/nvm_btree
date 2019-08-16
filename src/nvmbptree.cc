@@ -655,7 +655,7 @@ void bpnode::printAll() {
  * class btree
  */
 btree::btree(){
-    root = new (bt->AllocNode())bpnode();
+    root = new (AllocNode())bpnode();
     // root = (char*)new bpnode();
     // node_alloc = nullptr;
     // value_alloc = nullptr;
@@ -717,14 +717,14 @@ char *btree::btree_search(entry_key_t key) {
 
     if(!t) {
         printf("NOT FOUND %lu\n", key);
-        return "";
+        return NULL;
     }
 
     return (char *)t;
 }
 
 // insert the key in the leaf node
-void btree::btree_insert(entry_key_t key, const char *pvalue) { //need to be string
+void btree::btree_insert(entry_key_t key, char *pvalue) { //need to be string
     bpnode* p = (bpnode*)root;
 
     while(p->hdr.leftmost_ptr != NULL) {
