@@ -105,7 +105,9 @@ class btree{
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, page **);
     char *btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
+    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void printAll();
+    void PrintInfo();
 
     friend class page;
 };
@@ -996,6 +998,10 @@ void btree::btree_search_range
   }
 }
 
+void btree::btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size) {
+
+}
+
 void btree::printAll(){
   int total_keys = 0;
   page *leftmost = (page *)root;
@@ -1016,4 +1022,11 @@ void btree::printAll(){
   }
 
   printf("total number of keys: %d\n", total_keys);
+}
+
+void btree::PrintInfo() {
+    printf("This is a b+ tree.\n");
+    printf("Node size is %lu, M path is %d.\n", sizeof(bpnode), cardinality);
+    printf("Tree height is %d.\n", height);
+
 }
