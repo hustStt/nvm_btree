@@ -168,11 +168,11 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
     bt->PrintInfo();
 }
 
-const uint64_t PutOps = 2000000;
-const uint64_t GetOps = 100000;
-const uint64_t DeleteOps = 100000;
-const uint64_t ScanOps = 1000;
-const uint64_t ScanCount = 100;
+// const uint64_t PutOps = 2000000;
+// const uint64_t GetOps = 100000;
+// const uint64_t DeleteOps = 100000;
+// const uint64_t ScanOps = 1000;
+// const uint64_t ScanCount = 100;
 
 void motivationtest(NVMBtree *bt) {
     uint64_t i;

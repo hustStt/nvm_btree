@@ -17,6 +17,13 @@ const int NVM_KeyBuf = NVM_KeySize + NVM_PointSize;
 const int EntryInterval = 128;
 const double Double1 = 1.0;
 // Statistic stats;
+
+const uint64_t PutOps = 200000000;
+const uint64_t GetOps = 1000000;
+const uint64_t DeleteOps = 1000000;
+const uint64_t ScanOps = 100000;
+const uint64_t ScanCount = 1000;
+
 static inline int KeyCompare(const void *key1, const void *key2) {
     return memcmp(key1, key2, NVM_KeySize);
 }
