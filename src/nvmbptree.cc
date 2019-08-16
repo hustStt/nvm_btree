@@ -758,14 +758,14 @@ void btree::btree_delete(entry_key_t key) {
         p = (bpnode*) p->linear_search(key);
     }
 
-    bpnode *t;
+    bpnode *t = NULL;
     while((t = (bpnode *)p->linear_search(key)) == p->hdr.sibling_ptr) {
         p = t;
         if(!p)
             break;
     }
 
-    if(p) {
+    if(!t && p) {  //找到key-value
         if(!p->remove(this, key)) {
             btree_delete(key);
         }
