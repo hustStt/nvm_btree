@@ -926,7 +926,7 @@ void btree::btree_delete(entry_key_t key) {
       break;
   }
 
-  if(p) {
+  if(p && t) {
     if(!p->remove(this, key)) {
       btree_delete(key);
     }
