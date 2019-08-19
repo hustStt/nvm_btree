@@ -295,6 +295,7 @@ class bpnode{
               clflush((char *)&(bt->root), sizeof(char *));
 
               hdr.is_deleted = 1;
+              clflush((char *)&(hdr.is_deleted), sizeof(uint8_t));
             }
           }
 
