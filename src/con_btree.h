@@ -252,6 +252,7 @@ class bpnode{
 
       if(shift) {
         --hdr.last_index;
+        clflush((char *)&(hdr.last_index), sizeof(int16_t));
       }
       return shift;
     }
@@ -578,6 +579,7 @@ class bpnode{
 
         if(update_last_index) {
           hdr.last_index = *num_entries;
+          clflush((char *)&(hdr.last_index), sizeof(int16_t));
         }
         ++(*num_entries);
       }
