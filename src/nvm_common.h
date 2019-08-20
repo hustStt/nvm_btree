@@ -11,14 +11,14 @@
 
 const int NVM_NodeSize = 256;
 const int NVM_KeySize = 8;
-const int NVM_ValueSize = 1024;
+const int NVM_ValueSize = 256;
 const int NVM_PointSize = 8;
 const int NVM_KeyBuf = NVM_KeySize + NVM_PointSize;
 const int EntryInterval = 128;
 const double Double1 = 1.0;
 // Statistic stats;
 
-const uint64_t PutOps = 200000000;
+const uint64_t PutOps = 400000000;
 const uint64_t GetOps = 1000000;
 const uint64_t DeleteOps = 1000000;
 const uint64_t ScanOps = 100000;

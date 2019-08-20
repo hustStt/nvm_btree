@@ -205,6 +205,30 @@ void motivationtest(NVMBtree *bt) {
     printf("Insert test finished\n");
     nvm_print(i-1);
 
+    start_time = get_now_micros();
+    for (i = 1; i <= GetOps; i++) {
+        auto key = rnd_insert.Next() & ((1ULL << 40) - 1);
+        stats.start();
+        bt->Insert(key, value);
+        stats.end();
+        stats.add_put();
+
+        if ((i % 1000) == 0) {
+            cout<<"Put_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
+
+        if(bt->StorageIsFull()) {
+            break;
+        }
+    }
+    stats.clear_period();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Last_Insert test finished\n");
+    nvm_print(i-1);
+
     //* 随机读测试
     rocksdb::Random64 rnd_get(0xdeadbeef); 
     start_time = get_now_micros();
