@@ -863,5 +863,5 @@ class bpnode{
 };
 
 static inline bpnode* NewBpnode() {
-  return bpnode::new bpnode();
+  return bpnode::operator new bpnode();
 }
