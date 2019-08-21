@@ -194,6 +194,10 @@ class bpnode{
       return ret;
     }
 
+    uint32_t GetLevel() {
+      return hdr.level;
+    }
+
     void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size);
     inline int count() {
       uint8_t previous_switch_counter;
@@ -953,5 +957,6 @@ class bpnode{
 };
 
 static inline bpnode* NewBpnode() {
-  return bpnode::new bpnode();
+  char *mem = node_alloc->Allocate(sizeof(bpnode));
+  return new (mem) bpnode();
 }

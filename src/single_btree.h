@@ -863,5 +863,6 @@ class bpnode{
 };
 
 static inline bpnode* NewBpnode() {
-  return bpnode::operator new bpnode();
+  char *mem = node_alloc->Allocate(sizeof(bpnode));
+  return new (mem) bpnode();
 }
