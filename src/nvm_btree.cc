@@ -33,6 +33,7 @@ NVMBtree::NVMBtree() {
     if(!bt) {
         assert(0);
     }
+    btree tmpbtree;
 }
 
 NVMBtree::~NVMBtree() {

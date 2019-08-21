@@ -117,6 +117,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
 
 btree::btree(){
   root = (char*)new bpnode();
+  print_log(LV_DEBUG, "root is %p", root);
   height = 1;
 }
 
