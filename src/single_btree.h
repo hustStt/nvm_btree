@@ -98,6 +98,7 @@ class btree{
 
   public:
     btree();
+    btree(bpnode *root);
     void setNewRoot(char *);
     void btree_insert(entry_key_t, char*);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
@@ -186,6 +187,10 @@ class bpnode{
     //   posix_memalign(&ret,64,size);
       alloc_memalign(&ret, 64, size);
       return ret;
+    }
+
+    uint32_t GetLevel() {
+      return hdr.level;
     }
 
     void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size);
@@ -856,3 +861,7 @@ class bpnode{
       }
     }
 };
+
+static inline bpnode* NewBpnode() {
+  return bpnode::new bpnode();
+}

@@ -121,6 +121,17 @@ btree::btree(){
   height = 1;
 }
 
+btree::btree(bpnode *root_) {
+    if(root_ == nullptr) {
+        root = (char*)new bpnode();
+        height = 1;
+    } else {
+        root = root_;
+        height = root_->GetLevel() + 1;
+    }
+    print_log(LV_DEBUG, "root is %p, btree is %p, height is %d", root, this, height);
+}
+
 void btree::setNewRoot(char *new_root) {
   this->root = (char*)new_root;
   clflush((char*)&(this->root),sizeof(char*));

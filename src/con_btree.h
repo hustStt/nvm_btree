@@ -99,6 +99,7 @@ class btree{
   public:
 
     btree();
+    btree(bpnode *root);
     void setNewRoot(char *);
     void getNumberOfNodes();
     void btree_insert(entry_key_t, char*);
@@ -950,3 +951,7 @@ class bpnode{
       }
     }
 };
+
+static inline bpnode* NewBpnode() {
+  return bpnode::new bpnode();
+}
