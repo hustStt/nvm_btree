@@ -33,7 +33,7 @@ NVMBtree::NVMBtree() {
     if(!bt) {
         assert(0);
     }
-    bpnode *root = NewBpnode();
+    bpnode *root = NewBpNode();
     btree tmpbtree = btree(root);
 }
 
