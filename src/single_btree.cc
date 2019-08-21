@@ -126,7 +126,7 @@ btree::btree(bpnode *root_) {
         root = (char*)new bpnode();
         height = 1;
     } else {
-        root = root_;
+        root = (char *)root_;
         height = root_->GetLevel() + 1;
     }
     print_log(LV_DEBUG, "root is %p, btree is %p, height is %d", root, this, height);
