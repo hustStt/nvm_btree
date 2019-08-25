@@ -314,6 +314,12 @@ void btree::printAll(){
   printf("total number of keys: %d\n", total_keys);
 }
 
+void btree::CalculateSapce(uint64_t &space) {
+    if(root != nullptr) {
+        ((bpnode*)root)->CalculateSapce(space);
+    }
+}
+
 void btree::PrintInfo() {
     printf("This is a b+ tree.\n");
     printf("Node size is %lu, M path is %d.\n", sizeof(bpnode), cardinality);

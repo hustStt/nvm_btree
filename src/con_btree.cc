@@ -320,6 +320,12 @@ void btree::printAll(){
   pthread_mutex_unlock(&print_mtx);
 }
 
+void btree::CalculateSapce(uint64_t &space) {
+    if(root != nullptr) {
+        ((bpnode*)root)->CalculateSapce(space);
+    }
+}
+
 
 void btree::PrintInfo() {
     printf("This is a b+ tree.\n");

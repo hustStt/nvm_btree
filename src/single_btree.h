@@ -26,7 +26,7 @@
 
 #include "nvm_common.h"
 
-#define PAGESIZE 256
+#define PAGESIZE 512
 
 // #define CPU_FREQ_MHZ (1994)
 // #define DELAY_IN_NS (1000)
@@ -109,6 +109,7 @@ class btree{
     void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void printAll();
     void PrintInfo();
+    void CalculateSapce(uint64_t &space);
 
     friend class bpnode;
 };
@@ -857,6 +858,19 @@ class bpnode{
         ((bpnode*) hdr.leftmost_ptr)->printAll();
         for(int i=0;records[i].ptr != NULL;++i){
           ((bpnode*) records[i].ptr)->printAll();
+        }
+      }
+    }
+
+    void CalculateSapce(uint64_t &space) {
+      if(hdr.leftmost_ptr==NULL) {
+        space += PAGESIZE;
+      }
+      else {
+        space += PAGESIZE;
+        ((bpnode*) hdr.leftmost_ptr)->CalculateSapce(space);
+        for(int i=0;records[i].ptr != NULL;++i){
+          ((bpnode*) records[i].ptr)->CalculateSapce(space);
         }
       }
     }
