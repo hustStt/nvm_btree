@@ -26,7 +26,7 @@
 
 #include "nvm_common.h"
 
-#define PAGESIZE 512
+#define PAGESIZE 256
 
 // #define CPU_FREQ_MHZ (1994)
 // #define DELAY_IN_NS (1000)
