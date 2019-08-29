@@ -183,7 +183,7 @@ void motivationtest(NVMBtree *bt) {
     rocksdb::Random64 rnd_insert(0xdeadbeef);
     start_time = get_now_micros();
     for (i = 1; i <= PutOps; i++) {
-        auto key = rnd_insert.Next() & ((1ULL << 40) - 1);
+        auto key = rnd_insert.Next() ;
         stats.start();
         bt->Insert(key, value);
         stats.end();
@@ -207,7 +207,7 @@ void motivationtest(NVMBtree *bt) {
 
     start_time = get_now_micros();
     for (i = 1; i <= GetOps; i++) {
-        auto key = rnd_insert.Next() & ((1ULL << 40) - 1);
+        auto key = rnd_insert.Next() ;
         stats.start();
         bt->Insert(key, value);
         stats.end();
@@ -233,7 +233,7 @@ void motivationtest(NVMBtree *bt) {
     rocksdb::Random64 rnd_get(0xdeadbeef); 
     start_time = get_now_micros();
     for (i = 1; i <= GetOps; i++) {
-        auto key = rnd_get.Next() & ((1ULL << 40) - 1);
+        auto key = rnd_get.Next() ;
         stats.start();
         const string value = bt->Get(key);
         stats.end();
@@ -257,7 +257,7 @@ void motivationtest(NVMBtree *bt) {
     for(int j = 1; j < 5; j++) {
         start_time = get_now_micros();
         for (i = 1; i <= 100; i++) {
-            uint64_t key = rnd_scan.Next() & ((1ULL << 40) - 1);
+            uint64_t key = rnd_scan.Next() ;
             key >> j;
             int size = scan_count;
             std::vector<std::string> values;
@@ -284,7 +284,7 @@ void motivationtest(NVMBtree *bt) {
     start_time = get_now_micros();
     for (i = 1; i <= DeleteOps; i++) {
 
-        auto key = rnd_delete.Next() & ((1ULL << 40) - 1);
+        auto key = rnd_delete.Next() ;
         stats.start();
         bt->Delete(key);
         stats.end();
