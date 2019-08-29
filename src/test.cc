@@ -253,28 +253,32 @@ void motivationtest(NVMBtree *bt) {
 
     //* Scan测试
     rocksdb::Random64 rnd_scan(0xdeadbeef); 
-    start_time = get_now_micros();
-    for (i = 1; i <= ScanOps; i++) {
-        auto key = rnd_scan.Next() & ((1ULL << 40) - 1);
-        int size = ScanCount;
-        std::vector<std::string> values;
-        stats.start();
-        bt->GetRange(key, MAX_KEY, values, size);
-        stats.end();
-        stats.add_scan();
+    int scan_count = 100;
+    for(int j = 1; j < 5; j++) {
+        start_time = get_now_micros();
+        for (i = 1; i <= 100; i++) {
+            auto key = rnd_scan.Next() & ((1ULL << 40) - 1);
+            key >> j;
+            int size = scan_count;
+            std::vector<std::string> values;
+            stats.start();
+            bt->GetRange(key, MAX_KEY, values, size);
+            stats.end();
+            stats.add_scan();
 
-        if ((i % 100) == 0) {
-            cout<<"Scan_test:"<<i;
-            stats.print_latency();
-            stats.clear_period();
+            if ((i % 100) == 0) {
+                cout<<"Scan_test:"<<i;
+                stats.print_latency();
+                stats.clear_period();
+            }
         }
+        stats.clear_period();
+        end_time = get_now_micros();
+        use_time = end_time - start_time;
+        printf("Scan test finished , scan count %d.\n", scan_count);
+        nvm_print(i-1);
+        scan_count *= 10;
     }
-    stats.clear_period();
-    end_time = get_now_micros();
-    use_time = end_time - start_time;
-    printf("Scan test finished\n");
-    nvm_print(i-1);
-
     //* 删除测试
     rocksdb::Random64 rnd_delete(0xdeadbeef);
     start_time = get_now_micros();
