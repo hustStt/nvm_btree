@@ -257,7 +257,7 @@ void motivationtest(NVMBtree *bt) {
     for(int j = 1; j < 5; j++) {
         start_time = get_now_micros();
         for (i = 1; i <= 100; i++) {
-            auto key = rnd_scan.Next() & ((1ULL << 40) - 1);
+            uint64_t key = rnd_scan.Next() & ((1ULL << 40) - 1);
             key >> j;
             int size = scan_count;
             std::vector<std::string> values;
