@@ -19,6 +19,7 @@ const uint64_t MAX_KEY = ~(0ULL);
 
 int using_existing_data = 0;
 int test_type = 1;
+int thread_num = 1;
 uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
@@ -84,83 +85,156 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
     if(ops > ops_param) {
         ops = ops_param;
     }
+    int loop = 1;
+    uint64_t rand_seed = 0xdeadbeef;
+    vector<future<void>> futures(thread_num);
+
     while(ops <= ops_param){
-        for(uint64_t i = 0; i < ops; i ++) {
-            auto key = rnd_put.Next();
-            snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-            string value(valuebuf, NVM_ValueSize);
-            bt->Insert(key, value);
-        } 
+        rand_seed /= loop;
+        for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+                rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    auto key = rnd_put.Next();
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                    string value(valuebuf, NVM_ValueSize);
+                    // printf("Insert number %ld, key %llx.\n", i, key);
+                    bt->Insert(key, value);
+                }
+                printf("thread %d finished.\n", tid);
+            }, tid, from, to);
+
+            futures.push_back(move(f));
+        }
+        for(auto &&f : futures) {
+            if(f.valid()) {
+                f.get();
+            }
+        }
+        futures.clear();
         printf("******Insert test finished.******\n");
         // bt->Print();
 
-        for(uint64_t i = 0; i < ops; i ++) {
-            // memset(valuebuf, 0, sizeof(valuebuf));
-            auto key = rnd_get.Next();
-            snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-            string value(valuebuf, NVM_ValueSize);
-            const string tmp_value = bt->Get(key);
-            if(tmp_value.size() == 0) {
-                printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
-            } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
-                printf("Error: Get %llx key-value faild.(Expect:%s, but Get %s)\n", key, value.c_str(), tmp_value.c_str());
+        for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+                rocksdb::Random64 rnd_get(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    auto key = rnd_get.Next();
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                    string value(valuebuf, NVM_ValueSize);
+                    const string tmp_value = bt->Get(key);
+                    if(tmp_value.size() == 0) {
+                        printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
+                    } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+                        printf("Error: Get %llx key-value faild.(Expect:%s, but Get %s)\n", key, value.c_str(), tmp_value.c_str());
+                    }
+                } 
+            }, tid, from, to);
+            futures.push_back(move(f));
+        }
+        for(auto &&f : futures) {
+            if(f.valid()) {
+                f.get();
             }
         }
+        futures.clear();
         printf("******Get test finished.*****\n");
 
-        for(i = 0; i < ops ; i ++) {
-            uint64_t key = rnd_scan.Next();
-            if(i % 100 == 0) {
-                std::vector<std::string> values;
-                int getcount = 10;
-                bt->GetRange(key, MAX_KEY, values, getcount);
-                int index = 0;
-                std::vector<std::string>::iterator it;
-                printf("Get rang no. %lld, key is %llx.\n", i, key);
-                for(it=values.begin(); it != values.end(); it++) 
-                {
-                    printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
-                    index ++;
-                }
+        for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+                rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    auto key = rnd_scan.Next();
+                    if(i % 100 == 0) {
+                        std::vector<std::string> values;
+                        int getcount = 10;
+                        bt->GetRange(key, MAX_KEY, values, getcount);
+                        int index = 0;
+                        std::vector<std::string>::iterator it;
+                        printf("Get rang no. %lld, key is %llx.\n", i, key);
+                        for(it=values.begin(); it != values.end(); it++) 
+                        {
+                            printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
+                            index ++;
+                        }
+                    }
+                } 
+            }, tid, from, to);
+            futures.push_back(move(f));
+        }
+        for(auto &&f : futures) {
+            if(f.valid()) {
+                f.get();
             }
         }
+        futures.clear();
         printf("******Get range test finished.******\n");
 
-        for(i = 0; i < ops; i ++) {
-            uint64_t key = rnd_delete.Next();
-            if(i % 5 == 0) {
-                bt->Delete(key);
-            }
-        }
+         for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        for(i = 0; i < ops; i ++) {
-            uint64_t key = rnd_delcheck.Next();
-            snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-            string value(valuebuf, NVM_ValueSize);
-            string tmp_value = bt->Get(key);
-            if(tmp_value.size() == 0) {
-                if(i % 5) {
-                    printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
+            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+                rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    uint64_t key = rnd_delete.Next();
+                    if(i % 5 == 0) {
+                        bt->Delete(key);
+                    }
                 }
-            } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
-                printf("Error: Get no. %lld key %llx key-value faild.(Expect:%s, but Get %s)\n", i, key, value.c_str(), tmp_value.c_str());
+                rocksdb::Random64 rnd_delcheck(rand_seed * (tid + 1));
+                for(uint64_t i = from; i < to; i ++) {
+                    uint64_t key = rnd_delcheck.Next();
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                    string value(valuebuf, NVM_ValueSize);
+                    string tmp_value = bt->Get(key);
+                    if(tmp_value.size() == 0) {
+                        if(i % 5) {
+                            printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
+                        }
+                    } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+                        printf("Error: Get no. %lld key %llx key-value faild.(Expect:%s, but Get %s)\n", i, key, value.c_str(), tmp_value.c_str());
+                    }
+                }
+            }, tid, from, to);
+
+            futures.push_back(move(f));
+        }
+        for(auto &&f : futures) {
+            if(f.valid()) {
+                f.get();
             }
         }
+        futures.clear();
         printf("******Delete test finished.******\n");
         printf("******Test one loop...\n");
         ops *= 10;
+        loop ++;
     }
-    ops= 1000;
-    if(ops > ops_param) {
-        ops = ops_param;
-    }
-    while(ops <= ops_param) {
-        for(i = 0; i < ops; i ++) {
-            uint64_t key = rnd_delall.Next();
-            bt->Delete(key);
-        }
-        ops *= 10;
-    } 
+    // ops= 1000;
+    // if(ops > ops_param) {
+    //     ops = ops_param;
+    // }
+    // while(ops <= ops_param) {
+    //     for(i = 0; i < ops; i ++) {
+    //         uint64_t key = rnd_delall.Next();
+    //         bt->Delete(key);
+    //     }
+    //     ops *= 10;
+    // } 
     printf("******Delete test finished.******\n");
     printf("******B+ tree function test finished.******\n");
     // bt->printAll();
