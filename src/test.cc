@@ -372,6 +372,7 @@ void motivationtest(NVMBtree *bt) {
             int scan_count = 1000;
             for(uint64_t i = from; i < to; i ++) {
                 int size = scan_count;
+                uint64_t key = rnd_scan.Next();
                 std::vector<std::string> values;
                 bt->GetRange(key, MAX_KEY, values, size);
             }
