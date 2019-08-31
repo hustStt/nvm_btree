@@ -260,8 +260,8 @@ void motivationtest(NVMBtree *bt) {
     string value("value", NVM_ValueSize);
     printf("Value size is %d\n", value.size());
     //* 随机插入测试
-    rocksdb::Random64 rnd_insert(0xdeadbeef);
     uint64_t rand_seed = 0xdeadbeef;
+    vector<future<void>> futures(thread_num);
 
     //*插入初始化数据
     ops = 100000000;
@@ -369,8 +369,9 @@ void motivationtest(NVMBtree *bt) {
         auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
+            int scan_count = 1000;
             for(uint64_t i = from; i < to; i ++) {
-                int size = scan_count = 1000;
+                int size = scan_count;
                 std::vector<std::string> values;
                 bt->GetRange(key, MAX_KEY, values, size);
             }
