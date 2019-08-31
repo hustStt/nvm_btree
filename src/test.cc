@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
 int parse_input(int num, char **para)
 {
-    if(num != 4) {
+    if(num < 4) {
         cout << "input parameter nums incorrect! " << num << endl;
         return -1; 
     }
@@ -64,6 +64,10 @@ int parse_input(int num, char **para)
     using_existing_data = atoi(para[1]);
     test_type = atoi(para[2]);
     ops_num = atoi(para[3]);
+
+    if(num > 4) {
+        thread_num = atoi(para[4]);
+    }
 
     print_log(LV_INFO, "using_existing_data: %d(0:no, 1:yes)", using_existing_data);
     print_log(LV_INFO, "test_type:%d(0:Motivation test, 1:Function test)", test_type);
