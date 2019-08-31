@@ -255,6 +255,177 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
 
 void motivationtest(NVMBtree *bt) {
     uint64_t i;
+    uint64_t ops;
+    Statistic stats;
+    string value("value", NVM_ValueSize);
+    printf("Value size is %d\n", value.size());
+    //* 随机插入测试
+    rocksdb::Random64 rnd_insert(0xdeadbeef);
+    uint64_t rand_seed = 0xdeadbeef;
+
+    //*插入初始化数据
+    ops = 100000000;
+    start_time = get_now_micros();
+    for(int tid = 0; tid < thread_num; tid ++) {
+        uint64_t from = (ops / thread_num) * tid;
+        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+            rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
+            char valuebuf[NVM_ValueSize + 1];
+            for(uint64_t i = from; i < to; i ++) {
+                auto key = rnd_put.Next();
+                snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                string value(valuebuf, NVM_ValueSize);
+                // printf("Insert number %ld, key %llx.\n", i, key);
+                bt->Insert(key, value);
+            }
+            printf("thread %d finished.\n", tid);
+        }, tid, from, to);
+
+        futures.push_back(move(f));
+    }
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    futures.clear();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Initial_insert test finished\n");
+    nvm_print(ops);
+
+    //* 随机写测试
+    ops = 50000000;
+    start_time = get_now_micros();
+    for(int tid = 0; tid < thread_num; tid ++) {
+        uint64_t from = (ops / thread_num) * tid;
+        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+            rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
+            char valuebuf[NVM_ValueSize + 1];
+            for(uint64_t i = from; i < to; i ++) {
+                auto key = rnd_put.Next();
+                snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                string value(valuebuf, NVM_ValueSize);
+                // printf("Insert number %ld, key %llx.\n", i, key);
+                bt->Insert(key, value);
+            }
+            print_log(LV_INFO, "thread %d finished.\n", tid);
+        }, tid, from, to);
+
+        futures.push_back(move(f));
+    }
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    futures.clear();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Insert test finished\n");
+    nvm_print(ops);
+
+    //* 随机读测试
+    ops = 50000000;
+    start_time = get_now_micros();
+    for(int tid = 0; tid < thread_num; tid ++) {
+        uint64_t from = (ops / thread_num) * tid;
+        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+            rocksdb::Random64 rnd_get(rand_seed * (tid + 1));
+            char valuebuf[NVM_ValueSize + 1];
+            for(uint64_t i = from; i < to; i ++) {
+                auto key = rnd_get.Next();
+                const string value = bt->Get(key);
+            }
+            print_log(LV_INFO, "thread %d finished.\n", tid);
+        }, tid, from, to);
+
+        futures.push_back(move(f));
+    }
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    futures.clear();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Get test finished\n");
+    nvm_print(ops);
+
+    //* Scan测试
+    ops = 1000;
+    start_time = get_now_micros();
+    for(int tid = 0; tid < thread_num; tid ++) {
+        uint64_t from = (ops / thread_num) * tid;
+        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+            rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
+            char valuebuf[NVM_ValueSize + 1];
+            for(uint64_t i = from; i < to; i ++) {
+                int size = scan_count = 1000;
+                std::vector<std::string> values;
+                bt->GetRange(key, MAX_KEY, values, size);
+            }
+            print_log(LV_INFO, "thread %d finished.\n", tid);
+        }, tid, from, to);
+
+        futures.push_back(move(f));
+    }
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Scan test finished , scan count %d.\n", 1000);
+    nvm_print(ops);
+
+    //* 删除测试
+    ops = 50000000;
+    start_time = get_now_micros();
+    for(int tid = 0; tid < thread_num; tid ++) {
+        uint64_t from = (ops / thread_num) * tid;
+        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+            rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
+            char valuebuf[NVM_ValueSize + 1];
+            for(uint64_t i = from; i < to; i ++) {
+                auto key = rnd_delete.Next();
+                bt->Delete(key);;
+            }
+            print_log(LV_INFO, "thread %d finished.\n", tid);
+        }, tid, from, to);
+
+        futures.push_back(move(f));
+    }
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    futures.clear();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Delete test finished\n");
+    nvm_print(ops);
+
+    bt->PrintStorage();
+    bt->PrintInfo();
+    print_log(LV_INFO, "end!");
+}
+
+void single_thread_motivationtest(NVMBtree *bt) {
+    uint64_t i;
     Statistic stats;
     string value("value", NVM_ValueSize);
     printf("Value size is %d\n", value.size());
