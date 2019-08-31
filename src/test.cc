@@ -70,8 +70,9 @@ int parse_input(int num, char **para)
     }
 
     print_log(LV_INFO, "using_existing_data: %d(0:no, 1:yes)", using_existing_data);
-    print_log(LV_INFO, "test_type:%d(0:Motivation test, 1:Function test)", test_type);
-    print_log(LV_INFO, "ops_num:%llu", ops_num);
+    print_log(LV_INFO, "test_type: %d(0:Motivation test, 1:Function test)", test_type);
+    print_log(LV_INFO, "ops_num: %llu", ops_num);
+    print_log(LV_INFO, "thread number: %d", thread_num);
     return 0;
 }
 
