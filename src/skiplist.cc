@@ -427,7 +427,12 @@
 
     void SkipList::GetRange(const std::string& key1, const std::string& key2, std::vector<std::string> &values, int &size) {
         int findsize = 0;
-        skipListDynamicQuery(key1);
+
+        // skipListDynamicQuery(key1);
+        NVMSkipNode *prev_[GetMaxHeight()];
+        // 从头开始遍历查找
+        FindLessThan(key1, prev_);
+
         if(prev_[0] == nullptr) {
             size = 0;
             return;
