@@ -110,5 +110,7 @@ class SkipList {
 
         char *skipListDynamicQuery(const std::string &key);
 
+        char *skipListStaticQuery(const std::string &key);
+
         void skipListDynamicDelete(const std::string& key);
     };

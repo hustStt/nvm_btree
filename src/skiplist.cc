@@ -246,10 +246,23 @@
         return nullptr;
     }
 
+    char *SkipList::skipListStaticQuery(const std::string &key) {
+        stats.add_tree_level(GetMaxHeight());
+        NVMSkipNode *prev_[GetMaxHeight()];
+
+        // 从头开始遍历查找
+        FindLessThan(key, prev_);
+        if(prev_[0]->Next(0) != nullptr && CompareKeyAndNode(key, prev_[0]->Next(0)) == 0) { // find the key 
+            return prev_[0]->Next(0)->key_ + NVM_KeySize;
+        } else {
+            return nullptr;
+        }
+    }
+
     string SkipList::Get(const std::string &param_key) {
         char *pvalue;
         stats.start();
-        if((pvalue = skipListDynamicQuery(param_key)) == nullptr) {
+        if((pvalue = skipListStaticQuery(param_key)) == nullptr) {
             return "";
         } else {
             uint64_t value_point;
