@@ -86,7 +86,7 @@ void function_test(NVMSkipList *slist, uint64_t ops_param) {
     rocksdb::Random64 rnd_delete(0xdeadbeef);
     rocksdb::Random64 rnd_delcheck(0xdeadbeef);
     rocksdb::Random64 rnd_delall(0xdeadbeef);
-    printf("******B+ tree function test start.******\n");
+    printf("******Skip-List function test start.******\n");
     uint64_t ops= 1000;
     if(ops > ops_param) {
         ops = ops_param;
@@ -123,7 +123,7 @@ void function_test(NVMSkipList *slist, uint64_t ops_param) {
         }
         futures.clear();
         printf("******Insert test finished.******\n");
-        // slist->Print();
+        slist->Print();
 
         for(int tid = 0; tid < thread_num; tid ++) {
             uint64_t from = (ops / thread_num) * tid;

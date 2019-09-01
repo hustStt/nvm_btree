@@ -83,7 +83,9 @@ public:
     }
 
     void Print() {
-
+        if(slist) {
+            slist->Print();
+        }
     }
 
     void PrintInfo() {
