@@ -83,3 +83,15 @@ private:
     std::mutex mut;
     char* cur_index_;
 };
+
+extern NVMAllocator *node_alloc;
+extern NVMAllocator *value_alloc;
+
+int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 
+                uint64_t valuesize);
+void AllocatorExit();
+
+inline void clflush(char *data, int len)
+{
+    pmem_persist(data, len);
+}

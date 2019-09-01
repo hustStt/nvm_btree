@@ -3,11 +3,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <future>
 
-#include "nvm_btree.h"
-#include "random.h"
-#include "debug.h"
-#include "statistic.h"
+#include "nvm_skiplist.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
@@ -24,8 +22,8 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-void function_test(NVMBtree *bt, uint64_t ops);
-void motivationtest(NVMBtree *bt);
+void function_test(NVMSkipList *slist, uint64_t ops);
+void motivationtest(NVMSkipList *slist);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
@@ -40,16 +38,16 @@ int main(int argc, char *argv[]) {
     }
 
 
-    NVMBtree *bt = new NVMBtree();
+    NVMSkipList *slist = new NVMSkipList();
 
-    // bt->PrintInfo();
+    // slist->PrintInfo();
     if(test_type == 0) {
-        motivationtest(bt);
+        motivationtest(slist);
     } else if(test_type == 1) {
-        function_test(bt, ops_num);
+        function_test(slist, ops_num);
     }
 
-    delete bt;
+    delete slist;
     AllocatorExit();
     return 0;
 }
@@ -76,7 +74,7 @@ int parse_input(int num, char **para)
     return 0;
 }
 
-void function_test(NVMBtree *bt, uint64_t ops_param) {
+void function_test(NVMSkipList *slist, uint64_t ops_param) {
     uint64_t i = 0;
     char valuebuf[NVM_ValueSize + 1];
     rocksdb::Random64 rnd_put(0xdeadbeef);
@@ -100,7 +98,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
             uint64_t from = (ops / thread_num) * tid;
             uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+            auto f = async(launch::async, [&slist, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
                 rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
                 char valuebuf[NVM_ValueSize + 1];
                 for(uint64_t i = from; i < to; i ++) {
@@ -108,7 +106,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
                     snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                     string value(valuebuf, NVM_ValueSize);
                     // printf("Insert number %ld, key %llx.\n", i, key);
-                    bt->Insert(key, value);
+                    slist->Insert(key, value);
                 }
                 printf("thread %d finished.\n", tid);
             }, tid, from, to);
@@ -122,20 +120,20 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
         }
         futures.clear();
         printf("******Insert test finished.******\n");
-        // bt->Print();
+        // slist->Print();
 
         for(int tid = 0; tid < thread_num; tid ++) {
             uint64_t from = (ops / thread_num) * tid;
             uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+            auto f = async(launch::async, [&slist, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
                 rocksdb::Random64 rnd_get(rand_seed * (tid + 1));
                 char valuebuf[NVM_ValueSize + 1];
                 for(uint64_t i = from; i < to; i ++) {
                     auto key = rnd_get.Next();
                     snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                     string value(valuebuf, NVM_ValueSize);
-                    const string tmp_value = bt->Get(key);
+                    const string tmp_value = slist->Get(key);
                     if(tmp_value.size() == 0) {
                         printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
                     } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
@@ -157,7 +155,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
             uint64_t from = (ops / thread_num) * tid;
             uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+            auto f = async(launch::async, [&slist, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
                 rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
                 char valuebuf[NVM_ValueSize + 1];
                 for(uint64_t i = from; i < to; i ++) {
@@ -165,7 +163,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
                     if(i % 100 == 0) {
                         std::vector<std::string> values;
                         int getcount = 10;
-                        bt->GetRange(key, MAX_KEY, values, getcount);
+                        slist->GetRange(key, MAX_KEY, values, getcount);
                         int index = 0;
                         std::vector<std::string>::iterator it;
                         printf("Get rang no. %lld, key is %llx.\n", i, key);
@@ -191,13 +189,13 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
             uint64_t from = (ops / thread_num) * tid;
             uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-            auto f = async(launch::async, [&bt, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
+            auto f = async(launch::async, [&slist, &rand_seed, &ops](int tid, uint64_t from, uint64_t to) {
                 rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
                 char valuebuf[NVM_ValueSize + 1];
                 for(uint64_t i = from; i < to; i ++) {
                     uint64_t key = rnd_delete.Next();
                     if(i % 5 == 0) {
-                        bt->Delete(key);
+                        slist->Delete(key);
                     }
                 }
                 rocksdb::Random64 rnd_delcheck(rand_seed * (tid + 1));
@@ -205,7 +203,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
                     uint64_t key = rnd_delcheck.Next();
                     snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                     string value(valuebuf, NVM_ValueSize);
-                    string tmp_value = bt->Get(key);
+                    string tmp_value = slist->Get(key);
                     if(tmp_value.size() == 0) {
                         if(i % 5) {
                             printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
@@ -236,15 +234,15 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
     // while(ops <= ops_param) {
     //     for(i = 0; i < ops; i ++) {
     //         uint64_t key = rnd_delall.Next();
-    //         bt->Delete(key);
+    //         slist->Delete(key);
     //     }
     //     ops *= 10;
     // } 
     printf("******Delete test finished.******\n");
     printf("******B+ tree function test finished.******\n");
-    // bt->printAll();
-    // bt->Print();
-    bt->PrintInfo();
+    // slist->printAll();
+    // slist->Print();
+    slist->PrintInfo();
 }
 
 // const uint64_t PutOps = 2000000;
@@ -253,7 +251,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
 
-void motivationtest(NVMBtree *bt) {
+void motivationtest(NVMSkipList *slist) {
     uint64_t i;
     uint64_t ops;
     Statistic stats;
@@ -270,7 +268,7 @@ void motivationtest(NVMBtree *bt) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&slist, &rand_seed](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
@@ -278,7 +276,7 @@ void motivationtest(NVMBtree *bt) {
                 snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                 string value(valuebuf, NVM_ValueSize);
                 // printf("Insert number %ld, key %llx.\n", i, key);
-                bt->Insert(key, value);
+                slist->Insert(key, value);
             }
             printf("thread %d finished.\n", tid);
         }, tid, from, to);
@@ -303,7 +301,7 @@ void motivationtest(NVMBtree *bt) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&slist, &rand_seed](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_put(rand_seed * (tid + 1) * 2);
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
@@ -311,7 +309,7 @@ void motivationtest(NVMBtree *bt) {
                 snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                 string value(valuebuf, NVM_ValueSize);
                 // printf("Insert number %ld, key %llx.\n", i, key);
-                bt->Insert(key, value);
+                slist->Insert(key, value);
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -336,12 +334,12 @@ void motivationtest(NVMBtree *bt) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&slist, &rand_seed](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_get(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_get.Next();
-                const string value = bt->Get(key);
+                const string value = slist->Get(key);
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -366,7 +364,7 @@ void motivationtest(NVMBtree *bt) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&slist, &rand_seed](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             int scan_count = 1000;
@@ -374,7 +372,7 @@ void motivationtest(NVMBtree *bt) {
                 int size = scan_count;
                 uint64_t key = rnd_scan.Next();
                 std::vector<std::string> values;
-                bt->GetRange(key, MAX_KEY, values, size);
+                slist->GetRange(key, MAX_KEY, values, size);
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -398,12 +396,12 @@ void motivationtest(NVMBtree *bt) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&slist, &rand_seed](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_delete.Next();
-                bt->Delete(key);;
+                slist->Delete(key);;
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -421,12 +419,12 @@ void motivationtest(NVMBtree *bt) {
     printf("Delete test finished\n");
     nvm_print(ops);
 
-    bt->PrintStorage();
-    bt->PrintInfo();
+    slist->PrintStorage();
+    slist->PrintInfo();
     print_log(LV_INFO, "end!");
 }
 
-void single_thread_motivationtest(NVMBtree *bt) {
+void single_thread_motivationtest(NVMSkipList *slist) {
     uint64_t i;
     Statistic stats;
     string value("value", NVM_ValueSize);
@@ -437,7 +435,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
     for (i = 1; i <= PutOps; i++) {
         auto key = rnd_insert.Next() ;
         stats.start();
-        bt->Insert(key, value);
+        slist->Insert(key, value);
         stats.end();
         stats.add_put();
 
@@ -447,7 +445,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
             stats.clear_period();
         }
 
-        if(bt->StorageIsFull()) {
+        if(slist->StorageIsFull()) {
             break;
         }
     }
@@ -461,7 +459,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
     for (i = 1; i <= GetOps; i++) {
         auto key = rnd_insert.Next() ;
         stats.start();
-        bt->Insert(key, value);
+        slist->Insert(key, value);
         stats.end();
         stats.add_put();
 
@@ -471,7 +469,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
             stats.clear_period();
         }
 
-        if(bt->StorageIsFull()) {
+        if(slist->StorageIsFull()) {
             break;
         }
     }
@@ -487,7 +485,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
     for (i = 1; i <= GetOps; i++) {
         auto key = rnd_get.Next() ;
         stats.start();
-        const string value = bt->Get(key);
+        const string value = slist->Get(key);
         stats.end();
         stats.add_get();
 
@@ -514,7 +512,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
             int size = scan_count;
             std::vector<std::string> values;
             stats.start();
-            bt->GetRange(key, MAX_KEY, values, size);
+            slist->GetRange(key, MAX_KEY, values, size);
             stats.end();
             stats.add_scan();
 
@@ -538,7 +536,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
 
         auto key = rnd_delete.Next() ;
         stats.start();
-        bt->Delete(key);
+        slist->Delete(key);
         stats.end();
         stats.add_delete();
 
@@ -553,8 +551,8 @@ void single_thread_motivationtest(NVMBtree *bt) {
     use_time = end_time - start_time;
     printf("Delete test finished\n");
     nvm_print(i-1);
-    bt->PrintStorage();
-    bt->PrintInfo();
+    slist->PrintStorage();
+    slist->PrintInfo();
     print_log(LV_INFO, "end!");
 }
 

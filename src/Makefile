@@ -10,9 +10,11 @@ MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
 
-SING_LIB_SOURCES = single_btree.cc nvm_btree.cc
+SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
-MULT_LIB_SOURCES = con_btree.cc nvm_btree.cc
+MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
+
+SKIPLIST_LIB_SOURCES = nvm_allocator.cc skiplist.cc nvm_btree.cc
 
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
@@ -23,7 +25,7 @@ LIBRARY = nvm_bptree.a
 .PHONY: clean
 default:  all
 
-all:  clean single_test mult_test
+all:  clean single_test mult_test skiplist
 
 clean: 
 	rm -f $(LIBRARY)
@@ -35,3 +37,6 @@ single_test:
 
 mult_test:
 	$(CXX) $(MULT_CXXFLAGS) test.cc $(MULT_LIB_SOURCES) -o mult_test $(LDFLAGS)
+
+skiplist:
+	$(CXX) $(MULT_CXXFLAGS) test_skiplist.cc $(SKIPLIST_LIB_SOURCES) -o skiplist_test $(LDFLAGS)

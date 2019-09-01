@@ -53,7 +53,3 @@ public:
 private:
     btree *bt;
 };
-
-int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 
-                uint64_t valuesize);
-void AllocatorExit();
