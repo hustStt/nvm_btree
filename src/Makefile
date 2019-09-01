@@ -14,7 +14,7 @@ SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
 MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
 
-SKIPLIST_LIB_SOURCES = nvm_allocator.cc skiplist.cc nvm_btree.cc
+SKIPLIST_LIB_SOURCES = nvm_allocator.cc skiplist.cc
 
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
