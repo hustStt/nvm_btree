@@ -91,7 +91,7 @@ int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &
                 uint64_t valuesize);
 void AllocatorExit();
 
-static inline void clflush(char *data, int len)
-{
-    pmem_persist(data, len);
-}
+// static inline void clflush(char *data, int len)
+// {
+//     pmem_persist(data, len);
+// }
