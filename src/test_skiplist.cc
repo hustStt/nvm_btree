@@ -281,6 +281,9 @@ void motivationtest(NVMSkipList *slist) {
                 // printf("Insert number %ld, key %llx.\n", i, key);
                 slist->Insert(key, value);
             }
+            if(i % 100000 == 0) {
+                print_log(LV_INFO, "Initial %lld ops", i);
+            }
             printf("thread %d finished.\n", tid);
         }, tid, from, to);
 
