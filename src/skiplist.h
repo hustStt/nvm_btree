@@ -7,6 +7,9 @@
 #include <mutex>
 
 #include "nvm_common.h"
+#include "random.h"
+
+using namespace rocksdb;
 
 const int SkipList_NodeSize = 256;
 const int NVM_SkipMaxHeight = (SkipList_NodeSize - NVM_KeyBuf) / NVM_PointSize;
@@ -31,7 +34,7 @@ struct NVMSkipNode {
 };
 
 class SkipList {
-
+    public:
 // explicit SkipList(PersistentAllocator* allocator, int32_t max_height = 12, int32_t branching_factor = 4, size_t key_size = 16 ,uint64_t opt_num = 0, size_t per_1g_num = 0);
         explicit SkipList(int32_t branching_factor = 4);
         ~SkipList() {

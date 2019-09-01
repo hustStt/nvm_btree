@@ -10,6 +10,8 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <vector>
+
 #include <assert.h>
 
 #include "nvm_common.h"

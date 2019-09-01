@@ -6,6 +6,9 @@
 #include <future>
 
 #include "nvm_skiplist.h"
+#include "random.h"
+#include "debug.h"
+#include "statistic.h"
 
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
