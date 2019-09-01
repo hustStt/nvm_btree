@@ -242,7 +242,7 @@ void function_test(NVMSkipList *slist, uint64_t ops_param) {
     //     ops *= 10;
     // } 
     printf("******Delete test finished.******\n");
-    printf("******B+ tree function test finished.******\n");
+    printf("******Skip-List function test finished.******\n");
     // slist->printAll();
     // slist->Print();
     slist->PrintInfo();
