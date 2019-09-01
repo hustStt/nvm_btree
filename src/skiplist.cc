@@ -397,7 +397,7 @@
             while(start != nullptr){
                 uint64_t value_point;
                 memcpy(&value_point, start->key_ + NVM_KeySize, sizeof(uint64_t));
-                printf("\t%010d %s %llx\n", num, start->key_, value_point);
+                printf("\t%010d %llx %llx\n", num, char8toint64(start->key_), value_point);
                 num++;
                 start=start->Next(i);
             }
