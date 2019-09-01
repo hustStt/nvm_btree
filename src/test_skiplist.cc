@@ -123,7 +123,7 @@ void function_test(NVMSkipList *slist, uint64_t ops_param) {
         }
         futures.clear();
         printf("******Insert test finished.******\n");
-        slist->Print();
+        // slist->Print();
 
         for(int tid = 0; tid < thread_num; tid ++) {
             uint64_t from = (ops / thread_num) * tid;
