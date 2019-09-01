@@ -280,7 +280,7 @@ void motivationtest(NVMSkipList *slist) {
                 string value(valuebuf, NVM_ValueSize);
                 // printf("Insert number %ld, key %llx.\n", i, key);
                 slist->Insert(key, value);
-                if(i % 100000 == 0) {
+                if(i % 1000 == 0) {
                     print_log(LV_INFO, "Initial %lld ops", i);
                 }
             }
