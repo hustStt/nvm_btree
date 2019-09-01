@@ -147,7 +147,7 @@
         stats.add_tree_level(GetMaxHeight());
         char keybuf[NVM_KeyBuf + 1];
         stats.start();
-        char *pvalue = SkipValueAllocator_->Allocate(value.size());
+        char *pvalue = value_alloc->Allocate(value.size());
         uint64_t vpoint = (uint64_t)pvalue;
         pmem_memcpy_persist(pvalue, value.c_str(), value.size());
         memcpy(keybuf, param_key.c_str(), param_key.size());
@@ -429,7 +429,7 @@
                 break;
             }
             // string value = GetValue(start->key_ + NVM_KeySize);
-            values.push_back(GetValue(start->key_ + NVM_KeySize););
+            values.push_back(GetValue(start->key_ + NVM_KeySize));
             findsize ++;
             start = start->Next(0);
         }
@@ -457,6 +457,6 @@
     }
 
     void SkipList::PrintStatistic() {
-        stats.print_statinfo();
+        // stats.print_statinfo();
         stats.clear_period();
     }

@@ -61,6 +61,7 @@ public:
             std::shared_lock<std::shared_timed_mutex> ReadLock(share_mut);
             return slist->Get(string(key_, NVM_KeyBuf));
         }
+        return "";
     }
 
     void GetRange(unsigned long key1, unsigned long key2, std::vector<std::string> &values, int &size) {

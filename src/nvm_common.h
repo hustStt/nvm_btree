@@ -4,6 +4,7 @@
 #include <string>
 #include <libpmem.h>
 #include <sys/time.h>
+#include <assert.h>
 
 #include "nvm_allocator.h"
 #include "statistic.h"
