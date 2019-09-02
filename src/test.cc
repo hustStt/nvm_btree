@@ -280,7 +280,8 @@ void motivationtest(NVMBtree *bt) {
                 // printf("Insert number %ld, key %llx.\n", i, key);
                 bt->Insert(key, value);
                 if ((i % 40000000) == 0) {
-                    nbt->PrintStorage();
+                    printf("Number %ld", i / 40000000);
+                    bt->PrintStorage();
                 }
             }
             printf("thread %d finished.\n", tid);
