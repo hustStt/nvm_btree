@@ -6,3 +6,9 @@ all:
 clean:
 	rm -rf test
 	make clean -C src
+
+install:
+	make -C src $@
+
+uninstall:
+	make -C src $@
