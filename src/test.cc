@@ -298,7 +298,6 @@ void motivationtest(NVMBtree *bt) {
     use_time = end_time - start_time;
     printf("Initial_insert test finished\n");
     nvm_print(ops);
-    return ;
 
     //* 随机写测试
     ops = 50000000;
