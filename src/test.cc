@@ -269,8 +269,7 @@ void motivationtest(NVMBtree *bt) {
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
-
-        {
+        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to){
             rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
@@ -285,16 +284,16 @@ void motivationtest(NVMBtree *bt) {
                 }
             }
             printf("thread %d finished.\n", tid);
-        };
+        }, tid, from, to);
 
-        // futures.push_back(move(f));
+        futures.push_back(move(f));
     }
-    // for(auto &&f : futures) {
-    //     if(f.valid()) {
-    //         f.get();
-    //     }
-    // }
-    // futures.clear();
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    futures.clear();
     end_time = get_now_micros();
     use_time = end_time - start_time;
     printf("Initial_insert test finished\n");
