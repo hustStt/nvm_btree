@@ -32,19 +32,26 @@ public:
         pmem_unmap(pmemaddr_, mapped_len_);
     }
 
-    char* Allocate(size_t bytes) {
-        mut.lock();
-        char *result = cur_index_;
-        uint64_t allocated = (bytes + NVMSectorSize - 1) & (~(NVMSectorSize - 1));  //保证最小按照NVMSectorSize分配
-        cur_index_ += allocated;
-        memused += allocated;
-        if(memused > capacity_) {
-            printf("%s: NVM full\n", __FUNCTION__);
-            result = nullptr;
-        }
-        mut.unlock();
-        return result;
+     char* Allocate(size_t bytes, uint64_t aligns = 256) {
+            std::lock_guard<std::mutex> lk(mut);
+            uint64_t start_offset = (uint64_t)cur_index_;
+            uint64_t allocated = (bytes + aligns - 1) & (~(aligns - 1));  //保证最小按照aligns分配
+            start_offset = (start_offset + aligns - 1) & (~(aligns - 1)); // 按照aligns对齐
+            memused = start_offset + allocated - (uint64_t)pmemaddr_;
+            cur_index_ = (char *)(start_offset + allocated);
+            return (char *)start_offset;
+
+            // char *result = cur_index_;
+            // uint64_t allocated = (bytes + NVMSectorSize - 1) & (~(NVMSectorSize - 1));  //保证最小按照NVMSectorSize分配
+            // cur_index_ += allocated;
+            // memused += allocated;
+            // if(memused > capacity_) {
+            //     printf("%s: NVM full\n", __FUNCTION__);
+            //     return nullptr;
+            // }
+            // return result;
     }
+
 
     char* AllocateAligned(size_t bytes, size_t huge_page_size = 0) {
         mut.lock();

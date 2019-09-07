@@ -28,7 +28,7 @@
 
     NVMSkipNode* SkipList::NewNode(const std::string &key, int height) {
         assert(height <= NVM_SkipMaxHeight);
-        char* mem = node_alloc->Allocate(sizeof(NVMSkipNode) + height * (sizeof(NVMSkipNode *)));
+        char* mem = node_alloc->Allocate(sizeof(NVMSkipNode) + height * (sizeof(NVMSkipNode *)), 8);
         return new (mem) NVMSkipNode(key);
     }
 
