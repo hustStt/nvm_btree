@@ -110,7 +110,7 @@ public:
     uint64_t m_key[NTMAX_WAY];
     LeafNode *LNs[NTMAX_WAY + 1];
     std::mutex mut;
-    
+
 public:
     PLeafNode() {
         n_keys = 0;
@@ -168,8 +168,18 @@ public:
         return n_keys;
     }
 
+
+
     bool insert(uint64_t key, LeafNode *child) {
         int d = binary_search(key);
+
+        for(int i = 0; i < n_keys -1; i++) {
+            if(m_key[i] > m_key[i + 1]) {
+                print_log("Unexcept key greater than next.");
+                Print();
+                assert(0);
+            }
+        }
         if (m_key[d] == key)
         {
             assert(d >= n_keys - 1);
@@ -183,6 +193,14 @@ public:
         LNs[d + 1] = child;
         assert(d + 1 < NTMAX_WAY);
         n_keys ++;
+        
+        for(int i = 0; i < n_keys -1; i++) {
+            if(m_key[i] > m_key[i + 1]) {
+                print_log("Unexcept key greater than next.");
+                Print();
+                assert(0);
+            }
+        }
         if(n_keys == NTMAX_WAY) {
             return true;
         }
