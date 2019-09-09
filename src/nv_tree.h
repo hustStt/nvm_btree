@@ -270,7 +270,13 @@ public:
     }
 
     void CheckKey(int off, uint64_t key) {
-        // if(off == 0)
+       if(off > 0 && m_key[off-1] > key) {
+           print_log(LV_ERR, "Key %16llx less than before %16llx.", key, m_key[off-1]);
+       }
+
+        if(m_key[off] < key) {
+           print_log(LV_ERR, "Key %16llx greater than next %llx.", key, m_key[off]);
+       }
     }
 
     void Print() {
@@ -315,6 +321,7 @@ public:
         int id = 0;
         while(id < MaxIndex) {
             pos = iNode[id].binary_search(key);
+            iNode[id].CheckKey(pos, key);
             id = id * IndexWay + 1 + pos;
         }
         id -= MaxIndex; 
