@@ -269,6 +269,16 @@ public:
         n_keys = n;
     }
 
+    void CheckKey(int off, uint64_t key) {
+        // if(off == 0)
+    }
+
+    void Print() {
+        for(int i = 0; i < n_keys; i ++) {
+            print_log(LV_INFO, "Index node key: %16llx", m_key[i]);
+        }
+    }
+
 } __attribute__((aligned(64)));
 
 class NVTree {
@@ -460,7 +470,10 @@ public:
 
         bool exists = false;
 
-        assert(parent->Get_MaxKey() > key);
+       if(parent->Get_MaxKey() < key) {
+           PrintIndex();
+           assert(0);
+       }
 
         for(int i = entry - 1; i >= 0; i--) {
             if(leaf->elements[i].key == key) {
@@ -521,6 +534,19 @@ public:
             }
         }
         return nullptr;
+    }
+
+    void PrintIndex() {
+        int level_start = 0;
+        int level_count = 1;
+        for(int i =0; i < level; i ++) {
+            print_log(LV_INFO, "Index level %d print.", i);
+            for(j = 0; j < level_count; j ++) {
+                iNode[level_start + j].Print();
+            }
+            level_start += level_count;
+            level_count *= IndexWay;
+        }
     }
 
     void Print() {
