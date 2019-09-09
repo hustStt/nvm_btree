@@ -175,7 +175,7 @@ public:
 
         for(int i = 0; i < n_keys -1; i++) {
             if(m_key[i] > m_key[i + 1]) {
-                print_log(LV_DEBUG, "Unexcept key greater than next.");
+                print_log(LV_DEBUG, "Unexcept key greater than next key is %llx.", key);
                 Print();
                 assert(0);
             }
@@ -196,7 +196,7 @@ public:
 
         for(int i = 0; i < n_keys -1; i++) {
             if(m_key[i] > m_key[i + 1]) {
-                print_log(LV_DEBUG, "Unexcept key greater than next.");
+                print_log(LV_DEBUG, "Unexcept key greater than next key is %llx. d is %d.", key, d);
                 Print();
                 assert(0);
             }
