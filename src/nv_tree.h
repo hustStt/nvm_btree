@@ -539,9 +539,9 @@ public:
     void PrintIndex() {
         int level_start = 0;
         int level_count = 1;
-        for(int i =0; i < level; i ++) {
+        for(int i =0; i < indexlevel; i ++) {
             print_log(LV_INFO, "Index level %d print.", i);
-            for(j = 0; j < level_count; j ++) {
+            for(int j = 0; j < level_count; j ++) {
                 iNode[level_start + j].Print();
             }
             level_start += level_count;
