@@ -36,7 +36,7 @@ struct Element {
 };
 
 const int NV_NodeSize = 256;
-const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex))) / (sizeof(uint64_t) + sizeof(void *));
+const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex)) / (sizeof(uint64_t) + sizeof(void *));
 const int IndexWay = (NV_NodeSize - 2) / sizeof(uint64_t);
 const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex)) / sizeof(Element);
 
