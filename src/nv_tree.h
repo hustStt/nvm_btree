@@ -83,7 +83,7 @@ public:
             if(max_key == 0) {
                 max_key = elements[j].key;
             }
-            else if(KeyCompare(max_key, elements[j].key) < 0) {
+            else if(max_key < elements[j].key) {
                 max_key = elements[j].key;
             }
         }
@@ -309,10 +309,10 @@ public:
         }
         assert(interim_pCount != lCount);
         int interim_MaxIndex = index_start[level-1] + index_count[level-1];
-        IndexNode *interim_iNode = (PLeafNode *)node_alloc->Allocate(sizeof(PLeafNode) * interim_MaxIndex);
+        IndexNode *interim_iNode = (IndexNode *)node_alloc->Allocate(sizeof(IndexNode) * interim_MaxIndex);
 
         {
-            int i = level - 1 
+            int i = level - 1;
             for(int j = 0; j < index_count[i]; j ++) {
                 int id = index_start[i] + j;
                 IndexNode *tmp_iNode =  interim_iNode + index_start[i] + j;
