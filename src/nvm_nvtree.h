@@ -34,7 +34,7 @@ class NVMNvtree {
         if(nvtree) {
             char *pvalue = value_alloc->Allocate(value.size());
             pmem_memcpy_persist(pvalue, value.c_str(), value.size());
-            nvtree->insert(key, value);
+            nvtree->insert(key, pvalue);
         }
     }
 
@@ -48,12 +48,12 @@ class NVMNvtree {
         if(nvtree) {
             char *pvalue = value_alloc->Allocate(value.size());
             pmem_memcpy_persist(pvalue, value.c_str(), value.size());
-            nvtree->update(key, value);
+            nvtree->update(key, pvalue);
         }
     }
 
     const std::string Get(const unsigned long key) {
-
+        return "";
     }
 
     void GetRange(unsigned long key1, unsigned long key2, std::vector<std::string> &values, int &size) {

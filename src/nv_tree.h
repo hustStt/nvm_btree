@@ -10,11 +10,6 @@
 
 #include "nvm_common.h"
 
-const int NV_NodeSize = 256;
-const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2) / (sizeof(uint64_t) + sizeof(void *));
-const int IndexWay = (NV_NodeSize - 2) / sizeof(uint64_t);
-const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
-
 enum OpFlag {
     OpInsert = 0,
     OpUpdate,
@@ -25,7 +20,7 @@ struct Element {
     uint8_t flag;
     uint64_t key;
     void *value;
-    
+
     uint8_t GetFlag(){
         return flag;
     }
@@ -39,6 +34,11 @@ struct Element {
         key = k;
     }
 };
+
+const int NV_NodeSize = 256;
+const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2) / (sizeof(uint64_t) + sizeof(void *));
+const int IndexWay = (NV_NodeSize - 2) / sizeof(uint64_t);
+const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
 
 class PLeafNode;
 class IndexNode;
@@ -77,10 +77,10 @@ public:
         return nElements == LeafMaxEntry;
     }
 
-    char *find_max_key() {
-        char *max_key = nullptr;
+    uint64_t find_max_key() {
+        uint64_t max_key = 0;
         for(int j = 0; j < nElements; j ++) {
-            if(max_key == nullptr) {
+            if(max_key == 0) {
                 max_key = elements[j].key;
             }
             else if(KeyCompare(max_key, elements[j].key) < 0) {
@@ -197,7 +197,7 @@ public:
         while (l < r)
         {
             int mid = (l + r) / 2;
-            if (keys[mid] >= key)
+            if (m_key[mid] >= key)
             {
                 r = mid;
             }
@@ -263,6 +263,7 @@ public:
 
     PLeafNode *find_pnode(uint64_t key) {
         int pos = 0;
+        int id = 0;
         while(id < MaxIndex) {
             pos = iNode[id].binary_search(key);
             id = id * IndexWay + 1 + pos;
@@ -272,7 +273,7 @@ public:
 
     }
 
-    void find_leaf(const char * &key, int &id, int &pos, PLeafNode *&parent, LeafNode *&leaf) {
+    void find_leaf(uint64_t &key, int &id, int &pos, PLeafNode *&parent, LeafNode *&leaf) {
         parent = find_pnode(key);
 
         pos = parent->binary_search(key);
@@ -307,8 +308,8 @@ public:
             }
         }
         assert(interim_pCount != lCount);
-        int interim_MaxIndex = index_start[j] + index_count[j];
-        IndexNode *interim_iNode = (PLeafNode *)IndexNode->Allocate(sizeof(PLeafNode) * interim_MaxIndex);
+        int interim_MaxIndex = index_start[level-1] + index_count[level-1];
+        IndexNode *interim_iNode = (PLeafNode *)node_alloc->Allocate(sizeof(PLeafNode) * interim_MaxIndex);
 
         {
             int i = level - 1 
@@ -352,7 +353,7 @@ public:
     void generateNextLeaf(LeafNode *leaf, uint64_t &sep)
     {
         // 1. tmp_leaf leaf，创建新的leaf 和 nextleaf。
-        LeafNode *next = new (node->Allocate(sizeof(LeafNode))) LeafNode();
+        LeafNode *next = new (node_alloc->Allocate(sizeof(LeafNode))) LeafNode();
         LeafNode *tmp_leaf = new LeafNode();
         memcpy(tmp_leaf, leaf, sizeof(LeafNode));
         //
@@ -412,7 +413,7 @@ public:
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
 
-        int entry = leaf->n_keys;
+        int entry = leaf->nElements;
 
         bool exists = false;
 
@@ -436,12 +437,12 @@ public:
         leaf->elements[entry].value = value; 
         leaf->elements[entry].flag = flag; 
 
-        leaf->n_keys ++;
+        leaf->nElements ++;
 
-        if(leaf->n_keys == LeafMaxEntry) {
+        if(leaf->nElements == LeafMaxEntry) {
             splitLeafNode(leaf, parent);
         }
-        assert(leaf->n_keys < LeafMaxEntry);
+        assert(leaf->nElements < LeafMaxEntry);
         return true;
     }
 
