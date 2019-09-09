@@ -509,7 +509,7 @@ public:
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
 
-        for(int i = leaf->n_keys - 1; i >= 0; i ++) {
+        for(int i = leaf->nElements - 1; i >= 0; i ++) {
             if(leaf->elements[i].key == key) {
                 if(leaf->elements[i].flag == OpDelete) {
                     return nullptr;

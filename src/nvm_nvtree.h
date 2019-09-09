@@ -54,7 +54,7 @@ class NVMNvtree {
 
     const std::string Get(const unsigned long key) {
         if(nvtree) {
-            char *pvalue = nvtree->get(key);
+            char *pvalue = (char *)nvtree->get(key);
             if(pvalue == nullptr) {
                 return ""; 
             }
