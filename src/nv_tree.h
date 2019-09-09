@@ -258,6 +258,7 @@ class NVTree {
     IndexNode *iNode;
     PLeafNode *pNode;
     int MaxIndex;
+    int indexlevel = 0;
     int pCount;
     int lCount;
 public:
@@ -367,10 +368,11 @@ public:
         
         MaxIndex = interim_MaxIndex;
         iNode = interim_iNode;
+        indexlevel = level;
 
         pCount = interim_pCount;
         pNode = interim_pNode;
-        print_log(LV_DEBUG, "End");
+        print_log(LV_DEBUG, "End. MaxIndex = %d, pCount = %d level = %d.", MaxIndex, pCount, indexlevel);
     }
 
     void generateNextLeaf(LeafNode *leaf, uint64_t &sep)
