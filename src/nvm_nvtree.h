@@ -64,7 +64,9 @@ class NVMNvtree {
     }
 
     void GetRange(unsigned long key1, unsigned long key2, std::vector<std::string> &values, int &size) {
-
+        if(nvtree) {
+            nvtree->scan(key1, key2, values, size);
+        }
     }
 
     void Print() {

@@ -316,15 +316,16 @@ public:
 
     }
 
-    PLeafNode *find_pnode(uint64_t key) {
+    PLeafNode *find_pnode(uint64_t key, int &id) {
         int pos = 0;
-        int id = 0;
+        id = 0;
         while(id < MaxIndex) {
             pos = iNode[id].binary_search(key);
-            iNode[id].CheckKey(pos, key);
+            // iNode[id].CheckKey(pos, key);
             id = id * IndexWay + 1 + pos;
         }
         id -= MaxIndex; 
+        assert(id < pCount);
         return (pNode + id);
 
     }
@@ -430,11 +431,11 @@ public:
         leaf->next = next;
         sep = leaf->elements[split - 1].key;
 
-        uint64_t max_key = leaf->Get_MaxKey();
-        if(sep < max_key) {
-           leaf->Print();
-           assert(0); 
-        }
+        // uint64_t max_key = leaf->Get_MaxKey();
+        // if(sep < max_key) {
+        //    leaf->Print();
+        //    assert(0); 
+        // }
 
 //        std::cout << "Entry " << leaf->nElements << " " << next->nElements << std::endl;
         delete tmp_leaf;
@@ -474,7 +475,8 @@ public:
     }
 
     bool modify(uint64_t key, void * value, uint8_t flag) {
-        PLeafNode *parent = find_pnode(key);
+        int id = 0;
+        PLeafNode *parent = find_pnode(key, id);
 
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
@@ -483,12 +485,12 @@ public:
 
         bool exists = false;
 
-       if(parent->Get_MaxKey() < key) {
-           print_log(LV_DEBUG, "Max key is %16llx, key is %16llx", parent->Get_MaxKey(), key);
-           PrintIndex();
-           Print();
-           assert(0);
-       }
+        // if(parent->Get_MaxKey() < key) {
+        //     print_log(LV_DEBUG, "Max key is %16llx, key is %16llx", parent->Get_MaxKey(), key);
+        //     PrintIndex();
+        //     Print();
+        //     assert(0);
+        // }
 
         for(int i = entry - 1; i >= 0; i--) {
             if(leaf->elements[i].key == key) {
@@ -534,7 +536,8 @@ public:
     }
 
     void *get(uint64_t key) {
-        PLeafNode *parent = find_pnode(key);
+        int id = 0;
+        PLeafNode *parent = find_pnode(key, id);
 
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
@@ -549,6 +552,52 @@ public:
             }
         }
         return nullptr;
+    }
+
+    void scan(uint64_t key1, uint64_t key2, std::vector<string> values, int &size) {
+        int find_size = 0;
+
+        int id = 0;
+        PLeafNode *parent = find_pnode(key, id);
+
+        Element tmps[LeafMaxEntry];
+
+        for(id < pCount) {
+            for(int i = 0; i < parent->n_keys; i++) {
+                LeafNode *leaf = parent->LNs[i];
+                std::map<uint64_t, std::pair<void *, uint8_t>> maps;
+                for (int i = leaf->nElements-1; i >= 0; i--)
+                {
+                    if (maps.find(leaf->elements[i].key) == maps.end())
+                    {
+                        maps.insert(std::make_pair(leaf->elements[i].key,
+                                                std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
+                    }
+                }
+
+                for (auto it : maps)
+                {
+                    if(it.first > key2) {
+                        size = find_size;
+                        return;
+                    } else {
+                        if(it.second.second != OpDelete) {
+                            if(it.first >= key1 && it.second.first != nullptr) {
+                                values.push_back(string(it.second.first, NVM_ValueSize));
+                            }
+                            find_size ++;
+                            if(find_size >= size) {
+                                return ;
+                            }
+
+                        }
+                    }
+                }
+            }
+            id ++;
+            parent ++;
+        }
+        size = find_size;
     }
 
     void PrintIndex() {
