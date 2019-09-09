@@ -455,10 +455,12 @@ public:
         tmp->nElements = 0;
         for (auto it : maps)
         {
-            tmp->elements[tmp->nElements].key = it.first;
-            tmp->elements[tmp->nElements].value = it.second.first;
-            tmp->elements[tmp->nElements].flag = it.second.second;
-            tmp->nElements++;
+            if(it.second.second != OpDelete) {  // 最后一次操作不是 Delete
+                tmp->elements[tmp->nElements].key = it.first;
+                tmp->elements[tmp->nElements].value = it.second.first;
+                tmp->elements[tmp->nElements].flag = it.second.second;
+                tmp->nElements++;
+            }
         }
 
         if (maps.size() > LeafMaxEntry / 2)
@@ -472,6 +474,7 @@ public:
                 rebuild();
             }
         }
+        pmem_persist(tmp, sizeof(LeafNode));
     }
 
     bool modify(uint64_t key, void * value, uint8_t flag) {
@@ -513,6 +516,9 @@ public:
         leaf->elements[entry].flag = flag; 
 
         leaf->nElements ++;
+
+        pmem_persist(&leaf->elements[entry], sizeof(Element));
+        pmem_persist(&leaf->nElements, sizeof(uint16_t));
 
         if(leaf->nElements == LeafMaxEntry) {
             splitLeafNode(leaf, parent);
@@ -581,7 +587,7 @@ public:
                         size = find_size;
                         return;
                     } else {
-                        if(it.second.second != OpDelete) {
+                        if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
                             if(it.first >= key1 && it.second.first != nullptr) {
                                 values.push_back(string(it.second.first, NVM_ValueSize));
                             }
