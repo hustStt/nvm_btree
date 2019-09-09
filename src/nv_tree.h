@@ -77,7 +77,7 @@ public:
         return nElements == LeafMaxEntry;
     }
 
-    uint64_t find_max_key() {
+    uint64_t Get_MaxKey() {
         uint64_t max_key = 0;
         for(int j = 0; j < nElements; j ++) {
             if(max_key == 0) {
@@ -376,7 +376,7 @@ public:
                 IndexNode *tmp_iNode =  interim_iNode + index_start[i] + j;
                 tmp_iNode->n_keys = 0;
                 for(int k = 0; k < IndexWay; k++) {
-                    int pindex = id * IndexWay + k + 1;
+                    int pindex = id * IndexWay + k + 1 - interim_MaxIndex;
                     if(pindex >= interim_pCount) {
                         pindex = interim_pCount -1;
                     }
@@ -430,6 +430,12 @@ public:
         leaf->next = next;
         sep = leaf->elements[split - 1].key;
 
+        uint64_t max_key = leaf->Get_MaxKey();
+        if(sep < max_key) {
+           leaf->Print();
+           assert(0); 
+        }
+
 //        std::cout << "Entry " << leaf->nElements << " " << next->nElements << std::endl;
         delete tmp_leaf;
     }
@@ -478,7 +484,9 @@ public:
         bool exists = false;
 
        if(parent->Get_MaxKey() < key) {
+           print_log(LV_DEBUG, "Max key is %16llx, key is %16llx", parent->Get_MaxKey(), key);
            PrintIndex();
+           Print();
            assert(0);
        }
 
