@@ -21,12 +21,12 @@ struct Element {
     uint64_t key;
     void *value;
 
-    uint8_t GetFlag(){
-        return flag;
-    }
-    void SetFlag(uint8_t f){
-        flag = f;
-    }
+    // uint8_t GetFlag(){
+    //     return flag;
+    // }
+    // void SetFlag(uint8_t f){
+    //     flag = f;
+    // }
     uint64_t GetKey() {
         return key;
     }
@@ -36,9 +36,9 @@ struct Element {
 };
 
 const int NV_NodeSize = 256;
-const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2) / (sizeof(uint64_t) + sizeof(void *));
+const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex))) / (sizeof(uint64_t) + sizeof(void *));
 const int IndexWay = (NV_NodeSize - 2) / sizeof(uint64_t);
-const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
+const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex)) / sizeof(Element);
 
 class PLeafNode;
 class IndexNode;
@@ -48,6 +48,7 @@ public:
     int16_t nElements;
     Element elements[LeafMaxEntry];
     LeafNode* next;
+    std::mutex mut;
 public:
     LeafNode() {
         nElements = 0;
@@ -90,6 +91,14 @@ public:
         return max_key;
     }
 
+    void Print() {
+        uint64_t max_key = 0;
+        for(int j = 0; j < nElements; j ++) {
+            print_log(LV_INFO, "key: %16llx, value %p flag %d.", elements[j].key, 
+                elements[j].value, elements[j].flag);
+        }
+    }
+
     // int DoSth(LeafNode* valid, bool has_right); //1:split,2:replace,3:merge
     // void Split(LeafNode* valid, LeafNode* left, LeafNode* right);
     // void Merge(LeafNode* valid);
@@ -101,6 +110,7 @@ public:
     int16_t n_keys;
     uint64_t m_key[NTMAX_WAY];
     LeafNode *LNs[NTMAX_WAY + 1];
+    std::mutex mut;
 
 public:
     PLeafNode() {
@@ -183,6 +193,16 @@ public:
     void Setn(int16_t n){
         n_keys = n;
     }
+
+    void Print() {
+        for(int i = 0; i < n_keys; i ++) {
+            print_log(LV_INFO, "pnode key: %16llx, leaf node %p", m_key[i], LNs[i]);
+            if(LNs[i]){
+                LNs[i]->Print();
+            }
+        }
+    }
+
 } __attribute__((aligned(64)));
 
 
@@ -231,6 +251,7 @@ public:
     void Setn(int16_t n){
         n_keys = n;
     }
+
 } __attribute__((aligned(64)));
 
 class NVTree {
@@ -461,7 +482,9 @@ public:
     }
 
     void Print() {
-
+        for(int i = 0; i < pCount; i ++) {
+            pNode[i].Print();
+        }
     }
 
     void PrintInfo() {

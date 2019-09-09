@@ -80,7 +80,7 @@ int parse_input(int num, char **para)
 void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
     uint64_t i = 0;
     char valuebuf[NVM_ValueSize + 1];
-    
+
     printf("******Nv-Tree function test start.******\n");
     uint64_t ops= 1000;
     if(ops > ops_param) {
@@ -109,7 +109,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
             }
         }
         printf("******Insert test finished.******\n");
-        // nvtree->Print();
+        nvtree->Print();
 
         // for(int tid = 0; tid < thread_num; tid ++) {
         //     uint64_t from = (ops / thread_num) * tid;
