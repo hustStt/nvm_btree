@@ -4,6 +4,9 @@
 #include <climits>
 #include <future>
 #include <mutex>
+#include <iostream>
+#include <algorithm>
+#include <map>
 
 #include "nvm_common.h"
 
@@ -353,16 +356,16 @@ public:
     void generateNextLeaf(LeafNode *leaf, uint64_t &sep)
     {
         // 1. tmp_leaf leaf，创建新的leaf 和 nextleaf。
-        LeafNode *next = new (alloc_leaf()) LeafNode;
+        LeafNode *next = new (node->Allocate(sizeof(LeafNode))) LeafNode();
         LeafNode *tmp_leaf = new LeafNode();
         memcpy(tmp_leaf, leaf, sizeof(LeafNode));
         //
-        int split = tmp_leaf->entry / 2;
+        int split = tmp_leaf->nElements / 2;
 
-        leaf->persist_entry = leaf->entry = split;
-        next->persist_entry = next->entry = tmp_leaf->entry - split;
+        leaf->nElements = split;
+        next->nElements = tmp_leaf->nElements - split;
 
-        for (int i = 0; i < next->entry; i++)
+        for (int i = 0; i < next->nElements; i++)
         {
             next->elements[i] = tmp_leaf->elements[i + split];
         }
@@ -370,7 +373,7 @@ public:
         leaf->next = next;
         sep = leaf->elements[split - 1].key;
 
-//        std::cout << "Entry " << leaf->entry << " " << next->entry << std::endl;
+//        std::cout << "Entry " << leaf->nElements << " " << next->nElements << std::endl;
         delete tmp_leaf;
     }
 

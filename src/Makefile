@@ -27,7 +27,8 @@ LIBRARY = libnvmbtree.a
 .PHONY: clean
 default:  all
 
-all:  clean single_test mult_test skiplist nvtree
+# all:  clean single_test mult_test skiplist nvtree
+all: clean nvtree
 
 clean: 
 	rm -f $(LIBRARY)
