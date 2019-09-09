@@ -42,12 +42,14 @@ const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
 
 class PLeafNode;
 class IndexNode;
+class NVTree;
 
 class LeafNode {
     int16_t nElements;
     Element elements[LeafMaxEntry];
     LeafNode* next;
 public:
+    friend class NVTree;
     LeafNode() {
         nElements = 0;
         next = nullptr;
@@ -65,6 +67,7 @@ class PLeafNode {
     LeafNode *LNs[NTMAX_WAY + 1];
 
 public:
+    friend class NVTree;
     PLeafNode() {
         n_keys = 0;
     }
@@ -82,6 +85,8 @@ class IndexNode {
     uint64_t m_key[IndexWay];
 
 public:
+    friend class NVTree;
+
     IndexNode() {
         n_keys = 0;
     }
@@ -121,15 +126,15 @@ public:
     }
 
     
-    bool modify(uint64_t key, void * value, uint8_t flag) {
+    bool modify(uint64_t key, void *value, uint8_t flag) {
         return true;
     }
 
-    bool insert(uint64_t key, void * value) {
+    bool insert(uint64_t key, void *value) {
         return modify(key, value, OpInsert);
     }
 
-    bool update(uint64_t key, void * value)
+    bool update(uint64_t key, void *value)
     {
         return modify(key, value, OpUpdate);
     }
