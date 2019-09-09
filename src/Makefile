@@ -45,7 +45,7 @@ skiplist:
 	$(CXX) $(MULT_CXXFLAGS) test_skiplist.cc $(SKIPLIST_LIB_SOURCES) -o skiplist_test $(LDFLAGS)
 
 nvtree:
-	$(CXX) $(MULT_CXXFLAGS) test_nvtree.cc $(NVTREE_LIB_SOURCES) -o skiplist_test $(LDFLAGS)
+	$(CXX) $(MULT_CXXFLAGS) test_nvtree.cc $(NVTREE_LIB_SOURCES) -o nvtree_test $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \

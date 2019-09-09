@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // nvtree->PrintInfo();
     if(test_type == 0) {
-        motivationtest(nvtree);
+        // motivationtest(nvtree);
     } else if(test_type == 1) {
         function_test(nvtree, ops_num);
     }
@@ -80,7 +80,8 @@ int parse_input(int num, char **para)
 void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
     uint64_t i = 0;
     char valuebuf[NVM_ValueSize + 1];
-    printf("******Skip-List function test start.******\n");
+    
+    printf("******Nv-Tree function test start.******\n");
     uint64_t ops= 1000;
     if(ops > ops_param) {
         ops = ops_param;
@@ -206,7 +207,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
     //     ops *= 10;
     // } 
     printf("******Delete test finished.******\n");
-    printf("******Skip-List function test finished.******\n");
+    printf("******Nv-Tree function test finished.******\n");
     // nvtree->printAll();
     // nvtree->Print();
     nvtree->PrintInfo();

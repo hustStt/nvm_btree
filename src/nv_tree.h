@@ -322,7 +322,7 @@ public:
                     if(pindex >= interim_pCount) {
                         pindex = interim_pCount -1;
                     }
-                    PLeafNode *p = interim_pNodeid * IndexWay + pindex;
+                    PLeafNode *p = interim_pNode + pindex;
                     tmp_iNode->m_key[k] = p->Get_MaxKey();
                 }
                 tmp_iNode->n_keys = IndexWay;
