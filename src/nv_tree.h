@@ -14,7 +14,6 @@ const int NV_NodeSize = 256;
 const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2) / (sizeof(uint64_t) + sizeof(void *));
 const int IndexWay = (NV_NodeSize - 2) / sizeof(uint64_t);
 const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
-const float Minimal_Fill_Factor = 0.5
 
 enum OpFlag {
     OpInsert = 0,
@@ -26,10 +25,7 @@ struct Element {
     uint8_t flag;
     uint64_t key;
     void *value;
-    Element(uint8_t flag, const char * &key){
-        SetFlag(flag);
-        SetKey(key);
-    }
+    
     uint8_t GetFlag(){
         return flag;
     }
@@ -120,7 +116,7 @@ public:
         while (l < r)
         {
             int mid = (l + r) / 2;
-            if (keys[mid] >= key)
+            if (m_key[mid] >= key)
             {
                 r = mid;
             }
@@ -167,9 +163,9 @@ public:
         int d = binary_search(key);
         if (m_key[d] == key)
         {
-            assert(d >= children_number - 1);
+            assert(d >= n_keys - 1);
         }
-        for (int i = children_number - 1; i > d; i--)
+        for (int i = n_keys - 1; i > d; i--)
         {
             m_key[i] = m_key[i - 1];
             LNs[i+1] = LNs[i];
