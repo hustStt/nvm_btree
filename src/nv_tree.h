@@ -460,6 +460,8 @@ public:
 
         bool exists = false;
 
+        assert(parent->Get_MaxKey() > key);
+
         for(int i = entry - 1; i >= 0; i--) {
             if(leaf->elements[i].key == key) {
                 if(leaf->elements[i].flag == OpInsert) {
