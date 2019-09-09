@@ -14,9 +14,9 @@ const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
 const float Minimal_Fill_Factor = 0.5
 
 enum OpFlag {
-    OpInsert = 0;
-    OpUpdate;
-    OpDelete;
+    OpInsert = 0,
+    OpUpdate,
+    OpDelete,
 };
 
 struct Element {
@@ -47,7 +47,7 @@ class IndexNode;
 class LeafNode {
 public:
     int16_t nElements;
-    Element [LeafMaxEntry];
+    Element elements[LeafMaxEntry];
     LeafNode* next;
 public:
     LeafNode() {
@@ -352,26 +352,26 @@ public:
 
     void generateNextLeaf(LeafNode *leaf, uint64_t &sep)
     {
-        // 1. log leaf，创建新的leaf 和 nextleaf。
+        // 1. tmp_leaf leaf，创建新的leaf 和 nextleaf。
         LeafNode *next = new (alloc_leaf()) LeafNode;
-        LeafNode *log = new LeafNode();
-        memcpy(log, leaf, sizeof(LeafNode));
+        LeafNode *tmp_leaf = new LeafNode();
+        memcpy(tmp_leaf, leaf, sizeof(LeafNode));
         //
-        int split = log->entry / 2;
+        int split = tmp_leaf->entry / 2;
 
         leaf->persist_entry = leaf->entry = split;
-        next->persist_entry = next->entry = log->entry - split;
+        next->persist_entry = next->entry = tmp_leaf->entry - split;
 
         for (int i = 0; i < next->entry; i++)
         {
-            next->elements[i] = log->elements[i + split];
+            next->elements[i] = tmp_leaf->elements[i + split];
         }
         next->next = leaf->next;
         leaf->next = next;
         sep = leaf->elements[split - 1].key;
 
 //        std::cout << "Entry " << leaf->entry << " " << next->entry << std::endl;
-        delete log;
+        delete tmp_leaf;
     }
 
     void splitLeafNode(LeafNode *leaf, PLeafNode *parent) {

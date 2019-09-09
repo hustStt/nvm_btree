@@ -22,10 +22,10 @@ class NVMNvtree {
     NVMNvtree() {
         nvtree = new NVTree();
         if(nvtree == nullptr) {
-            print_log(LV_ERR, "Initial faild.")
+            print_log(LV_ERR, "Initial faild.");
         }
     }
-    
+
     ~NVMNvtree() {
         delete nvtree;
     }
