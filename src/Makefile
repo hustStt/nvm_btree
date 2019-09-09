@@ -16,6 +16,8 @@ MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
 
 SKIPLIST_LIB_SOURCES = nvm_allocator.cc skiplist.cc
 
+NVTREE_LIB_SOURCES = nvm_allocator.cc
+
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
 TARGET_OBJS = $(SING_LIB_SOURCES:.cc=)
@@ -25,7 +27,7 @@ LIBRARY = libnvmbtree.a
 .PHONY: clean
 default:  all
 
-all:  clean single_test mult_test skiplist
+all:  clean single_test mult_test skiplist nvtree
 
 clean: 
 	rm -f $(LIBRARY)
@@ -40,6 +42,9 @@ mult_test:
 
 skiplist:
 	$(CXX) $(MULT_CXXFLAGS) test_skiplist.cc $(SKIPLIST_LIB_SOURCES) -o skiplist_test $(LDFLAGS)
+
+nvtree:
+	$(CXX) $(MULT_CXXFLAGS) test_nvtree.cc $(NVTREE_LIB_SOURCES) -o skiplist_test $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
