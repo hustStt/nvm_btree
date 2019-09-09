@@ -38,7 +38,7 @@ struct Element {
 const int NV_NodeSize = 256;
 const int NTMAX_WAY = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex)) / (sizeof(uint64_t) + sizeof(void *));
 const int IndexWay = (NV_NodeSize - 2) / sizeof(uint64_t);
-const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2 - sizeof(std::mutex)) / sizeof(Element);
+const int LeafMaxEntry = (NV_NodeSize - sizeof(void *) - 2) / sizeof(Element);
 
 class PLeafNode;
 class IndexNode;
@@ -48,7 +48,6 @@ public:
     Element elements[LeafMaxEntry];
     LeafNode* next;
     int16_t nElements;
-    std::mutex mut;
 public:
     LeafNode() {
         nElements = 0;
@@ -111,7 +110,7 @@ public:
     uint64_t m_key[NTMAX_WAY];
     LeafNode *LNs[NTMAX_WAY + 1];
     std::mutex mut;
-
+    
 public:
     PLeafNode() {
         n_keys = 0;
@@ -484,6 +483,24 @@ public:
     bool remove(uint64_t key)
     {
         return modify(key, nullptr, OpDelete);
+    }
+
+    void *get(uint64_t key) {
+        PLeafNode *parent = find_pnode(key);
+
+        int pos = parent->binary_search(key);
+        LeafNode *leaf = parent->LNs[pos];
+
+        for(int i = leaf->n_keys - 1; i >= 0; i ++) {
+            if(leaf->elements[i].key == key) {
+                if(leaf->elements[i].flag == OpDelete) {
+                    return nullptr;
+                } else {
+                    return leaf->elements[i].value;
+                }
+            }
+        }
+        return nullptr;
     }
 
     void Print() {
