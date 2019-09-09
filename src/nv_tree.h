@@ -175,7 +175,7 @@ public:
 
         for(int i = 0; i < n_keys -1; i++) {
             if(m_key[i] > m_key[i + 1]) {
-                print_log("Unexcept key greater than next.");
+                print_log(LV_DEBUG, "Unexcept key greater than next.");
                 Print();
                 assert(0);
             }
@@ -193,10 +193,10 @@ public:
         LNs[d + 1] = child;
         assert(d + 1 < NTMAX_WAY);
         n_keys ++;
-        
+
         for(int i = 0; i < n_keys -1; i++) {
             if(m_key[i] > m_key[i + 1]) {
-                print_log("Unexcept key greater than next.");
+                print_log(LV_DEBUG, "Unexcept key greater than next.");
                 Print();
                 assert(0);
             }
