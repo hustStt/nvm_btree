@@ -328,9 +328,10 @@ public:
                 p->m_key[0] = tmp_pNode->m_key[k];
                 p->LNs[0] = tmp_pNode->LNs[k];
                 p->n_keys = 1;
+                interim_pCount ++;
             }
         }
-        assert(interim_pCount != lCount);
+        assert(interim_pCount == lCount);
         int interim_MaxIndex = index_start[level-1] + index_count[level-1];
         IndexNode *interim_iNode = (IndexNode *)node_alloc->Allocate(sizeof(IndexNode) * interim_MaxIndex);
 
