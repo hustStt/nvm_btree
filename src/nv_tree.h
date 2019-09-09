@@ -45,9 +45,9 @@ class IndexNode;
 
 class LeafNode {
 public:
-    int16_t nElements;
     Element elements[LeafMaxEntry];
     LeafNode* next;
+    int16_t nElements;
     std::mutex mut;
 public:
     LeafNode() {
@@ -304,6 +304,7 @@ public:
     void rebuild() {
         int level = 0;
         int tmp_count = lCount;
+        print_log(LV_DEBUG, "Start");
         while(tmp_count > 0) {
             level ++;
             tmp_count /= IndexWay;
@@ -369,6 +370,7 @@ public:
 
         pCount = interim_pCount;
         pNode = interim_pNode;
+        print_log(LV_DEBUG, "End");
     }
 
     void generateNextLeaf(LeafNode *leaf, uint64_t &sep)
