@@ -83,4 +83,4 @@ class NVMNvtree {
 
 private:
     NVTree *nvtree;
-}
+};

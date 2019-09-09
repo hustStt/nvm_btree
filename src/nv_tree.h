@@ -139,7 +139,7 @@ public:
         return modify(key, value, OpUpdate);
     }
 
-    bool remove(uint64_t key)
+    bool remove(uint64_t key,  void *value)
     {
         return modify(key, value, OpDelete);
     }
