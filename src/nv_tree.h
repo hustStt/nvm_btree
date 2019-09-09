@@ -466,7 +466,8 @@ public:
 
     void PrintInfo() {
         print_log(LV_INFO, "This is a NV-Tree.");
-        print_log(LV_INFO, "Leaf node size is %d, leaf max entry is %d.", sizeof(LeafNode), LeafMaxEntry);
+        print_log(LV_INFO, "Leaf node size is %d, leaf max entry is %d, ememt size is %d.", 
+                sizeof(LeafNode), LeafMaxEntry, sizeof(Element));
         print_log(LV_INFO, "Parent node size is %d, parent max entry is %d.", sizeof(PLeafNode), NTMAX_WAY);
         print_log(LV_INFO, "Index node size is %d, index max entry is %d.", sizeof(IndexNode), IndexWay);
     }
