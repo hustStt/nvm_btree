@@ -175,7 +175,7 @@ public:
         {
             assert(d >= n_keys - 1);
         }
-        for (int i = n_keys - 1; i > d; i--)
+        for (int i = n_keys; i > d; i--)
         {
             m_key[i] = m_key[i - 1];
             LNs[i+1] = LNs[i];
