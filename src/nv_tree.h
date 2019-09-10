@@ -159,7 +159,7 @@ public:
     void CheckNode() {
         for(int i = 0; i < n_keys -1; i++) {
             if(m_key[i] > m_key[i + 1]) {
-                print_log(LV_DEBUG, "Unexcept key greater than next key is %llx. d is %d.", key, d);
+                print_log(LV_DEBUG, "Unexcept key greater than next key.");
                 Print();
                 assert(0);
             }
@@ -274,7 +274,7 @@ public:
     }
 
     void find_leaf(uint64_t &key, int &id, int &pos, PLeafNode *&parent, LeafNode *&leaf) {
-        parent = find_pnode(key);
+        parent = find_pnode(key, id);
 
         pos = parent->binary_search(key);
         leaf = parent->LNs[pos];
@@ -507,11 +507,11 @@ public:
         int find_size = 0;
 
         int id = 0;
-        PLeafNode *parent = find_pnode(key, id);
+        PLeafNode *parent = find_pnode(key1, id);
 
         Element tmps[LeafMaxEntry];
 
-        for(id < pCount) {
+        while(id < pCount) {
             for(int i = 0; i < parent->n_keys; i++) {
                 LeafNode *leaf = parent->LNs[i];
                 std::map<uint64_t, std::pair<void *, uint8_t>> maps;
