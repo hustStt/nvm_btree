@@ -55,6 +55,7 @@ class NVMNvtree {
     const std::string Get(const unsigned long key) {
         if(nvtree) {
             char *pvalue = (char *)nvtree->get(key);
+            print_log(LV_DEBUG, "Get value pointer is %p", pvalue);
             if(pvalue == nullptr) {
                 return ""; 
             }
