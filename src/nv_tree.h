@@ -447,21 +447,21 @@ public:
         //     assert(0);
         // }
 
-        for(int i = entry - 1; i >= 0; i--) {
-            if(leaf->elements[i].key == key) {
-                if(leaf->elements[i].flag == OpInsert) {
-                    exists = true;
-                }
-                break;
-            }
-        }
-        if(flag == OpInsert) {
-            if(exists) {
-                return false;
-            }
-        } else if(!exists) {
-            return false;
-        }
+        // for(int i = entry - 1; i >= 0; i--) {
+        //     if(leaf->elements[i].key == key) {
+        //         if(leaf->elements[i].flag == OpInsert) {
+        //             exists = true;
+        //         }
+        //         break;
+        //     }
+        // }
+        // if(flag == OpInsert) {
+        //     if(exists) {
+        //         return false;
+        //     }
+        // } else if(!exists) {
+        //     return false;
+        // }
 
         leaf->elements[entry].key = key; 
         leaf->elements[entry].value = value; 
