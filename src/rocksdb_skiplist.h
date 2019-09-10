@@ -17,9 +17,17 @@ const int SkipMaxHeight = 20;
 struct SkipNode {
     uint64_t key;
     void *value;
-    SkipNode(const uint64_t &k, void *v = nullptr) : key(k) value(v){
+    std::atomic<SkipNode*> next_[];
+
+    SkipNode(const uint64_t &k, void *v = nullptr) {
+        key = k;
+        value = v;
+    }
+
+    ~SkipNode() {
 
     }
+
     SkipNode* Next(int n) {
         assert(n >= 0);
         // Use an 'acquire load' so that we observe a fully initialized
@@ -50,10 +58,7 @@ struct SkipNode {
             pmem_persist(&next_[n], sizeof(std::atomic<SkipNode*> ));
         }
     }
-
-private:
-    std::atomic<SkipNode*> next_[];
-}
+};
 
 class SkipList {
 private:
@@ -68,7 +73,8 @@ private:
 public:
 // explicit SkipList(PersistentAllocator* allocator, int32_t max_height = 12, int32_t branching_factor = 4, size_t key_size = 16 ,uint64_t opt_num = 0, size_t per_1g_num = 0);
     explicit SkipList(uint16_t branching_factor = 4)
-        : rnd_(0xdeadbeef) max_height_(1) {
+        : rnd_(0xdeadbeef)
+        max_height_(1) {
         kBranching_ = branching_factor;
         head_ = NewNode(0, SkipMaxHeight);
         for(int i =0; i < SkipMaxHeight; i ++) {
@@ -110,7 +116,7 @@ public:
             prev[i]->SetNext(i, x, true);
         }
 
-        pmem_persist(x, sizeof(SkipNode) + height * (sizeof(std::atomic(SkipNode *))));
+        pmem_persist(x, sizeof(SkipNode) + height * (sizeof(std::atomic<SkipNode *>)));
     }
 
     bool Update(const uint64_t &key, void *value) {
@@ -134,14 +140,14 @@ public:
     }
 
     bool Delete(const uint64_t &key) {
-        SkipNode *prev[SkipMaxHeight];
-        SkipNode *x = FindLessThan(key, prev); 
+        SkipNode *prev_[SkipMaxHeight];
+        SkipNode *x = FindLessThan(key, prev_); 
 
         if(x == nullptr) {
             return false;
         }
 
-        struct NVMSkipNode *current_node = x->Next(0);
+        SkipNode *current_node = x->Next(0);
 
         if(current_node->key != key) {
             return false;
@@ -159,7 +165,7 @@ public:
     void GetRange(uint64_t &key1, uint64_t &key2, std::vector<std::string> &values, int &size) {
         int find_size = 0;
 
-        SkipNode *x = FindGreaterOrEqual(key);
+        SkipNode *x = FindGreaterOrEqual(key1);
         while(x != nullptr) {
             if(x->key > key2) {
                 size = find_size;
@@ -207,7 +213,7 @@ public:
     void PrintInfo() const {
         printf("NVM skip list max height = %d\n", SkipMaxHeight);
         printf("Skip list max height = %d of %d\n", GetMaxHeight(), SkipMaxHeight);
-        printf("Skip Node size = %d\n", sizeof(NVMSkipNode));
+        printf("Skip Node size = %d\n", sizeof(SkipNode));
     }
 
     void PrintStatistic() {
@@ -250,7 +256,7 @@ private:
     }
 
     bool KeyIsAfterNode(const uint64_t &key, SkipNode* n) const {
-        return (n != nullptr && key > n->key)
+        return (n != nullptr && key > n->key);
     }
     
     int CompareKeyAndNode(const uint64_t &key, SkipNode* n) const {
@@ -262,7 +268,7 @@ private:
         return 0;
     }
 
-    SkipNode* FindGreaterOrEqual(const uint64_t &key,  SkipNode** prev == nullptr) const {
+    SkipNode* FindGreaterOrEqual(const uint64_t &key,  SkipNode** prev = nullptr) const {
         SkipNode* x = head_;
         int level = GetMaxHeight() - 1;
         while (true) {
