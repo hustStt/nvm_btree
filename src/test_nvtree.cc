@@ -18,6 +18,7 @@ const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
 const uint64_t MAX_KEY = ~(0ULL);
 
+
 int using_existing_data = 0;
 int test_type = 1;
 int thread_num = 1;
@@ -26,6 +27,7 @@ uint64_t ops_num = 1000;
 uint64_t start_time, end_time, use_time;
 
 void function_test(NVMNvtree *nvtree, uint64_t ops);
+void single_thread_motivationtest(NVMNvtree *nvtree);
 void motivationtest(NVMNvtree *nvtree);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
