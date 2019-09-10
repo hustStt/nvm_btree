@@ -505,7 +505,7 @@ public:
         return nullptr;
     }
 
-    void scan(uint64_t key1, uint64_t key2, std::vector<string> values, int &size) {
+    void scan(uint64_t key1, uint64_t key2, std::vector<string> &values, int &size) {
         int find_size = 0;
 
         int id = 0;
