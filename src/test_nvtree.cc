@@ -47,7 +47,11 @@ int main(int argc, char *argv[]) {
 
     // nvtree->PrintInfo();
     if(test_type == 0) {
-        // motivationtest(nvtree);
+        if(thread_num == 1) {
+            single_thread_motivationtest(nvtree);
+        } else {
+            motivationtest(nvtree);
+        }
     } else if(test_type == 1) {
         function_test(nvtree, ops_num);
     }
