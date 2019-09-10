@@ -73,7 +73,7 @@ private:
 public:
 // explicit SkipList(PersistentAllocator* allocator, int32_t max_height = 12, int32_t branching_factor = 4, size_t key_size = 16 ,uint64_t opt_num = 0, size_t per_1g_num = 0);
     explicit SkipList(uint16_t branching_factor = 4)
-        : rnd_(0xdeadbeef)
+        : rnd_(0xdeadbeef) {
         kBranching_ = branching_factor;
         head_ = NewNode(0, SkipMaxHeight);
         max_height_ = 1;
