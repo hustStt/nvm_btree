@@ -283,7 +283,8 @@ public:
     void rebuild() {
         int level = 0;
         int tmp_count = lCount;
-        print_log(LV_DEBUG, "Start");
+        print_log(LV_INFO, "Start");
+        chrono::high_resolution_clock::time_point start_ = chrono::high_resolution_clock::now();
         while(tmp_count > 0) {
             level ++;
             tmp_count /= IndexWay;
@@ -351,7 +352,10 @@ public:
 
         pCount = interim_pCount;
         pNode = interim_pNode;
-        print_log(LV_DEBUG, "End. MaxIndex = %d, pCount = %d level = %d.", MaxIndex, pCount, indexlevel);
+        chrono::high_resolution_clock::time_point end_ = chrono::high_resolution_clock::now();
+        chrono::duration<double, std::nano> diff = end_ - start_;
+        print_log(LV_INFO, "Expand NV-Tree cost %lf s.\n", diff.count() * 1e-9);
+        print_log(LV_INFO, "End. MaxIndex = %d, pCount = %d level = %d.", MaxIndex, pCount, indexlevel);
     }
 
     void generateNextLeaf(LeafNode *leaf, uint64_t &sep)
@@ -426,6 +430,8 @@ public:
         int id = 0;
         PLeafNode *parent = find_pnode(key, id);
 
+        std::lock_guard<std::mutex> lk(parent->mut);
+        
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
 
@@ -490,6 +496,8 @@ public:
         int id = 0;
         PLeafNode *parent = find_pnode(key, id);
 
+        std::lock_guard<std::mutex> lk(parent->mut);
+
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
 
@@ -514,6 +522,7 @@ public:
         Element tmps[LeafMaxEntry];
 
         while(id < pCount) {
+            std::lock_guard<std::mutex> lk(parent->mut);
             for(int i = 0; i < parent->n_keys; i++) {
                 LeafNode *leaf = parent->LNs[i];
                 std::map<uint64_t, std::pair<void *, uint8_t>> maps;
