@@ -528,6 +528,8 @@ public:
 
                 for (auto it : maps)
                 {
+                    print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
+                                        it.first, it.second.first, it.second.second);
                     if(it.first > key2) {
                         size = find_size;
                         return;
