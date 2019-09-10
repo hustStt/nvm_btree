@@ -153,7 +153,7 @@ public:
             return false;
         }
         for(int i=0; i < GetMaxHeight(); i ++) {
-            if(prev_[i] != nullptr && prev[i]->NoBarrier_Next(i) == current_node) {
+            if(prev_[i] != nullptr && prev_[i]->NoBarrier_Next(i) == current_node) {
                 prev_[i]->SetNext(i, current_node->NoBarrier_Next(i), true);
             } else {
                 break;
