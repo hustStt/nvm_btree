@@ -229,7 +229,7 @@ public:
 
 private:
     inline int GetMaxHeight() const {
-        return max_height_;
+        return max_height_.load(std::memory_order_relaxed);
     }
 
     SkipNode* NewNode(const uint64_t key, int height, void *value = nullptr) {
