@@ -109,7 +109,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
             }
         }
         printf("******Insert test finished.******\n");
-        nvtree->Print();
+        // nvtree->Print();
 
         for(int tid = 0; tid < thread_num; tid ++) {
             uint64_t from = (ops / thread_num) * tid;
