@@ -244,6 +244,9 @@ private:
         while (height < SkipMaxHeight && ((rnd_.Next() % kBranching_) == 0)) {    // level DB
             height++;
         }
+        if(height > 1) {
+            print_log(LV_DEBUG, "height is %d, factor is %d", height, kBranching_);
+        }
         return height;
     }
 
