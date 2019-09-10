@@ -469,11 +469,11 @@ public:
 
         leaf->nElements ++;
 
-        pmem_persist(&leaf->elements[entry], sizeof(Element));
-        pmem_persist(&leaf->nElements, sizeof(uint16_t));
-
         if(leaf->nElements == LeafMaxEntry) {
             splitLeafNode(leaf, parent);
+        } else {
+            pmem_persist(&leaf->elements[entry], sizeof(Element));
+            pmem_persist(&leaf->nElements, sizeof(uint16_t));
         }
         assert(leaf->nElements < LeafMaxEntry);
         return true;
@@ -588,6 +588,20 @@ public:
                 sizeof(LeafNode), LeafMaxEntry, sizeof(Element));
         print_log(LV_INFO, "Parent node size is %d, parent max entry is %d.", sizeof(PLeafNode), NTMAX_WAY);
         print_log(LV_INFO, "Index node size is %d, index max entry is %d.", sizeof(IndexNode), IndexWay);
+        uint64_t inode_space = MaxIndex * sizeof(IndexNode);
+        uint64_t pnode_space = pCount * sizeof(PLeafNode);
+        uint64_t leaf_space =  lCount * sizeof(LeafNode);
+        uint64_t total_space =  inode_space + pnode_space + leaf_space;
+
+        print_log(LV_INFO, "Index node storage used is %dG %dM %dK %dB", inode_space >> 30, inode_space >> 20 & (1024 - 1), 
+                        inode_space >> 10 & (1024 - 1), inode_space & (1024 - 1));
+        print_log(LV_INFO, "Parent node storage used is %dG %dM %dK %dB", pnode_space >> 30, pnode_space >> 20 & (1024 - 1), 
+                        pnode_space >> 10 & (1024 - 1), pnode_space & (1024 - 1));
+        print_log(LV_INFO, "Leaf node storage used is %dG %dM %dK %dB", leaf_space >> 30, leaf_space >> 20 & (1024 - 1), 
+                        leaf_space >> 10 & (1024 - 1), leaf_space & (1024 - 1));
+                        
+        print_log(LV_INFO, "Total key storage used is %dG %dM %dK %dB", total_space >> 30, total_space >> 20 & (1024 - 1), 
+                        total_space >> 10 & (1024 - 1), total_space & (1024 - 1));
     }
 
 };
