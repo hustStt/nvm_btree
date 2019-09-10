@@ -160,38 +160,38 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
         // }
         // printf("******Get range test finished.******\n");
 
-        // for(int tid = 0; tid < thread_num; tid ++) {
-        //     uint64_t from = (ops / thread_num) * tid;
-        //     uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+        for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        //     {
-        //         rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
-        //         char valuebuf[NVM_ValueSize + 1];
-        //         for(uint64_t i = from; i < to; i ++) {
-        //             uint64_t key = rnd_delete.Next();
-        //             if(i % 5 == 0) {
-        //                 nvtree->Delete(key);
-        //             }
-        //         }
-        //         rocksdb::Random64 rnd_delcheck(rand_seed * (tid + 1));
-        //         for(uint64_t i = from; i < to; i ++) {
-        //             uint64_t key = rnd_delcheck.Next();
-        //             snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-        //             string value(valuebuf, NVM_ValueSize);
-        //             string tmp_value = nvtree->Get(key);
-        //             if(tmp_value.size() == 0) {
-        //                 if(i % 5) {
-        //                     printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
-        //                 }
-        //             } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
-        //                 printf("Error: Get no. %lld key %llx key-value faild.(Expect:%s, but Get %s)\n", i, key, value.c_str(), tmp_value.c_str());
-        //             }
-        //         }
-        //     };
+            {
+                rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    uint64_t key = rnd_delete.Next();
+                    if(i % 5 == 0) {
+                        nvtree->Delete(key);
+                    }
+                }
+                rocksdb::Random64 rnd_delcheck(rand_seed * (tid + 1));
+                for(uint64_t i = from; i < to; i ++) {
+                    uint64_t key = rnd_delcheck.Next();
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                    string value(valuebuf, NVM_ValueSize);
+                    string tmp_value = nvtree->Get(key);
+                    if(tmp_value.size() == 0) {
+                        if(i % 5) {
+                            printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
+                        }
+                    } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+                        printf("Error: Get no. %lld key %llx key-value faild.(Expect:%s, but Get %s)\n", i, key, value.c_str(), tmp_value.c_str());
+                    }
+                }
+            };
 
-        // }
-        // printf("******Delete test finished.******\n");
-        // printf("******Test one loop...\n");
+        }
+        printf("******Delete test finished.******\n");
+        printf("******Test one loop...\n");
         ops *= 10;
         loop ++;
     }

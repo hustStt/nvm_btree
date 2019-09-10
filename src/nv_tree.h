@@ -374,6 +374,8 @@ public:
         leaf->next = next;
         sep = leaf->elements[split - 1].key;
 
+        pmem_persist(next, sizeof(LeafNode));
+
         // uint64_t max_key = leaf->Get_MaxKey();
         // if(sep < max_key) {
         //    leaf->Print();
