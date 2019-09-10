@@ -213,7 +213,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
                 rocksdb::Random64 rnd_delcheck(rand_seed * (tid + 1));
                 for(uint64_t i = from; i < to; i ++) {
                     uint64_t key = rnd_delcheck.Next();
-                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i * i);
                     string value(valuebuf, NVM_ValueSize);
                     string tmp_value = nvtree->Get(key);
                     if(tmp_value.size() == 0) {
