@@ -93,6 +93,8 @@ public:
 
         SkipNode *x = FindGreaterOrEqual(key, prev);
 
+        print_log(LV_DEBUG, "Call ");
+
         int height = RandomHeight();
 
         if (height > GetMaxHeight()) {
