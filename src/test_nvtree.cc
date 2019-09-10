@@ -440,33 +440,10 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
     Statistic stats;
     string value("value", NVM_ValueSize);
     printf("Value size is %d\n", value.size());
-    //* 随机插入测试
-    // rocksdb::Random64 rnd_insert(0xdeadbeef);
-    // start_time = get_now_micros();
-    // for (i = 1; i <= PutOps; i++) {
-    //     auto key = rnd_insert.Next() ;
-    //     stats.start();
-    //     nvtree->Insert(key, value);
-    //     stats.end();
-    //     stats.add_put();
 
-    //     if ((i % 1000) == 0) {
-    //         cout<<"Put_test:"<<i;
-    //         stats.print_latency();
-    //         stats.clear_period();
-    //     }
-
-    //     if(nvtree->StorageIsFull()) {
-    //         break;
-    //     }
-    // }
-    // stats.clear_period();
-    // end_time = get_now_micros();
-    // use_time = end_time - start_time;
-    // printf("Insert test finished\n");
-    // nvm_print(i-1);
     uint64_t rand_seed = 0xdeadbeef;
     start_time = get_now_micros();
+    uint64_t ops = 400000000;
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
@@ -499,9 +476,36 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
     // futures.clear();
     end_time = get_now_micros();
     use_time = end_time - start_time;
+    nvtree->PrintInfo();
     printf("Initial_insert test finished\n");
     nvm_print(ops);
     return ;
+
+    //* 随机插入测试
+    rocksdb::Random64 rnd_insert(0xdeadbeef);
+    start_time = get_now_micros();
+    for (i = 1; i <= PutOps; i++) {
+        auto key = rnd_insert.Next() ;
+        stats.start();
+        nvtree->Insert(key, value);
+        stats.end();
+        stats.add_put();
+
+        if ((i % 1000) == 0) {
+            cout<<"Put_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
+
+        if(nvtree->StorageIsFull()) {
+            break;
+        }
+    }
+    stats.clear_period();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Insert test finished\n");
+    nvm_print(i-1);
 
     start_time = get_now_micros();
     for (i = 1; i <= GetOps; i++) {
