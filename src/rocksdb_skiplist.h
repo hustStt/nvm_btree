@@ -241,12 +241,11 @@ private:
     int RandomHeight() {
         int height = 1;
         // while (height < SkipMaxHeight && rnd_->Next() < kBranching_) {
-        while (height < SkipMaxHeight && ((rnd_.Next() % kBranching_) == 0)) {    // level DB
+        int rand = 0;
+        while (height < SkipMaxHeight && (((rand =rnd_.Next()) % kBranching_) == 0)) {    // level DB
             height++;
         }
-        if(height > 1) {
-            print_log(LV_DEBUG, "height is %d, factor is %d", height, kBranching_);
-        }
+        print_log(LV_DEBUG, "height is %d, rand is %d, factor is %d", height, rand, kBranching_);
         return height;
     }
 
