@@ -153,6 +153,7 @@ public:
         if(n_keys == NTMAX_WAY) {
             return true;
         }
+        // pmem_persist(this, sizeof(PLeafNode));
         return false;
     }
 
@@ -431,7 +432,7 @@ public:
         PLeafNode *parent = find_pnode(key, id);
 
         std::lock_guard<std::mutex> lk(parent->mut);
-        
+
         int pos = parent->binary_search(key);
         LeafNode *leaf = parent->LNs[pos];
 

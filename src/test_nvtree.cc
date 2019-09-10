@@ -171,6 +171,37 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
             uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
             {
+                rocksdb::Random64 rnd_update(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    uint64_t key = rnd_update.Next();
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i * i);
+                    string value(valuebuf, NVM_ValueSize);
+                    // print_log(LV_DEBUG, "Update number %ld, key %llx.\n", i, key);
+                    nvtree->Update(key, value);
+                }
+                rocksdb::Random64 rnd_updatecheck(rand_seed * (tid + 1));
+                for(uint64_t i = from; i < to; i ++) {
+                    uint64_t key = rnd_updatecheck.Next();
+                    snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i * i);
+                    string value(valuebuf, NVM_ValueSize);
+                    const string tmp_value = nvtree->Get(key);
+                    if(tmp_value.size() == 0) {
+                        printf("Error: Get key-value %lld faild.(key:%llx)\n", i, key);
+                    } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
+                        printf("Error: Get %llx key-value faild.(Expect:%s, but Get %s)\n", key, value.c_str(), tmp_value.c_str());
+                    }
+                }
+            };
+
+        }
+        printf("******Update test finished.******\n");
+
+        for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+
+            {
                 rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
                 char valuebuf[NVM_ValueSize + 1];
                 for(uint64_t i = from; i < to; i ++) {
