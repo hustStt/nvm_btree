@@ -17,7 +17,7 @@ const int SkipMaxHeight = 20;
 struct SkipNode {
     uint64_t key;
     void *value;
-    std::atomic<SkipNode*> next_[];
+    std::atomic<SkipNode*> next_[1];
 
     SkipNode(const uint64_t &k, void *v = nullptr) {
         key = k;
@@ -55,7 +55,7 @@ struct SkipNode {
         next_[n].store(x, std::memory_order_relaxed);
 
         if(persist) {
-            pmem_persist(&next_[n], sizeof(std::atomic<SkipNode*> ));
+            pmem_persist(&next_[n], sizeof(std::atomic<SkipNode*>));
         }
     }
 };
@@ -74,9 +74,9 @@ public:
 // explicit SkipList(PersistentAllocator* allocator, int32_t max_height = 12, int32_t branching_factor = 4, size_t key_size = 16 ,uint64_t opt_num = 0, size_t per_1g_num = 0);
     explicit SkipList(uint16_t branching_factor = 4)
         : rnd_(0xdeadbeef)
-        max_height_(1) {
         kBranching_ = branching_factor;
         head_ = NewNode(0, SkipMaxHeight);
+        max_height_ = 1;
         for(int i =0; i < SkipMaxHeight; i ++) {
             head_->SetNext(i, nullptr);
         }
@@ -234,7 +234,7 @@ private:
 
     SkipNode* NewNode(const uint64_t key, int height, void *value = nullptr) {
         assert(height <= SkipMaxHeight);
-        char* mem = node_alloc->Allocate(sizeof(SkipNode) + height * (sizeof(SkipNode *)), 8);
+        char* mem = node_alloc->Allocate(sizeof(SkipNode) + (height - 1) * (sizeof(SkipNode *)), 8);
         return new (mem) SkipNode(key, value);
     }
 
