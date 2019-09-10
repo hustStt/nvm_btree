@@ -532,7 +532,7 @@ public:
                     } else {
                         if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
                             if(it.first >= key1 && it.second.first != nullptr) {
-                                values.push_back(string(it.second.first, NVM_ValueSize));
+                                values.push_back(string((char *)(it.second.first), NVM_ValueSize));
                             }
                             find_size ++;
                             if(find_size >= size) {
