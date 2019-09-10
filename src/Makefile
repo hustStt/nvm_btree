@@ -14,7 +14,7 @@ SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
 MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
 
-SKIPLIST_LIB_SOURCES = nvm_allocator.cc skiplist.cc
+SKIPLIST_LIB_SOURCES = nvm_allocator.cc
 
 NVTREE_LIB_SOURCES = nvm_allocator.cc
 
@@ -28,7 +28,7 @@ LIBRARY = libnvmbtree.a
 default:  all
 
 # all:  clean single_test mult_test skiplist nvtree
-all: clean nvtree skiplist
+all: clean skiplist
 
 clean: 
 	rm -f $(LIBRARY)
