@@ -21,12 +21,12 @@ struct Element {
     uint64_t key;
     void *value;
 
-    // uint8_t GetFlag(){
-    //     return flag;
-    // }
-    // void SetFlag(uint8_t f){
-    //     flag = f;
-    // }
+    uint8_t GetFlag(){
+        return flag;
+    }
+    void SetFlag(uint8_t f){
+        flag = f;
+    }
     uint64_t GetKey() {
         return key;
     }
@@ -56,21 +56,6 @@ public:
 
     ~LeafNode() {
 
-    }
-    int16_t GetnElements(){
-        return nElements;
-    }
-
-    void SetnElements(int16_t nEle){
-        nElements = nEle;
-    }
-
-    Element GetElement(int off){
-        return elements[off];
-    }
-
-    void SetElement(int off, Element e){
-        elements[off] = e;
     }
 
     bool IsFull(){
@@ -137,10 +122,6 @@ public:
         return l;
     }
 
-    bool IsFull(){
-        return n_keys == NTMAX_WAY;
-    }
-
     uint64_t GetKey(int off) {
         return m_key[off];
     }
@@ -152,34 +133,9 @@ public:
         return m_key[n_keys -1];
     } 
 
-    void SetKey_nodrain(int off, uint64_t key) {
-        m_key[off] =  key;
-    }
-
-    LeafNode * GetLN(int off){
-        return LNs[off];
-    }
-
-    void SetLN(int off, LeafNode* ln){
-        LNs[off] = ln;
-    }
-
-    int16_t Getn(){
-        return n_keys;
-    }
-
-
-
     bool insert(uint64_t key, LeafNode *child) {
         int d = binary_search(key);
 
-        for(int i = 0; i < n_keys -1; i++) {
-            if(m_key[i] > m_key[i + 1]) {
-                print_log(LV_DEBUG, "Unexcept key greater than next key is %llx.", key);
-                Print();
-                assert(0);
-            }
-        }
         if (m_key[d] == key)
         {
             assert(d >= n_keys - 1);
@@ -194,6 +150,13 @@ public:
         assert(d + 1 < NTMAX_WAY);
         n_keys ++;
 
+        if(n_keys == NTMAX_WAY) {
+            return true;
+        }
+        return false;
+    }
+
+    void CheckNode() {
         for(int i = 0; i < n_keys -1; i++) {
             if(m_key[i] > m_key[i + 1]) {
                 print_log(LV_DEBUG, "Unexcept key greater than next key is %llx. d is %d.", key, d);
@@ -201,14 +164,6 @@ public:
                 assert(0);
             }
         }
-        if(n_keys == NTMAX_WAY) {
-            return true;
-        }
-        return false;
-    }
-
-    void Setn(int16_t n){
-        n_keys = n;
     }
 
     void Print() {
@@ -250,24 +205,12 @@ public:
         return m_key[off];
     }
 
-    void SetKey_nodrain(int off, uint64_t key) {
-        m_key[off] = key;
-    }
-
     uint64_t Get_MaxKey() {
         if(n_keys == 0) {
             return (uint64_t) -1;
         }
         return m_key[n_keys -1];
     } 
-
-    int16_t Getn(){
-        return n_keys;
-    }
-
-    void Setn(int16_t n){
-        n_keys = n;
-    }
 
     void CheckKey(int off, uint64_t key) {
        if(off > 0 && m_key[off-1] > key) {
