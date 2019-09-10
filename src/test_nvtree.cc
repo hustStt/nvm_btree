@@ -109,7 +109,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
             }
         }
         printf("******Insert test finished.******\n");
-        // nvtree->Print();
+        nvtree->Print();
 
         for(int tid = 0; tid < thread_num; tid ++) {
             uint64_t from = (ops / thread_num) * tid;
@@ -133,32 +133,32 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
         }
         printf("******Get test finished.*****\n");
 
-        // for(int tid = 0; tid < thread_num; tid ++) {
-        //     uint64_t from = (ops / thread_num) * tid;
-        //     uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+        for(int tid = 0; tid < thread_num; tid ++) {
+            uint64_t from = (ops / thread_num) * tid;
+            uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        //     {
-        //         rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
-        //         char valuebuf[NVM_ValueSize + 1];
-        //         for(uint64_t i = from; i < to; i ++) {
-        //             auto key = rnd_scan.Next();
-        //             if(i % 100 == 0) {
-        //                 std::vector<std::string> values;
-        //                 int getcount = 10;
-        //                 nvtree->GetRange(key, MAX_KEY, values, getcount);
-        //                 int index = 0;
-        //                 std::vector<std::string>::iterator it;
-        //                 printf("Get rang no. %lld, key is %llx.\n", i, key);
-        //                 for(it=values.begin(); it != values.end(); it++) 
-        //                 {
-        //                     printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
-        //                     index ++;
-        //                 }
-        //             }
-        //         } 
-        //     }
-        // }
-        // printf("******Get range test finished.******\n");
+            {
+                rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
+                char valuebuf[NVM_ValueSize + 1];
+                for(uint64_t i = from; i < to; i ++) {
+                    auto key = rnd_scan.Next();
+                    if(i % 100 == 0) {
+                        std::vector<std::string> values;
+                        int getcount = 10;
+                        nvtree->GetRange(key, MAX_KEY, values, getcount);
+                        int index = 0;
+                        std::vector<std::string>::iterator it;
+                        printf("Get rang no. %lld, key is %llx.\n", i, key);
+                        for(it=values.begin(); it != values.end(); it++) 
+                        {
+                            printf("Info: Get range index %d is %s.\n", index, (*it).c_str());
+                            index ++;
+                        }
+                    }
+                } 
+            }
+        }
+        printf("******Get range test finished.******\n");
 
         for(int tid = 0; tid < thread_num; tid ++) {
             uint64_t from = (ops / thread_num) * tid;
