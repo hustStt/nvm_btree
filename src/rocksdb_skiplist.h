@@ -93,7 +93,7 @@ public:
 
         SkipNode *x = FindGreaterOrEqual(key, prev);
 
-        print_log(LV_DEBUG, "Call ");
+        // print_log(LV_DEBUG, "Call ");
 
         int height = RandomHeight();
 
@@ -247,7 +247,7 @@ private:
         while (height < SkipMaxHeight && (((rand =rnd_.Next()) % kBranching_) == 0)) {    // level DB
             height++;
         }
-        print_log(LV_DEBUG, "height is %d, rand is %d, factor is %d", height, rand, kBranching_);
+        // print_log(LV_DEBUG, "height is %d, rand is %d, factor is %d", height, rand, kBranching_);
         return height;
     }
 
