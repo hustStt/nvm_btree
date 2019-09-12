@@ -363,7 +363,10 @@ public:
     {
         // 1. tmp_leaf leaf，创建新的leaf 和 nextleaf。
         LeafNode *next = new (node_alloc->Allocate(sizeof(LeafNode))) LeafNode();
-        LeafNode *tmp_leaf = new LeafNode();
+        void *mem = nullptr;
+        posix_memalign(&mem, 64, sizeof(LeafNode));
+        assert(mem != nullptr);
+        // LeafNode *tmp_leaf = new LeafNode();
         memcpy(tmp_leaf, leaf, sizeof(LeafNode));
         //
         int split = tmp_leaf->nElements / 2;
@@ -388,7 +391,8 @@ public:
         // }
 
 //        std::cout << "Entry " << leaf->nElements << " " << next->nElements << std::endl;
-        delete tmp_leaf;
+        // delete tmp_leaf;
+        free(mem);
     }
 
     void splitLeafNode(LeafNode *leaf, PLeafNode *parent) {
