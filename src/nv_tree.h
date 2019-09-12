@@ -410,12 +410,12 @@ public:
         tmp->nElements = 0;
         for (auto it : maps)
         {
-            if(it.second.second != OpDelete) {  // 最后一次操作不是 Delete
+            // if(it.second.second != OpDelete) {  // 最后一次操作不是 Delete
                 tmp->elements[tmp->nElements].key = it.first;
                 tmp->elements[tmp->nElements].value = it.second.first;
                 tmp->elements[tmp->nElements].flag = it.second.second;
                 tmp->nElements++;
-            }
+            // }
         }
 
         if (maps.size() > LeafMaxEntry / 2)
@@ -451,24 +451,18 @@ public:
         //     Print();
         //     assert(0);
         // }
-
-        // for(int i = entry - 1; i >= 0; i--) {
-        //     if(leaf->elements[i].key == key) {
-        //         if(leaf->elements[i].flag == OpInsert) {
-        //             exists = true;
-        //         }
-        //         break;
-        //     }
-        // }
-        // if(flag == OpInsert) {
-        //     if(exists) {
-        //         return false;
-        //     }
-        // } else if(!exists) {
-        //     return false;
-        // }
-        if(flag == OpDelete) {
-            print_log(LV_DEBUG, "Delete key %llx, value is %p", key, value);
+        if(flag != OpInsert) {
+            for(int i = entry - 1; i >= 0; i--) {
+                if(leaf->elements[i].key == key) {
+                    if(leaf->elements[i].flag == OpInsert) {
+                        exists = true;
+                    }
+                    break;
+                }
+            }
+            if(!exists) {
+                return false;
+            }
         }
 
         leaf->elements[entry].key = key; 
