@@ -28,7 +28,7 @@ LIBRARY = libnvmbtree.a
 default:  all
 
 # all:  clean single_test mult_test skiplist nvtree
-all: clean skiplist
+all: clean skiplist mult_test nvtree
 
 clean: 
 	rm -f $(LIBRARY)
