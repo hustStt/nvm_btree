@@ -217,7 +217,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
                     string value(valuebuf, NVM_ValueSize);
                     string tmp_value = nvtree->Get(key);
                     if(tmp_value.size() == 0) {
-                        if(i < ops / 5) {
+                        if(i >= ops / 5) {
                             printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
                         }
                     } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
