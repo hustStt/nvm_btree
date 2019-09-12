@@ -479,7 +479,6 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
     nvtree->PrintInfo();
     printf("Initial_insert test finished\n");
     nvm_print(ops);
-    return ;
 
     //* 随机插入测试
     rocksdb::Random64 rnd_insert(0xdeadbeef);
@@ -491,11 +490,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_put();
 
-        if ((i % 1000) == 0) {
-            cout<<"Put_test:"<<i;
-            stats.print_latency();
-            stats.clear_period();
-        }
+        // if ((i % 1000) == 0) {
+        //     cout<<"Put_test:"<<i;
+        //     stats.print_latency();
+        //     stats.clear_period();
+        // }
 
         if(nvtree->StorageIsFull()) {
             break;
@@ -515,11 +514,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_put();
 
-        if ((i % 1000) == 0) {
-            cout<<"Put_test:"<<i;
-            stats.print_latency();
-            stats.clear_period();
-        }
+        // if ((i % 1000) == 0) {
+        //     cout<<"Put_test:"<<i;
+        //     stats.print_latency();
+        //     stats.clear_period();
+        // }
 
         if(nvtree->StorageIsFull()) {
             break;
@@ -541,11 +540,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_get();
 
-        if ((i % 1000) == 0) {
-            cout<<"Get_test:"<<i;
-            stats.print_latency();
-            stats.clear_period();
-        }
+        // if ((i % 1000) == 0) {
+        //     cout<<"Get_test:"<<i;
+        //     stats.print_latency();
+        //     stats.clear_period();
+        // }
     }
     stats.clear_period();
     end_time = get_now_micros();
@@ -568,11 +567,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
             stats.end();
             stats.add_scan();
 
-            if ((i % 100) == 0) {
-                cout<<"Scan_test:"<<i;
-                stats.print_latency();
-                stats.clear_period();
-            }
+            // if ((i % 100) == 0) {
+            //     cout<<"Scan_test:"<<i;
+            //     stats.print_latency();
+            //     stats.clear_period();
+            // }
         }
         stats.clear_period();
         end_time = get_now_micros();
@@ -592,11 +591,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_delete();
 
-        if ((i % 1000) == 0) {
-            cout<<"Delete_test:"<<i;
-            stats.print_latency();
-            stats.clear_period();
-        }
+        // if ((i % 1000) == 0) {
+        //     cout<<"Delete_test:"<<i;
+        //     stats.print_latency();
+        //     stats.clear_period();
+        // }
     }
     stats.clear_period();
     end_time = get_now_micros();
