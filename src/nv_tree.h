@@ -514,7 +514,7 @@ public:
             if(leaf->elements[i].key == key) {
                 if(key == 0xc20369a413e28fc1) {
                     print_log(LV_DEBUG, "key %llx, value %p flag %d", leaf->elements[i].key, 
-                            leaf->elements[i].value, leaf->elements[i].flag)
+                            leaf->elements[i].value, leaf->elements[i].flag);
                 }
                 if(leaf->elements[i].flag == OpDelete) {
                     return nullptr;
