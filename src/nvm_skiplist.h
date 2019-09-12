@@ -112,6 +112,7 @@ public:
     void PrintInfo() {
         if(slist) {
             slist->PrintInfo();
+            show_persist_data();
         }
     }
 

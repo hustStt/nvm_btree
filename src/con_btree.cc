@@ -331,5 +331,4 @@ void btree::PrintInfo() {
     printf("This is a b+ tree.\n");
     printf("Node size is %lu, M path is %d.\n", sizeof(bpnode), cardinality);
     printf("Tree height is %d.\n", height);
-
 }

@@ -56,6 +56,7 @@ void NVMBtree::Print() {
 void NVMBtree::PrintInfo() {
     if(bt) {
         bt->PrintInfo();
+        show_persist_data();
     }
 }
 

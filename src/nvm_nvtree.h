@@ -79,6 +79,7 @@ class NVMNvtree {
     void PrintInfo() {
         if(nvtree) {
             nvtree->PrintInfo();
+            show_persist_data();
         }
     }
 
