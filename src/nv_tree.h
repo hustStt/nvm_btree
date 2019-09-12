@@ -512,12 +512,12 @@ public:
 
         for(int i = leaf->nElements - 1; i >= 0; i --) {
             if(leaf->elements[i].key == key) {
-                if(key == 0xc20369a413e28fc1) {
-                    print_log(LV_DEBUG, "key %llx, value %p flag %d, opDelete is %d", leaf->elements[i].key, 
-                            leaf->elements[i].value, leaf->elements[i].flag, OpDelete);
-                }
+                // if(key == 0xc20369a413e28fc1) {
+                //     print_log(LV_DEBUG, "key %llx, value %p flag %d, opDelete is %d", leaf->elements[i].key, 
+                //             leaf->elements[i].value, leaf->elements[i].flag, OpDelete);
+                // }
                 if(leaf->elements[i].flag == OpDelete) {
-                    print_log(LV_DEBUG, "Leaf is deleted");
+                    // print_log(LV_DEBUG, "Leaf is deleted");
                     return nullptr;
                 } else {
                     return leaf->elements[i].value;
