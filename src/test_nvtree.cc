@@ -206,7 +206,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
                 char valuebuf[NVM_ValueSize + 1];
                 for(uint64_t i = from; i < to; i ++) {
                     uint64_t key = rnd_delete.Next();
-                    if(i % 5 == 0) {
+                    if(i < ops / 5) {
                         nvtree->Delete(key);
                     }
                 }
@@ -217,7 +217,7 @@ void function_test(NVMNvtree *nvtree, uint64_t ops_param) {
                     string value(valuebuf, NVM_ValueSize);
                     string tmp_value = nvtree->Get(key);
                     if(tmp_value.size() == 0) {
-                        if(i % 5) {
+                        if(i < ops / 5) {
                             printf("Error: Get no. %lld (key:%llx) key-value should deleted.\n", i, key);
                         }
                     } else if(strncmp(value.c_str(), tmp_value.c_str(), NVM_ValueSize) != 0) {
