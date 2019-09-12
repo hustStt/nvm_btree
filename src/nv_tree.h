@@ -366,6 +366,7 @@ public:
         void *mem = nullptr;
         posix_memalign(&mem, 64, sizeof(LeafNode));
         assert(mem != nullptr);
+        LeafNode **tmp_leaf = new (mem) LeafNode();
         // LeafNode *tmp_leaf = new LeafNode();
         memcpy(tmp_leaf, leaf, sizeof(LeafNode));
         //
