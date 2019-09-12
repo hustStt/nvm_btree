@@ -418,7 +418,7 @@ public:
             // }
         }
 
-        if (maps.size() > LeafMaxEntry / 2)
+        if (tmp->nElements > LeafMaxEntry / 2)
         {
             // split
             uint64_t sep;
