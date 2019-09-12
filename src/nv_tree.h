@@ -467,6 +467,9 @@ public:
         // } else if(!exists) {
         //     return false;
         // }
+        if(flag == OpDelete) {
+            print_log(LV_DEBUG, "Delete key %llx, value is %p", key, value);
+        }
 
         leaf->elements[entry].key = key; 
         leaf->elements[entry].value = value; 
