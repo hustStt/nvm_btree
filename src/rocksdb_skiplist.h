@@ -40,7 +40,7 @@ struct SkipNode {
         // pointer observes a fully initialized version of the inserted node.
         next_[n].store(x, std::memory_order_release);
         if(persist) {
-            pmem_persist(&next_[n], sizeof(std::atomic<SkipNode*> ));
+            nvm_persist(&next_[n], sizeof(std::atomic<SkipNode*> ));
         }
     }
 
@@ -55,7 +55,7 @@ struct SkipNode {
         next_[n].store(x, std::memory_order_relaxed);
 
         if(persist) {
-            pmem_persist(&next_[n], sizeof(std::atomic<SkipNode*>));
+            nvm_persist(&next_[n], sizeof(std::atomic<SkipNode*>));
         }
     }
 };
@@ -80,7 +80,7 @@ public:
         for(int i =0; i < SkipMaxHeight; i ++) {
             head_->SetNext(i, nullptr);
         }
-        pmem_persist(head_, sizeof(SkipNode) + SkipMaxHeight * sizeof(std::atomic<SkipNode *>));
+        nvm_persist(head_, sizeof(SkipNode) + SkipMaxHeight * sizeof(std::atomic<SkipNode *>));
     }
     ~SkipList() {
 #ifdef CAL_ACCESS_COUNT
@@ -118,7 +118,7 @@ public:
             prev[i]->SetNext(i, x, true);
         }
 
-        pmem_persist(x, sizeof(SkipNode) + height * (sizeof(std::atomic<SkipNode *>)));
+        nvm_persist(x, sizeof(SkipNode) + height * (sizeof(std::atomic<SkipNode *>)));
     }
 
     bool Update(const uint64_t &key, void *value) {
@@ -126,7 +126,7 @@ public:
 
         if(x != nullptr && key == x->key) {
             x->value = value;
-            pmem_persist(&x->value, sizeof(void *));
+            nvm_persist(&x->value, sizeof(void *));
             return true;
         }
         return false;

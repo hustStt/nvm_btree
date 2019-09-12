@@ -135,10 +135,10 @@
             x->SetNext(i, prev_[i]->Next(i));
             prev_[i]->SetNext(i ,x);
             prev_[i] = x;
-            // pmem_persist(prev_[i], sizeof(NVMSkipNode*));
+            // nvm_persist(prev_[i], sizeof(NVMSkipNode*));
         }
         //prev_[0] = x;
-        //pmem_persist(prev_[0], sizeof(NVMSkipNode*));
+        //nvm_persist(prev_[0], sizeof(NVMSkipNode*));
         prev_height_ = static_cast<uint16_t >(height);
         stats.add_entries_num();
     }
@@ -149,7 +149,7 @@
         stats.start();
         char *pvalue = value_alloc->Allocate(value.size());
         uint64_t vpoint = (uint64_t)pvalue;
-        pmem_memcpy_persist(pvalue, value.c_str(), value.size());
+        nvm_memcpy_persist(pvalue, value.c_str(), value.size());
         memcpy(keybuf, param_key.c_str(), param_key.size());
         memcpy(keybuf + NVM_KeySize, &vpoint, NVM_PointSize);
         string key(keybuf, NVM_KeyBuf);
@@ -196,10 +196,10 @@
             x->SetNext(i, prev_[i]->Next(i));
             prev_[i]->SetNext(i ,x);
             prev_[i] = x;
-            // pmem_persist(prev_[i], sizeof(NVMSkipNode*));
+            // nvm_persist(prev_[i], sizeof(NVMSkipNode*));
         }
         //prev_[0] = x;
-        //pmem_persist(prev_[0], sizeof(NVMSkipNode*));
+        //nvm_persist(prev_[0], sizeof(NVMSkipNode*));
         prev_height_ = static_cast<uint16_t >(height);
         stats.add_entries_num();
     }

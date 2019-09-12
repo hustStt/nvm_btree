@@ -100,5 +100,5 @@ void AllocatorExit();
 
 // static inline void clflush(char *data, int len)
 // {
-//     pmem_persist(data, len);
+//     nvm_persist(data, len);
 // }

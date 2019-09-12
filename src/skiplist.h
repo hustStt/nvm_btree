@@ -16,7 +16,7 @@ const int NVM_SkipMaxHeight = (SkipList_NodeSize - NVM_KeyBuf) / NVM_PointSize;
 
 struct NVMSkipNode {
     explicit NVMSkipNode(string key) {
-        pmem_memcpy_persist(key_, key.c_str(), key.size());
+        nvm_memcpy_persist(key_, key.c_str(), key.size());
     };
     ~NVMSkipNode() = default;
     
@@ -27,7 +27,7 @@ struct NVMSkipNode {
 
     void SetNext(int n, NVMSkipNode* next) {
         assert(n >= 0);
-        pmem_memcpy_persist(next_ + n, &next, sizeof(NVMSkipNode*));
+        nvm_memcpy_persist(next_ + n, &next, sizeof(NVMSkipNode*));
     }
     char key_[NVM_KeyBuf];
     NVMSkipNode *next_[];

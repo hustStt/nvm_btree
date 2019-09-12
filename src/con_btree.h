@@ -70,7 +70,7 @@ using namespace std;
 
 inline void clflush(char *data, int len)
 {
-    pmem_persist(data, len);
+    nvm_persist(data, len);
 //   volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
 //   mfence();
 //   for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){

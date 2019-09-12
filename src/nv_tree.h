@@ -153,7 +153,7 @@ public:
         if(n_keys == NTMAX_WAY) {
             return true;
         }
-        // pmem_persist(this, sizeof(PLeafNode));
+        // nvm_persist(this, sizeof(PLeafNode));
         return false;
     }
 
@@ -383,7 +383,7 @@ public:
         leaf->next = next;
         sep = leaf->elements[split - 1].key;
 
-        pmem_persist(next, sizeof(LeafNode));
+        nvm_persist(next, sizeof(LeafNode));
 
         // uint64_t max_key = leaf->Get_MaxKey();
         // if(sep < max_key) {
@@ -429,7 +429,7 @@ public:
                 rebuild();
             }
         }
-        pmem_persist(tmp, sizeof(LeafNode));
+        nvm_persist(tmp, sizeof(LeafNode));
     }
 
     bool modify(uint64_t key, void * value, uint8_t flag) {
@@ -474,8 +474,8 @@ public:
         if(leaf->nElements == LeafMaxEntry) {
             splitLeafNode(leaf, parent);
         } else {
-            pmem_persist(&leaf->elements[entry], sizeof(Element));
-            pmem_persist(&leaf->nElements, sizeof(uint16_t));
+            nvm_persist(&leaf->elements[entry], sizeof(Element));
+            nvm_persist(&leaf->nElements, sizeof(uint16_t));
         }
         assert(leaf->nElements < LeafMaxEntry);
         return true;
