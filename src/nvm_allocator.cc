@@ -14,6 +14,7 @@ int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &
         delete node_alloc;
         return -1;
     }
+    perist_data = 0;
     return 0;
 }
 
