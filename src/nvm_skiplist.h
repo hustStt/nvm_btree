@@ -36,7 +36,7 @@ public:
     void Insert(const unsigned long key, const string &value) {
         if(slist) {
             char *pvalue = value_alloc->Allocate(value.size());
-            nvm_memcpy_persist(pvalue, value.c_str(), value.size());
+            nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
             // char key_[NVM_KeySize + sizeof(uint64_t)];
             // fillchar8wirhint64(key_, key);
             // uint64_t vpoint = (uint64_t)pvalue;
@@ -50,7 +50,7 @@ public:
     void Update(const unsigned long key, const string &value) {
         if(slist) {
             char *pvalue = value_alloc->Allocate(value.size());
-            nvm_memcpy_persist(pvalue, value.c_str(), value.size());
+            nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
             // char key_[NVM_KeySize + sizeof(uint64_t)];
             // fillchar8wirhint64(key_, key);
             // uint64_t vpoint = (uint64_t)pvalue;

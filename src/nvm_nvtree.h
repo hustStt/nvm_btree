@@ -33,7 +33,7 @@ class NVMNvtree {
     void Insert(const unsigned long key, const string &value) {
         if(nvtree) {
             char *pvalue = value_alloc->Allocate(value.size());
-            nvm_memcpy_persist(pvalue, value.c_str(), value.size());
+            nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
             nvtree->insert(key, pvalue);
         }
     }
@@ -47,7 +47,7 @@ class NVMNvtree {
     void Update(const unsigned long key, const string &value) {
         if(nvtree) {
             char *pvalue = value_alloc->Allocate(value.size());
-            nvm_memcpy_persist(pvalue, value.c_str(), value.size());
+            nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
             nvtree->update(key, pvalue);
         }
     }

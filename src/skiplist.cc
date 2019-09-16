@@ -149,7 +149,7 @@
         stats.start();
         char *pvalue = value_alloc->Allocate(value.size());
         uint64_t vpoint = (uint64_t)pvalue;
-        nvm_memcpy_persist(pvalue, value.c_str(), value.size());
+        nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
         memcpy(keybuf, param_key.c_str(), param_key.size());
         memcpy(keybuf + NVM_KeySize, &vpoint, NVM_PointSize);
         string key(keybuf, NVM_KeyBuf);

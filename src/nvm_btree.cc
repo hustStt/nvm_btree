@@ -18,7 +18,7 @@ NVMBtree::~NVMBtree() {
 void NVMBtree::Insert(const unsigned long key, const string &value) {
     if(bt) {
         char *pvalue = value_alloc->Allocate(value.size());
-        nvm_memcpy_persist(pvalue, value.c_str(), value.size());
+        nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
         bt->btree_insert(key, pvalue);
     }
 }
