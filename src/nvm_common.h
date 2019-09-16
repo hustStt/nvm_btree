@@ -70,7 +70,7 @@ static inline uint64_t get_now_micros(){
     return (tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
-static atomic<uint64_t> perist_data = 0;
+static atomic<uint64_t> perist_data;
 
 static inline void nvm_persist(const void *addr, size_t len) {
     perist_data += len;
