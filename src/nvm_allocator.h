@@ -3,6 +3,7 @@
 #include <cstring>
 #include <string>
 #include <libpmem.h>
+#include <atomic>
 #include <mutex>
 
 
