@@ -74,7 +74,7 @@ static atomic<uint64_t> perist_data(0);
 
 static inline void nvm_persist(const void *addr, size_t len) {
     perist_data += len;
-    print_log(LV_DEBUG, "perist_data is %ld, len is %ld", perist_data.load(), len);
+    print_log(LV_DEBUG, "perist_data is %ld, len is %ld", perist_data.load(std::memory_order_relaxed), len);
     pmem_persist(addr, len);
 }
 
@@ -86,5 +86,5 @@ static inline void nvm_memcpy_persist(void *pmemdest, const void *src, size_t le
 }
 
 static inline void show_persist_data() {
-    print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data.load(), (1.0 * perist_data) / 1000 / 1000/ 1000);
+    print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data.load(std::memory_order_relaxed), (1.0 * perist_data) / 1000 / 1000/ 1000);
 }
