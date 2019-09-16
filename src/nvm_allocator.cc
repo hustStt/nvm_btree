@@ -1,3 +1,4 @@
+#include "nvm_common.h"
 #include "nvm_allocator.h"
 
 NVMAllocator *node_alloc = nullptr;
