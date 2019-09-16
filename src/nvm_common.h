@@ -72,6 +72,10 @@ static inline uint64_t get_now_micros(){
 
 static atomic<uint64_t> perist_data(0);
 
+static inline void show_persist_data() {
+    print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data.load(std::memory_order_relaxed), (1.0 * perist_data) / 1000 / 1000/ 1000);
+}
+
 static inline void nvm_persist(const void *addr, size_t len) {
     perist_data += len;
     print_log(LV_DEBUG, "perist_data is %ld, len is %ld", perist_data.load(std::memory_order_relaxed), len);
@@ -84,8 +88,4 @@ static inline void nvm_memcpy_persist(void *pmemdest, const void *src, size_t le
         perist_data += len;
     }
     pmem_memcpy_persist(pmemdest, src, len);
-}
-
-static inline void show_persist_data() {
-    print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data.load(std::memory_order_relaxed), (1.0 * perist_data) / 1000 / 1000/ 1000);
 }
