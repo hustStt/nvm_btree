@@ -78,8 +78,8 @@ static inline void show_persist_data() {
 
 static inline void nvm_persist(const void *addr, size_t len) {
     perist_data += len;
-    print_log(LV_DEBUG, "perist_data is %ld, len is %ld", perist_data.load(std::memory_order_relaxed), len);
-    show_persist_data();
+    // print_log(LV_DEBUG, "perist_data is %ld, len is %ld", perist_data.load(std::memory_order_relaxed), len);
+    // show_persist_data();
     pmem_persist(addr, len);
 }
 
