@@ -85,5 +85,5 @@ static inline void nvm_memcpy_persist(void *pmemdest, const void *src, size_t le
 }
 
 static inline void show_persist_data() {
-    print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data, (1.0 * perist_data) / 1000 / 1000/ 1000);
+    print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data.load(), (1.0 * perist_data) / 1000 / 1000/ 1000);
 }
