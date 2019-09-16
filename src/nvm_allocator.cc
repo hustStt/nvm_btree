@@ -4,6 +4,8 @@
 NVMAllocator *node_alloc = nullptr;
 NVMAllocator *value_alloc = nullptr;
 
+atomic<uint64_t> perist_data(0);
+
 int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 
                 uint64_t valuesize) {
     node_alloc = new NVMAllocator(path, keysize);

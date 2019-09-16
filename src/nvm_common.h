@@ -70,7 +70,7 @@ static inline uint64_t get_now_micros(){
     return (tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
-static atomic<uint64_t> perist_data(0);
+extern atomic<uint64_t> perist_data;
 
 static inline void show_persist_data() {
     print_log(LV_INFO, "Persit data is %ld %lf GB.", perist_data.load(std::memory_order_relaxed), (1.0 * perist_data) / 1000 / 1000/ 1000);
