@@ -521,52 +521,108 @@ public:
         return nullptr;
     }
 
+    void sort_leaf(LeafNode *leaf, uint8_t index[]) {
+
+        for(uint8_t i = 0; i < leaf->nElements; i++) {
+            index[i] = i;
+        }
+        for(uint8_t i = 0; i < leaf->nElements - 1; i++) {
+            for(uint8_t j =0; j < leaf->nElements - 1 - i; j ++) {
+                if(leaf->elements[index[j]].key > leaf->elements[index[j+1]].key) {
+                    uint8_t tmp = index[j];
+                    index[j] = index[j+1];
+                    index[j+1] = tmp;
+                }
+            }
+        }
+    }
+
     void scan(uint64_t key1, uint64_t key2, std::vector<string> &values, int &size) {
         int find_size = 0;
 
         int id = 0;
         PLeafNode *parent = find_pnode(key1, id);
 
-        Element tmps[LeafMaxEntry];
+        int pos = parent->binary_search(key1);
 
-        while(id < pCount) {
-            std::lock_guard<std::mutex> lk(parent->mut);
-            for(int i = 0; i < parent->n_keys; i++) {
-                LeafNode *leaf = parent->LNs[i];
-                std::map<uint64_t, std::pair<void *, uint8_t>> maps;
-                for (int i = leaf->nElements-1; i >= 0; i--)
+        LeafNode *leaf = parent->LNs[pos];
+        LeafNode tmp_leaf;
+        LeafNode *p = &tmp_leaf;
+
+        while(leaf != nullptr) {
+            memcpy(p, leaf, sizeof(LeafNode));
+            
+            std::map<uint64_t, std::pair<void *, uint8_t>> maps;
+            for (int i = p->nElements-1; i >= 0; i--)
+            {
+                if (maps.find(p->elements[i].key) == maps.end())
                 {
-                    if (maps.find(leaf->elements[i].key) == maps.end())
-                    {
-                        maps.insert(std::make_pair(leaf->elements[i].key,
-                                                std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
-                    }
+                    maps.insert(std::make_pair(p->elements[i].key,
+                                            std::make_pair(p->elements[i].value, p->elements[i].flag)));
                 }
+            }
 
-                for (auto it : maps)
-                {
-                    // print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
-                    //                     it.first, it.second.first, it.second.second);
-                    if(it.first > key2) {
-                        size = find_size;
-                        return;
-                    } else {
-                        if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
-                            if(it.first >= key1 && it.second.first != nullptr) {
-                                values.push_back(string((char *)(it.second.first), NVM_ValueSize));
-                                find_size ++;
-                            }
-                            if(find_size >= size) {
-                                return ;
-                            }
-
+            for (auto it : maps)
+            {
+                // print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
+                //                     it.first, it.second.first, it.second.second);
+                if(it.first > key2) {
+                    size = find_size;
+                    return;
+                } else {
+                    if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
+                        if(it.first >= key1 && it.second.first != nullptr) {
+                            values.push_back(string((char *)(it.second.first), NVM_ValueSize));
+                            find_size ++;
+                        }
+                        if(find_size >= size) {
+                            return ;
                         }
                     }
                 }
             }
-            id ++;
-            parent ++;
+            leaf = leaf->next;
         }
+
+
+        // while(id < pCount) {
+        //     std::lock_guard<std::mutex> lk(parent->mut);
+        //     for(int i = 0; i < parent->n_keys; i++) {
+        //         LeafNode *leaf = parent->LNs[i];
+        //         std::map<uint64_t, std::pair<void *, uint8_t>> maps;
+        //         for (int i = leaf->nElements-1; i >= 0; i--)
+        //         {
+        //             if (maps.find(leaf->elements[i].key) == maps.end())
+        //             {
+        //                 maps.insert(std::make_pair(leaf->elements[i].key,
+        //                                         std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
+        //             }
+        //         }
+
+        //         for (auto it : maps)
+        //         {
+        //             // print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
+        //             //                     it.first, it.second.first, it.second.second);
+        //             if(it.first > key2) {
+        //                 size = find_size;
+        //                 return;
+        //             } else {
+        //                 if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
+        //                     if(it.first >= key1 && it.second.first != nullptr) {
+        //                         values.push_back(string((char *)(it.second.first), NVM_ValueSize));
+        //                         find_size ++;
+        //                     }
+        //                     if(find_size >= size) {
+        //                         return ;
+        //                     }
+
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     id ++;
+        //     parent ++;
+        // }
         size = find_size;
     }
 
