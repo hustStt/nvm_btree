@@ -594,12 +594,12 @@ public:
                 memcpy(leaf, parent->LNs[i], sizeof(LeafNode));
 
                 std::map<uint64_t, std::pair<void *, uint8_t>> maps;
-                for (int i = p->nElements-1; i >= 0; i--)
+                for (int i = leaf->nElements-1; i >= 0; i--)
                 {
-                    if (maps.find(p->elements[i].key) == maps.end())
+                    if (maps.find(leaf->elements[i].key) == maps.end())
                     {
-                        maps.insert(std::make_pair(p->elements[i].key,
-                                                std::make_pair(p->elements[i].value, p->elements[i].flag)));
+                        maps.insert(std::make_pair(leaf->elements[i].key,
+                                                std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
                     }
                 }
 
