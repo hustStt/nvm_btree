@@ -400,11 +400,13 @@ public:
         std::map<uint64_t, std::pair<void *, uint8_t>> maps;
         for (int i = leaf->nElements-1; i >= 0; i--)
         {
-            if (maps.find(leaf->elements[i].key) == maps.end())
-            {
-                maps.insert(std::make_pair(leaf->elements[i].key,
+            // if (maps.find(leaf->elements[i].key) == maps.end())
+            // {
+            //     maps.insert(std::make_pair(leaf->elements[i].key,
+            //                                std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
+            // }
+            maps.insert(std::make_pair(leaf->elements[i].key,
                                            std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
-            }
         }
         LeafNode *tmp = leaf;
         tmp->nElements = 0;
