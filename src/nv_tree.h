@@ -540,6 +540,7 @@ public:
     }
 
     void scan(uint64_t key1, uint64_t key2, std::vector<string> &values, int &size) {
+        char mem[sizeof(LeafNode)];
         int find_size = 0;
 
         int id = 0;
@@ -550,6 +551,8 @@ public:
         LeafNode *leaf = parent->LNs[pos];
 
         while(leaf != nullptr) {
+            memcpy(mem, leaf, siezof(LeafNode));
+            leaf = (LeafNode *)mem;
             std::map<uint64_t, std::pair<void *, uint8_t>> maps;
             for (int i = leaf->nElements-1; i >= 0; i--)
             {
