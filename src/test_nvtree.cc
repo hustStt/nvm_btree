@@ -436,10 +436,10 @@ void motivationtest(NVMNvtree *nvtree) {
 }
 
 void single_thread_motivationtest(NVMNvtree *nvtree) {
-    // uint64_t i;
-    // Statistic stats;
-    // string value("value", NVM_ValueSize);
-    // printf("Value size is %d\n", value.size());
+    uint64_t i;
+    Statistic stats;
+    string value("value", NVM_ValueSize);
+    printf("Value size is %d\n", value.size());
 
     // uint64_t rand_seed = 0xdeadbeef;
     // start_time = get_now_micros();
