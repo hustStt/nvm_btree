@@ -436,37 +436,44 @@ void motivationtest(NVMNvtree *nvtree) {
 }
 
 void single_thread_motivationtest(NVMNvtree *nvtree) {
-    uint64_t i;
-    Statistic stats;
-    string value("value", NVM_ValueSize);
-    printf("Value size is %d\n", value.size());
+    // uint64_t i;
+    // Statistic stats;
+    // string value("value", NVM_ValueSize);
+    // printf("Value size is %d\n", value.size());
 
-    uint64_t rand_seed = 0xdeadbeef;
-    start_time = get_now_micros();
-    uint64_t ops = 400000000;
-    for(int tid = 0; tid < thread_num; tid ++) {
-        uint64_t from = (ops / thread_num) * tid;
-        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+    // uint64_t rand_seed = 0xdeadbeef;
+    // start_time = get_now_micros();
+    // uint64_t ops = 400000000;
+    // for(int tid = 0; tid < thread_num; tid ++) {
+    //     uint64_t from = (ops / thread_num) * tid;
+    //     uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        {
-            rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
-            char valuebuf[NVM_ValueSize + 1];
-            for(uint64_t i = from; i < to; i ++) {
-                auto key = rnd_put.Next();
-                snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
-                string value(valuebuf, NVM_ValueSize);
-                // printf("Insert number %ld, key %llx.\n", i, key);
-                nvtree->Insert(key, value);
-                if ((i % 10000000) == 0) {
-                    printf("Number %ld \n", i / 10000000);
-                    nvtree->PrintInfo();
-                }
-            }
-            printf("thread %d finished.\n", tid);
-        };
+    //     {
+    //         rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
+    //         char valuebuf[NVM_ValueSize + 1];
+    //         for(uint64_t i = from; i < to; i ++) {
+    //             auto key = rnd_put.Next();
+    //             snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+    //             stats.start();
+    //             nvtree->Insert(key, value);
+    //             stats.end();
+    //             stats.add_put();
 
-        // futures.push_back(move(f));
-    }
+    //             // if ((i % 1000) == 0) {
+    //             //     cout<<"Put_test:"<<i;
+    //             //     stats.print_latency();
+    //             //     stats.clear_period();
+    //             // }
+
+    //             if(nvtree->StorageIsFull()) {
+    //                 break;
+    //             }
+    //         }
+    //         printf("thread %d finished.\n", tid);
+    //     };
+
+    //     // futures.push_back(move(f));
+    // }
 
     // for(auto &&f : futures) {
     //     if(f.valid()) {
@@ -474,11 +481,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
     //     }
     // }
     // futures.clear();
-    end_time = get_now_micros();
-    use_time = end_time - start_time;
-    nvtree->PrintInfo();
-    printf("Initial_insert test finished\n");
-    nvm_print(ops);
+    // end_time = get_now_micros();
+    // use_time = end_time - start_time;
+    // nvtree->PrintInfo();
+    // printf("Initial_insert test finished\n");
+    // nvm_print(ops);
 
     //* 随机插入测试
     rocksdb::Random64 rnd_insert(0xdeadbeef);
@@ -490,11 +497,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_put();
 
-        // if ((i % 1000) == 0) {
-        //     cout<<"Put_test:"<<i;
-        //     stats.print_latency();
-        //     stats.clear_period();
-        // }
+        if ((i % 1000) == 0) {
+            cout<<"Put_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
 
         if(nvtree->StorageIsFull()) {
             break;
@@ -514,11 +521,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_put();
 
-        // if ((i % 1000) == 0) {
-        //     cout<<"Put_test:"<<i;
-        //     stats.print_latency();
-        //     stats.clear_period();
-        // }
+        if ((i % 1000) == 0) {
+            cout<<"Put_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
 
         if(nvtree->StorageIsFull()) {
             break;
@@ -540,11 +547,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_get();
 
-        // if ((i % 1000) == 0) {
-        //     cout<<"Get_test:"<<i;
-        //     stats.print_latency();
-        //     stats.clear_period();
-        // }
+        if ((i % 1000) == 0) {
+            cout<<"Get_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
     }
     stats.clear_period();
     end_time = get_now_micros();
@@ -567,11 +574,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
             stats.end();
             stats.add_scan();
 
-            // if ((i % 100) == 0) {
-            //     cout<<"Scan_test:"<<i;
-            //     stats.print_latency();
-            //     stats.clear_period();
-            // }
+            if ((i % 100) == 0) {
+                cout<<"Scan_test:"<<i;
+                stats.print_latency();
+                stats.clear_period();
+            }
         }
         stats.clear_period();
         end_time = get_now_micros();
@@ -591,11 +598,11 @@ void single_thread_motivationtest(NVMNvtree *nvtree) {
         stats.end();
         stats.add_delete();
 
-        // if ((i % 1000) == 0) {
-        //     cout<<"Delete_test:"<<i;
-        //     stats.print_latency();
-        //     stats.clear_period();
-        // }
+        if ((i % 1000) == 0) {
+            cout<<"Delete_test:"<<i;
+            stats.print_latency();
+            stats.clear_period();
+        }
     }
     stats.clear_period();
     end_time = get_now_micros();
