@@ -563,8 +563,8 @@ public:
 
             for (auto it : v_entry)
             {
-                print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
-                                    it.key, it.value, it.flag);
+                // print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
+                //                     it.key, it.value, it.flag);
                 if(it.key > key2) {
                     size = find_size;
                     return;
