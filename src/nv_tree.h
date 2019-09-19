@@ -586,7 +586,7 @@ public:
 
 
         while(id < pCount) {
-            std::lock_guard<std::mutex> lk(parent->mut);
+            // std::lock_guard<std::mutex> lk(parent->mut);
             for(int i = 0; i < parent->n_keys; i++) {
                 // LeafNode *leaf = parent->LNs[i];
                 LeafNode tmp_leaf;
