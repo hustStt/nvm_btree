@@ -523,20 +523,21 @@ public:
         return nullptr;
     }
 
-    void sort_leaf(LeafNode *leaf, uint8_t index[]) {
-
-        for(uint8_t i = 0; i < leaf->nElements; i++) {
-            index[i] = i;
-        }
-        for(uint8_t i = 0; i < leaf->nElements - 1; i++) {
-            for(uint8_t j =0; j < leaf->nElements - 1 - i; j ++) {
-                if(leaf->elements[index[j]].key > leaf->elements[index[j+1]].key) {
-                    uint8_t tmp = index[j];
-                    index[j] = index[j+1];
-                    index[j+1] = tmp;
-                }
+    void insert_sort(vector<Element> &v_entry, Element &e) {
+        int i = 0;
+        for(i =0; i < v_entry.size(); i ++) {
+            if(v_entry[i].key == e.key) {
+                return ;
+            } else if(v_entry[i].key > e.key) {
+                break;
             }
+        } 
+
+        v_entry.push_back(e);
+        for(int j = v_entry.size() - 1; j > i; j --) {
+            v_entry[j] =  v_entry[j - 1];
         }
+        v_entry[i] = e;
     }
 
     void scan(uint64_t key1, uint64_t key2, std::vector<string> &values, int &size) {
@@ -553,29 +554,24 @@ public:
         while(leaf != nullptr) {
             memcpy(mem, leaf, sizeof(LeafNode));
             leaf = (LeafNode *)mem;
-            std::map<uint64_t, std::pair<void *, uint8_t>> maps;
+            // std::map<uint64_t, std::pair<void *, uint8_t>> maps;
+            std::vector<Element> v_entry;
             for (int i = leaf->nElements-1; i >= 0; i--)
             {
-                // if (maps.find(p->elements[i].key) == maps.end())
-                // {
-                //     maps.insert(std::make_pair(p->elements[i].key,
-                //                             std::make_pair(p->elements[i].value, p->elements[i].flag)));
-                // }
-                maps.insert(std::make_pair(leaf->elements[i].key,
-                                            std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
+                insert_sort(v_entry, leaf->elements[i]);
             }
 
-            for (auto it : maps)
+            for (auto it : v_entry)
             {
-                // print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
-                //                     it.first, it.second.first, it.second.second);
-                if(it.first > key2) {
+                print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
+                                    it.key, it.value, it.flag);
+                if(it.key > key2) {
                     size = find_size;
                     return;
                 } else {
-                    if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
-                        if(it.first >= key1 && it.second.first != nullptr) {
-                            values.push_back(string((char *)(it.second.first), NVM_ValueSize));
+                    if(it.flag != OpDelete) {  // 最后一次操作不是Delete
+                        if(it.key >= key1 && it.value != nullptr) {
+                            values.push_back(string((char *)(it.value), NVM_ValueSize));
                             find_size ++;
                         }
                         if(find_size >= size) {
@@ -584,6 +580,33 @@ public:
                     }
                 }
             }
+            
+            // std::map<uint64_t, std::pair<void *, uint8_t>> maps;
+            // for (int i = leaf->nElements-1; i >= 0; i--)
+            // {
+            //     maps.insert(std::make_pair(leaf->elements[i].key,
+            //                                 std::make_pair(leaf->elements[i].value, leaf->elements[i].flag)));
+            // }
+
+            // for (auto it : maps)
+            // {
+            //     // print_log(LV_DEBUG, "Get range key is %16llx, value %p, flag %d.", 
+            //     //                     it.first, it.second.first, it.second.second);
+            //     if(it.first > key2) {
+            //         size = find_size;
+            //         return;
+            //     } else {
+            //         if(it.second.second != OpDelete) {  // 最后一次操作不是Delete
+            //             if(it.first >= key1 && it.second.first != nullptr) {
+            //                 values.push_back(string((char *)(it.second.first), NVM_ValueSize));
+            //                 find_size ++;
+            //             }
+            //             if(find_size >= size) {
+            //                 return ;
+            //             }
+            //         }
+            //     }
+            // }
             leaf = leaf->next;
         }
 
