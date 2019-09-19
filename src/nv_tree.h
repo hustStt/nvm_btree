@@ -551,7 +551,7 @@ public:
         LeafNode *leaf = parent->LNs[pos];
 
         while(leaf != nullptr) {
-            memcpy(mem, leaf, siezof(LeafNode));
+            memcpy(mem, leaf, sizeof(LeafNode));
             leaf = (LeafNode *)mem;
             std::map<uint64_t, std::pair<void *, uint8_t>> maps;
             for (int i = leaf->nElements-1; i >= 0; i--)
