@@ -549,11 +549,11 @@ public:
         int pos = parent->binary_search(key1);
 
         LeafNode *leaf = parent->LNs[pos];
-        std::map<uint64_t, std::pair<void *, uint8_t>> maps;
 
         while(leaf != nullptr) {
             memcpy(mem, leaf, sizeof(LeafNode));
             leaf = (LeafNode *)mem;
+            std::map<uint64_t, std::pair<void *, uint8_t>> maps;
             for (int i = leaf->nElements-1; i >= 0; i--)
             {
                 // if (maps.find(p->elements[i].key) == maps.end())
@@ -585,7 +585,6 @@ public:
                 }
             }
             leaf = leaf->next;
-            maps.clear();
         }
 
 
