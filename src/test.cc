@@ -358,9 +358,8 @@ void motivationtest(NVMBtree *bt) {
                 char *pvalue = nullptr;
                 bt->Get(key, pvalue);
 #else
-                bt->Insert(key, value);
-#endif
                 const string value = bt->Get(key);
+#endif
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
