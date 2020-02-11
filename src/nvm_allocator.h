@@ -5,6 +5,9 @@
 #include <libpmem.h>
 #include <mutex>
 
+#include <errno.h>
+#include <err.h>
+
 
 const uint64_t NVMSectorSize = 256;
 const uint64_t MemReserved = (10 << 20);  // 保留 10M 空间
@@ -17,7 +20,7 @@ public:
         pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
             
         if (pmemaddr_ == NULL) {
-            printf("%s: map error, filepath %s\n", __FUNCTION__, path.c_str());
+            printf("%s: map error, filepath %s, error: %s(%d)\n", __FUNCTION__, path.c_str(), strerror(errno), errno);
             exit(-1);
         } else {
             printf("%s: map at %p \n", __FUNCTION__, pmemaddr_);

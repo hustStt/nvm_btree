@@ -9,12 +9,12 @@
 #include "debug.h"
 #include "statistic.h"
 
-#define NODEPATH   "/pmem0/datastruct/persistent"
-#define VALUEPATH "/pmem0/datastruct/value_persistent"
+#define NODEPATH   "/pmem1/persistent"
+#define VALUEPATH "/pmem1/value_persistent"
 
 
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
-const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
+const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 180GB
 const uint64_t MAX_KEY = ~(0ULL);
 
 int using_existing_data = 0;
