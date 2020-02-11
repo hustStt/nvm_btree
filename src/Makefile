@@ -1,7 +1,7 @@
 CXX = g++
 LDFLAGS = -pthread -lpmemobj -lpmem
-DEFS = -DSINGLE_BTREE -DNO_V ALUE
-MULT_DEFS = -DNO_V ALUE
+DEFS = -DSINGLE_BTREE -DNO_VALUE
+MULT_DEFS = -DNO_VALUE
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
 
 SING_CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS)
