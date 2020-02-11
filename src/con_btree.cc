@@ -118,6 +118,117 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
     size = off;
 }
 
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<void *> &values, int &size) {
+    int i, off = 0;
+    uint8_t previous_switch_counter;
+    bpnode *current = this;
+
+    while(current) {
+        int old_off = off;
+        do {
+            previous_switch_counter = current->hdr.switch_counter;
+            off = old_off;
+
+            entry_key_t tmp_key;
+            char *tmp_ptr;
+
+            if(IS_FORWARD(previous_switch_counter)) {
+                if((tmp_key = current->records[0].key) > min) {
+                    if(tmp_key < max) {
+                        if((tmp_ptr = current->records[0].ptr) != NULL) {
+                            if(tmp_key == current->records[0].key) {
+                                if(tmp_ptr) {
+                                    // buf[off++] = (unsigned long)tmp_ptr;
+                                    values.push_back(tmp_ptr);
+                                    off++;
+                                    if(off >= size) {
+                                        return ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        size = off;
+                        return;
+                    }
+                }
+
+                for(i=1; current->records[i].ptr != NULL; ++i) { 
+                    if((tmp_key = current->records[i].key) > min) {
+                        if(tmp_key < max) {
+                            if((tmp_ptr = current->records[i].ptr) != current->records[i - 1].ptr) {
+                                if(tmp_key == current->records[i].key) {
+                                    if(tmp_ptr) {
+                                        // buf[off++] = (unsigned long)tmp_ptr;
+                                        values.push_back(tmp_ptr);
+                                        off++;
+                                        if(off >= size) {
+                                            return ;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            size = off;
+                            return;
+                        }
+                    }
+                }
+            }
+            else {
+                for(i=count() - 1; i > 0; --i) { 
+                    if((tmp_key = current->records[i].key) > min) {
+                        if(tmp_key < max) {
+                            if((tmp_ptr = current->records[i].ptr) != current->records[i - 1].ptr) {
+                                if(tmp_key == current->records[i].key) {
+                                    if(tmp_ptr) {
+                                        // buf[off++] = (unsigned long)tmp_ptr;
+                                        values.push_back(tmp_ptr);
+                                        off++;
+                                        if(off >= size) {
+                                            return ;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            size = off;
+                            return;
+                        }
+                    }
+                }
+
+                if((tmp_key = current->records[0].key) > min) {
+                    if(tmp_key < max) {
+                        if((tmp_ptr = current->records[0].ptr) != NULL) {
+                            if(tmp_key == current->records[0].key) {
+                                if(tmp_ptr) {
+                                    // buf[off++] = (unsigned long)tmp_ptr;
+                                    values.push_back(tmp_ptr);
+                                    off++;
+                                    if(off >= size) {
+                                        return ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        size = off;
+                        return;
+                    }
+                }
+            }
+        } while(previous_switch_counter != current->hdr.switch_counter);
+
+        current = current->hdr.sibling_ptr;
+    }
+    size = off;
+}
+
 btree::btree(){
   root = (char*)new bpnode();
   height = 1;
@@ -298,6 +409,23 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max,
     }
 }
 
+void btree::btree_search_range(entry_key_t min, entry_key_t max, 
+        std::vector<void *> &values, int &size) {
+    bpnode *p = (bpnode *)root;
+
+    while(p) {
+        if(p->hdr.leftmost_ptr != NULL) {
+        // The current bpnode is internal
+        p = (bpnode *)p->linear_search(min);
+        }
+        else {
+        // Found a leaf
+        p->linear_search_range(min, max, values, size);
+
+        break;
+        }
+    }
+}
 void btree::printAll(){
   pthread_mutex_lock(&print_mtx);
   int total_keys = 0;

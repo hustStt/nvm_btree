@@ -277,7 +277,12 @@ void motivationtest(NVMBtree *bt) {
                 snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                 string value(valuebuf, NVM_ValueSize);
                 // printf("Insert number %ld, key %llx.\n", i, key);
+#ifdef NO_VALUE
+                char *pvalue = (char *)key;
+                bt->Insert(key, pvalue);
+#else
                 bt->Insert(key, value);
+#endif
                 if ((i % 40000000) == 0) {
                     printf("Number %ld", i / 40000000);
                     bt->PrintStorage();
@@ -314,7 +319,12 @@ void motivationtest(NVMBtree *bt) {
                 snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                 string value(valuebuf, NVM_ValueSize);
                 // printf("Insert number %ld, key %llx.\n", i, key);
+#ifdef NO_VALUE
+                char *pvalue = (char *)key;
+                bt->Insert(key, pvalue);
+#else
                 bt->Insert(key, value);
+#endif
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -344,6 +354,12 @@ void motivationtest(NVMBtree *bt) {
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_get.Next();
+#ifdef NO_VALUE
+                char *pvalue = nullptr;
+                bt->Get(key, pvalue);
+#else
+                bt->Insert(key, value);
+#endif
                 const string value = bt->Get(key);
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
@@ -376,8 +392,13 @@ void motivationtest(NVMBtree *bt) {
             for(uint64_t i = from; i < to; i ++) {
                 int size = scan_count;
                 uint64_t key = rnd_scan.Next();
+#ifdef NO_VALUE
+                std::vector<void *> values;
+                bt->GetRange(key, MAX_KEY, values, size);
+#else
                 std::vector<std::string> values;
                 bt->GetRange(key, MAX_KEY, values, size);
+#endif
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);

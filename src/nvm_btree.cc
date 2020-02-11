@@ -23,6 +23,12 @@ void NVMBtree::Insert(const unsigned long key, const string &value) {
     }
 }
 
+void NVMBtree::Insert(const unsigned long key, char *pvalue) {
+    if(bt) {
+        bt->btree_insert(key, pvalue);
+    }
+}
+
 void NVMBtree::Delete(const unsigned long  key) {
     if(bt) {
         bt->btree_delete(key);
@@ -41,7 +47,24 @@ const string NVMBtree::Get(const unsigned long key) {
     return "";
 }
 
+int NVMBtree::Get(const unsigned long key, char *&pvalue) {
+    if(bt) {
+        pvalue = bt->btree_search(key);
+    }
+    if(pvalue) {
+        return 0;
+    }
+    return 1;
+
+}
+
 void NVMBtree::GetRange(unsigned long key1, unsigned long key2, std::vector<std::string> &values, int &size) {
+    if(bt) {
+        bt->btree_search_range(key1, key2, values, size);
+    }
+}
+
+void NVMBtree::GetRange(unsigned long key1, unsigned long key2, std::vector<void *> &values, int &size) {
     if(bt) {
         bt->btree_search_range(key1, key2, values, size);
     }
