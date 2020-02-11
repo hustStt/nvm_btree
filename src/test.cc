@@ -39,6 +39,11 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+#ifdef NO_VALUE
+    printf("Have define NO_VALUE\n");
+#else 
+    printf("Have not define NO_VALUE\n");
+#endif
 
     NVMBtree *bt = new NVMBtree();
 
