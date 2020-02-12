@@ -429,7 +429,9 @@ void motivationtest(NVMBtree *bt) {
     use_time = end_time - start_time;
     printf("Scan test finished , scan count %d.\n", scan_count);
     nvm_print(ops);
+
     scan_count *= 10;
+    scantimes --;
     }
 
     //* 删除测试

@@ -22,6 +22,7 @@
 
 using namespace std;
 
+const uint64_t MAX_KEY = ~(0ULL);
 class NVMBtree{
 public:
     NVMBtree();
