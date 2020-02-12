@@ -392,16 +392,18 @@ void motivationtest(NVMBtree *bt) {
     nvm_print(ops);
 
     //* Scan测试
-    ops = 1000;
+    ops = 100;
     start_time = get_now_micros();
+    int scantimes = 4;
+    int scan_count = 100;
+    while(scantimes > 0) {
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
-            int scan_count = 1000;
             for(uint64_t i = from; i < to; i ++) {
                 int size = scan_count;
                 uint64_t key = rnd_scan.Next();
@@ -425,8 +427,10 @@ void motivationtest(NVMBtree *bt) {
     }
     end_time = get_now_micros();
     use_time = end_time - start_time;
-    printf("Scan test finished , scan count %d.\n", 1000);
+    printf("Scan test finished , scan count %d.\n", scan_count);
     nvm_print(ops);
+    scan_count *= 10;
+    }
 
     //* 删除测试
     ops = 50000000;
