@@ -18,6 +18,7 @@ const int NVM_PointSize = 8;
 const int NVM_KeyBuf = NVM_KeySize + NVM_PointSize;
 const int EntryInterval = 128;
 const double Double1 = 1.0;
+const uint64_t MAX_KEY = ~(0ULL);
 // Statistic stats;
 
 const uint64_t PutOps = 400000000;

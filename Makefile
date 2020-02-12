@@ -8,7 +8,7 @@ MULT_DEFS = -DNO_VALUE
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
 
 MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
-MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
+MULT_LIB_SOURCES = src/nvm_allocator.cc src/con_btree.cc src/nvm_btree.cc
 
 all: ycsb
 	rm -rf test

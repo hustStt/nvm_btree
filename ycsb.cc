@@ -14,6 +14,8 @@ using namespace std;
 #include "src/nvm_nvtree.h"
 #include "src/nvm_skiplist.h"
 
+#define NODEPATH   "/pmem0/datastruct/persistent"
+#define VALUEPATH "/pmem0/datastruct/value_persistent"
 
 // index types
 enum {
@@ -184,7 +186,8 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                         bt->Get(keys[i], pvalue);
                         if ((uint64_t)pvalue != keys[i]) {
                             std::cout << "[FAST-FAIR] wrong key read: " << (uint64_t)pvalue << " expected:" << keys[i] << std::endl;
-                            exit(1);
+                            break;
+                            // exit(1);
                         }
                     } else if (ops[i] == OP_SCAN) {
                         size_t resultsSize = ranges[i];
@@ -265,7 +268,10 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Unknown access pattern: %s\n", argv[4]);
         exit(1);
     }
-
+    if(AllocatorInit(NODEPATH, NVM_NODE_SIZE, VALUEPATH, NVM_VALUE_SIZE) < 0) {
+        print_log(LV_ERR, "Initial allocator failed");
+        return 0;
+    }
     int num_thread = atoi(argv[5]);
     tbb::task_scheduler_init init(num_thread);
 
@@ -305,6 +311,6 @@ int main(int argc, char **argv) {
 
     //     ycsb_load_run_string(index_type, wl, kt, ap, num_thread, init_keys, keys, ranges, ops);
     }
-
+    AllocatorExit();
     return 0;
 }

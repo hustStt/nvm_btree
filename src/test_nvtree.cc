@@ -16,8 +16,6 @@
 
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 180 * (1ULL << 30);         // 180GB
-const uint64_t MAX_KEY = ~(0ULL);
-
 
 int using_existing_data = 0;
 int test_type = 1;
