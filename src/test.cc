@@ -9,8 +9,8 @@
 #include "debug.h"
 #include "statistic.h"
 
-#define NODEPATH   "/pmem1/persistent"
-#define VALUEPATH "/pmem1/value_persistent"
+#define NODEPATH   "/pmem0/persistent"
+#define VALUEPATH "/pmem0/value_persistent"
 
 
 const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
@@ -274,13 +274,14 @@ void motivationtest(NVMBtree *bt) {
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to){
+        auto f = async(launch::async, [&](int tid, uint64_t from, uint64_t to){
             rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_put.Next();
                 snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                 string value(valuebuf, NVM_ValueSize);
+                stats.start();
                 // printf("Insert number %ld, key %llx.\n", i, key);
 #ifdef NO_VALUE
                 char *pvalue = (char *)key;
@@ -288,10 +289,18 @@ void motivationtest(NVMBtree *bt) {
 #else
                 bt->Insert(key, value);
 #endif
-                if ((i % 40000000) == 0) {
-                    printf("Number %ld", i / 40000000);
-                    bt->PrintStorage();
+                stats.end();
+                stats.add_put();
+
+                if ((i % 1000) == 0) {
+                    cout<<"Put_test:"<<i;
+                    stats.print_latency();
+                    stats.clear_period();
                 }
+                // if ((i % 40000000) == 0) {
+                //     printf("Number %ld", i / 40000000);
+                //     bt->PrintStorage();
+                // }
             }
             printf("thread %d finished.\n", tid);
         }, tid, from, to);
