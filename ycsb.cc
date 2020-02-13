@@ -157,6 +157,9 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
             return;
         }
         count++;
+        if(count % 1000 == 0) {
+            printf("Read %d run keys\n", count);
+        }
     }
     fprintf(stderr, "Read %d run keys\n", count);
 
@@ -170,7 +173,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                 for (uint64_t i = scope.begin(); i != scope.end(); i++) {
                     char *pvalue = (char *)init_keys[i];
                     bt->Insert(key, pvalue);
-                    if(i % 1000) {
+                    if(i % 1000 == 0) {
                         printf("Load %d keys\n", i);
                     }
                 }
