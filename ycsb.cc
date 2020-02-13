@@ -14,17 +14,13 @@ using namespace std;
 #include "src/nvm_nvtree.h"
 #include "src/nvm_skiplist.h"
 
-#define NODEPATH   "/pmem0/datastruct/persistent"
-#define VALUEPATH "/pmem0/datastruct/value_persistent"
-
 #define NODEPATH   "/pmem0/persistent"
 #define VALUEPATH "/pmem0/value_persistent"
 
-#define WORKLOADSDIR "/home/zhangyiwen/RECIPE/index-microbench/workloads/"
-
-const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
+const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 100GB
 const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
 
+#define WORKLOADSDIR "/home/zhangyiwen/RECIPE/index-microbench/workloads/"
 // index types
 enum {
     TYPE_FASTFAIR,
@@ -201,7 +197,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                             // exit(1);
                         }
                     } else if (ops[i] == OP_SCAN) {
-                        size_t resultsSize = ranges[i];
+                        int resultsSize = ranges[i];
                         void *values[resultsSize];
                         bt->GetRange(keys[i], MAX_KEY, values, resultsSize);
                     } else if(ops[i] == OP_DELETE) {
