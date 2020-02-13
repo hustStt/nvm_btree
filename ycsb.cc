@@ -162,7 +162,8 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         }
     }
     fprintf(stderr, "Read %d run keys\n", count);
-
+    atomic<int> found(0);
+    atomic<int> notfound(0);
     if (index_type == TYPE_FASTFAIR) {
         NVMBtree *bt = new NVMBtree();
 
@@ -172,7 +173,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
             tbb::parallel_for(tbb::blocked_range<uint64_t>(0, LOAD_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
                 for (uint64_t i = scope.begin(); i != scope.end(); i++) {
                     char *pvalue = (char *)init_keys[i];
-                    bt->Insert(key, pvalue);
+                    bt->Insert(init_keys[i], pvalue);
                     if(i % 1000 == 0) {
                         printf("Load %d keys\n", i);
                     }
@@ -195,9 +196,12 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                         char *pvalue = nullptr;
                         bt->Get(keys[i], pvalue);
                         if ((uint64_t)pvalue != keys[i]) {
+                            notfound ++;
                             std::cout << "[FAST-FAIR] wrong key read: " << (uint64_t)pvalue << " expected:" << keys[i] << std::endl;
                             break;
                             // exit(1);
+                        } else {
+                            found ++;
                         }
                     } else if (ops[i] == OP_SCAN) {
                         int resultsSize = ranges[i];
@@ -212,6 +216,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                     std::chrono::system_clock::now() - starttime);
             printf("Throughput: run, %f ,ops/us\n", (RUN_SIZE * 1.0) / duration.count());
         }
+        printf("Found/Notfound: %d / %d\n", found.load(), notfound.load());
     }
 
 }
