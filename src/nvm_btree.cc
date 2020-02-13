@@ -50,7 +50,7 @@ const string NVMBtree::Get(const unsigned long key) {
 int NVMBtree::Get(const unsigned long key, char *&pvalue) {
     if(bt) {
         pvalue = bt->btree_search(key);
-        // printf("Get key %llx, pvalue %llx", key, pvalue);
+        printf("Get key %llx, pvalue %llx", key, pvalue);
     }
     if(pvalue) {
         return 0;
