@@ -158,6 +158,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         }
         count++;
     }
+    fprintf(stderr, "Read %d run keys\n", count);
 
     if (index_type == TYPE_FASTFAIR) {
         NVMBtree *bt = new NVMBtree();
