@@ -30,9 +30,9 @@ void NVMBtree::Insert(const unsigned long key, char *pvalue) {
         char *value = bt->btree_search(key);
 
         if((unsigned long)value != key) {
-            printf("Get key %llx, pvalue %llx", key, pvalue);
+            printf("Not Found Get key %llx, pvalue %llx\n", key, pvalue);
         } else {
-            printf("Get key %llx, pvalue %llx", key, value);
+            printf("Found Get key %llx, pvalue %llx\n", key, value);
         }
     }
 }
@@ -58,7 +58,7 @@ const string NVMBtree::Get(const unsigned long key) {
 int NVMBtree::Get(const unsigned long key, char *&pvalue) {
     if(bt) {
         pvalue = bt->btree_search(key);
-        printf("Get key %llx, pvalue %llx", key, pvalue);
+        printf("Get key %llx, pvalue %llx\n", key, pvalue);
     }
     if(pvalue) {
         return 0;
