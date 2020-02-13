@@ -64,9 +64,9 @@ void NVMBtree::GetRange(unsigned long key1, unsigned long key2, std::vector<std:
     }
 }
 
-void NVMBtree::GetRange(unsigned long key1, unsigned long key2, std::vector<void *> &values, int &size) {
+void NVMBtree::GetRange(unsigned long key1, unsigned long key2, void **pvalues, int &size) {
     if(bt) {
-        bt->btree_search_range(key1, key2, values, size);
+        bt->btree_search_range(key1, key2, pvalues, size);
     }
 }
 

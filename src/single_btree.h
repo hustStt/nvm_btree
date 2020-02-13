@@ -107,7 +107,7 @@ class btree{
     char *btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
-    void btree_search_range(entry_key_t, entry_key_t, std::vector<void *> &values, int &size); 
+    void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
@@ -196,7 +196,7 @@ class bpnode{
     }
 
     void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size);
-    void linear_search_range(entry_key_t min, entry_key_t max, std::vector<void *g> &values, int &size);
+    void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size);
 
 
     inline int count() {

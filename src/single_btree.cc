@@ -115,7 +115,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
     size = off;
 }
 
-void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<void *> &values, int &size) {
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
     int i, off = 0;
     uint8_t previous_switch_counter;
     bpnode *current = this;
@@ -136,7 +136,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<v
                             if(tmp_key == current->records[0].key) {
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
-                                    values.push_back(tmp_ptr);
+                                    values[off] = tmp_ptr;
                                     off++;
                                     if(off >= size) {
                                         return ;
@@ -158,7 +158,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<v
                                 if(tmp_key == current->records[i].key) {
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
-                                        values.push_back(tmp_ptr);
+                                        values[off] = tmp_ptr;
                                         off++;
                                         if(off >= size) {
                                             return ;
@@ -182,7 +182,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<v
                                 if(tmp_key == current->records[i].key) {
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
-                                        values.push_back(tmp_ptr);
+                                        values[off] = tmp_ptr;
                                         off++;
                                         if(off >= size) {
                                             return ;
@@ -204,7 +204,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<v
                             if(tmp_key == current->records[0].key) {
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
-                                    values.push_back(tmp_ptr);
+                                    values[off] = tmp_ptr;
                                     off++;
                                     if(off >= size) {
                                         return ;
@@ -403,7 +403,7 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std
     }
 }
 
-void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<void *> &values, int &size) {
+void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
     bpnode *p = (bpnode *)root;
 
     while(p) {

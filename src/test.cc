@@ -318,7 +318,7 @@ void motivationtest(NVMBtree *bt) {
     nvm_print(ops);
 
     //* 随机写测试
-    ops = 50000000;
+    ops = 10000000;
     start_time = get_now_micros();
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
@@ -356,7 +356,7 @@ void motivationtest(NVMBtree *bt) {
     nvm_print(ops);
 
     //* 随机读测试
-    ops = 50000000;
+    ops = 10000000;
     start_time = get_now_micros();
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
@@ -402,13 +402,12 @@ void motivationtest(NVMBtree *bt) {
 
         auto f = async(launch::async, [&](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_scan(rand_seed * (tid + 1));
-            char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 int size = scan_count;
                 uint64_t key = rnd_scan.Next();
 #ifdef NO_VALUE
-                std::vector<void *> values;
-                bt->GetRange(key, MAX_KEY, values, size);
+                void *pvalues[scan_count];
+                bt->GetRange(key, MAX_KEY, pvalues, size);
 #else
                 std::vector<std::string> values;
                 bt->GetRange(key, MAX_KEY, values, size);
@@ -434,7 +433,7 @@ void motivationtest(NVMBtree *bt) {
     }
 
     //* 删除测试
-    ops = 50000000;
+    ops = 10000000;
     start_time = get_now_micros();
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
