@@ -2,7 +2,7 @@ CXX = g++
 AR = ar
 ARFLAGS = rs
 
-LDFLAGS = -pthread -lpmemobj -lpmem
+LDFLAGS = -pthread -lpmemobj -lpmem -ltbb
 DEFS = -DSINGLE_BTREE -DNO_VALUE
 MULT_DEFS = -DNO_VALUE
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
@@ -23,7 +23,7 @@ clean:
 install:
 	make -C src $@
 ycsb:
-	$(CXX) $(MULT_CXXFLAGS) ycsb.cc $(MULT_LIB_SOURCES) -o mult_test $(LDFLAGS)
+	$(CXX) $(MULT_CXXFLAGS) ycsb.cc $(MULT_LIB_SOURCES) -o ycsb $(LDFLAGS)
 
 uninstall:
 	make -C src $@

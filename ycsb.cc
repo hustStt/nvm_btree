@@ -159,10 +159,6 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         count++;
     }
 
-    std::atomic<int> range_complete, range_incomplete;
-    range_complete.store(0);
-    range_incomplete.store(0);
-
     if (index_type == TYPE_FASTFAIR) {
         NVMBtree *bt = new NVMBtree();
 
@@ -173,6 +169,9 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                 for (uint64_t i = scope.begin(); i != scope.end(); i++) {
                     char *pvalue = (char *)init_keys[i];
                     bt->Insert(key, pvalue);
+                    if(i % 1000) {
+                        printf("Load %d keys\n", i);
+                    }
                 }
             });
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
