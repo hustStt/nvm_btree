@@ -26,6 +26,12 @@ void NVMBtree::Insert(const unsigned long key, const string &value) {
 void NVMBtree::Insert(const unsigned long key, char *pvalue) {
     if(bt) {
         bt->btree_insert(key, pvalue);
+
+        char *value = bt->btree_search(key);
+
+        if((unsigned long)value != key) {
+            printf("Get key %llx, pvalue %llx", key, pvalue);
+        }
     }
 }
 
