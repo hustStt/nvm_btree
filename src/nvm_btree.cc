@@ -31,8 +31,10 @@ void NVMBtree::Insert(const unsigned long key, char *pvalue) {
 
         if((unsigned long)value != key) {
             printf("Not Found Get key %llx, pvalue %llx\n", key, pvalue);
-        } else {
-            printf("Found Get key %llx, pvalue %llx\n", key, value);
+        } 
+
+        if(key == 0x509af66da8d1399dUL) {
+            printf("Insert key %llx", key);
         }
     }
 }
