@@ -49,6 +49,9 @@ enum {
     ZIPFIAN,
 };
 
+static uint64_t LOAD_SIZE = 64000000;
+static uint64_t RUN_SIZE = 64000000;
+
 // void ycsb_load_run_string(int index_type, int wl, int kt, int ap, int num_thread,
 //         std::vector<Key *> &init_keys,
 //         std::vector<Key *> &keys,
