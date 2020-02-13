@@ -20,6 +20,7 @@ using namespace std;
 #define NODEPATH   "/pmem0/persistent"
 #define VALUEPATH "/pmem0/value_persistent"
 
+#define WORKLOADSDIR "/home/zhangyiwen/RECIPE/index-microbench/workloads/"
 
 const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
@@ -80,37 +81,37 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
 
     if (ap == UNIFORM) {
         if (kt == RANDINT_KEY && wl == WORKLOAD_A) {
-            init_file = "./index-microbench/workloads/loada_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsa_unif_int.dat";
+            init_file = WORKLOADSDIR"loada_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsa_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_B) {
-            init_file = "./index-microbench/workloads/loadb_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsb_unif_int.dat";
+            init_file = WORKLOADSDIR"loadb_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsb_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_C) {
-            init_file = "./index-microbench/workloads/loadc_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsc_unif_int.dat";
+            init_file = WORKLOADSDIR"loadc_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsc_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_D) {
-            init_file = "./index-microbench/workloads/loadd_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsd_unif_int.dat";
+            init_file = WORKLOADSDIR"loadd_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsd_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_E) {
-            init_file = "./index-microbench/workloads/loade_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnse_unif_int.dat";
+            init_file = WORKLOADSDIR"loade_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnse_unif_int.dat";
         }
     } else {
         if (kt == RANDINT_KEY && wl == WORKLOAD_A) {
-            init_file = "./index-microbench/workloads/loada_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsa_unif_int.dat";
+            init_file = WORKLOADSDIR"loada_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsa_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_B) {
-            init_file = "./index-microbench/workloads/loadb_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsb_unif_int.dat";
+            init_file = WORKLOADSDIR"loadb_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsb_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_C) {
-            init_file = "./index-microbench/workloads/loadc_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsc_unif_int.dat";
+            init_file = WORKLOADSDIR"loadc_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsc_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_D) {
-            init_file = "./index-microbench/workloads/loadd_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnsd_unif_int.dat";
+            init_file = WORKLOADSDIR"loadd_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnsd_unif_int.dat";
         } else if (kt == RANDINT_KEY && wl == WORKLOAD_E) {
-            init_file = "./index-microbench/workloads/loade_unif_int.dat";
-            txn_file = "./index-microbench/workloads/txnse_unif_int.dat";
+            init_file = WORKLOADSDIR"loade_unif_int.dat";
+            txn_file = WORKLOADSDIR"txnse_unif_int.dat";
         }
     }
 
@@ -201,7 +202,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                         }
                     } else if (ops[i] == OP_SCAN) {
                         size_t resultsSize = ranges[i];
-                        std::vector<void *> values;
+                        void *values[resultsSize];
                         bt->GetRange(keys[i], MAX_KEY, values, resultsSize);
                     } else if(ops[i] == OP_DELETE) {
                         bt->Delete(keys[i]);
