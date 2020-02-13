@@ -13,8 +13,8 @@
 #define VALUEPATH "/pmem0/value_persistent"
 
 
-const uint64_t NVM_NODE_SIZE = 45 * (1ULL << 30);           // 45GB
-const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 180GB
+const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
+const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
 
 int using_existing_data = 0;
 int test_type = 1;

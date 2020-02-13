@@ -17,6 +17,13 @@ using namespace std;
 #define NODEPATH   "/pmem0/datastruct/persistent"
 #define VALUEPATH "/pmem0/datastruct/value_persistent"
 
+#define NODEPATH   "/pmem0/persistent"
+#define VALUEPATH "/pmem0/value_persistent"
+
+
+const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
+const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
+
 // index types
 enum {
     TYPE_FASTFAIR,
