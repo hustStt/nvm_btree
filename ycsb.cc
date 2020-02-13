@@ -189,8 +189,8 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
             tbb::parallel_for(tbb::blocked_range<uint64_t>(0, RUN_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
                 for (uint64_t i = scope.begin(); i != scope.end(); i++) {
                     if (ops[i] == OP_INSERT) {
-                        char *pvalue = (char *)init_keys[i];
-                        bt->Insert(init_keys[i], pvalue);
+                        char *pvalue = (char *)keys[i];
+                        bt->Insert(keys[i], pvalue);
                     } else if (ops[i] == OP_READ) {
                         char *pvalue = nullptr;
                         bt->Get(keys[i], pvalue);
