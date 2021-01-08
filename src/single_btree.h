@@ -36,7 +36,7 @@
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
-using entry_key_t = uint64_t;
+//using entry_key_t = uint64_t;
 
 
 using namespace std;
@@ -54,6 +54,7 @@ static void alloc_memalign(void **ret, size_t alignment, size_t size) {
 }
 
 class bpnode;
+class subtree;
 
 class btree{
   private:
@@ -872,7 +873,7 @@ class subtree {
   private:
     bpnode* dram_ptr;
     nvmpage* nvm_ptr;
-    TOID(subtreeroot) sibling_ptr;
+    TOID(subtree) sibling_ptr;
     uint64_t heat;
     PMEMobjpool *pop;
     NVMAllocator* log_alloc;
@@ -907,11 +908,11 @@ class subtree {
     void subtree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
 
     // nvm --> dram
-    char* btree::DFS(nvmpage* root);
+    char* DFS(nvmpage* root);
     void nvm_to_dram();
 
     // dram --> nvm
-    char* btree::DFS(char* root);
+    char* DFS(char* root);
     void dram_to_nvm();
 
     // sync dram --> nvm

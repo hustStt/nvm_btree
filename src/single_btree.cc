@@ -598,7 +598,7 @@ void subtree::subtree_delete(entry_key_t key) {
       p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
     }
 
-    uint64_t t = (uint64_t)(D_RW(p)->linear_search(key);
+    uint64_t t = (uint64_t)D_RW(p)->linear_search(key);
     if (t) {
       if (!D_RW(p)->remove(this, key)) {
         subtree_delete(key);
@@ -610,7 +610,7 @@ void subtree::subtree_delete(entry_key_t key) {
   // 检查合并
 }
 
-char* subtree::subtree_search(entry_key_t) {
+char* subtree::subtree_search(entry_key_t key) {
   if (flag) {
     bpnode* p = dram_ptr;
     while(p->hdr.leftmost_ptr != NULL) {
