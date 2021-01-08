@@ -26,6 +26,7 @@ const uint64_t GetOps = 1000000;
 const uint64_t DeleteOps = 1000000;
 const uint64_t ScanOps = 100000;
 const uint64_t ScanCount = 1000;
+const uint64_t MAX_DRAM_BTREE_SIZE = 1600000000;
 
 static inline int KeyCompare(const void *key1, const void *key2) {
     return memcmp(key1, key2, NVM_KeySize);

@@ -25,6 +25,7 @@
 #include <mutex>
 
 #include "nvm_common.h"
+#include "single_pmdk.h"
 
 #define PAGESIZE 256
 
@@ -37,50 +38,13 @@
 
 using entry_key_t = uint64_t;
 
-// static inline void cpu_pause()
-// {
-//     __asm__ volatile ("pause" ::: "memory");
-// }
-
-// static inline unsigned long read_tsc(void)
-// {
-//     unsigned long var;
-//     unsigned int hi, lo;
-
-//     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
-//     var = ((unsigned long long int) hi << 32) | lo;
-
-//     return var;
-// }
-
-// unsigned long write_latency_in_ns=0;
-// unsigned long long search_time_in_insert=0;
-// unsigned int gettime_cnt= 0;
-// unsigned long long clflush_time_in_insert=0;
-// unsigned long long update_time_in_insert=0;
-// int clflush_cnt = 0;
-// int node_cnt=0;
 
 using namespace std;
 
-// inline void mfence()
-// {
-//   asm volatile("mfence":::"memory");
-// }
 
 inline void clflush(char *data, int len)
 {
-    nvm_persist(data, len);
-//   volatile char *ptr = (char *)((unsigned long)data &~(CACHE_LINE_SIZE-1));
-//   mfence();
-//   for(; ptr<data+len; ptr+=CACHE_LINE_SIZE){
-//     unsigned long etsc = read_tsc() + 
-//       (unsigned long)(write_latency_in_ns*CPU_FREQ_MHZ/1000);
-//     asm volatile("clflush %0" : "+m" (*(volatile char *)ptr));
-//     while (read_tsc() < etsc) cpu_pause();
-//     //++clflush_cnt;
-//   }
-//   mfence();
+    //nvm_persist(data, len);
 }
 
 static void alloc_memalign(void **ret, size_t alignment, size_t size) {
@@ -95,15 +59,22 @@ class btree{
   private:
     int height;
     char* root;
+    bool flag;
+    int tar_level;
+    uint64_t total_size;
 
   public:
-    btree();
+    PMEMobjpool *pop;
+    btree(PMEMobjpool *pool);
     btree(bpnode *root);
     void setNewRoot(char *);
+    void btreeInsert(entry_key_t, char*);
     void btree_insert(entry_key_t, char*);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
+    void btreeDelete(entry_key_t);
     void btree_delete(entry_key_t);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
+    char *btreeSearch(entry_key_t);
     char *btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
@@ -111,6 +82,17 @@ class btree{
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
+    void deform();
+    void CalcuRootLevel();
+
+    subtree* newSubtreeRoot(bpnode *subtree_root) {
+      TOID(subtree) node;
+      POBJ_NEW(pop, &node, subtree, NULL, NULL);
+      D_RW(node)->constructor(pop, subtree_root);
+      return D_RW(node);
+    }
+
+    char* findSubtreeRoot();
 
     friend class bpnode;
 };
@@ -165,6 +147,7 @@ class bpnode{
 
   public:
     friend class btree;
+    friend class subtree;
 
     bpnode(uint32_t level = 0) {
       hdr.level = level;
@@ -183,14 +166,14 @@ class bpnode{
 
       clflush((char*)this, sizeof(bpnode));
     }
-
+/*
     void *operator new(size_t size) {
       void *ret;
     //   posix_memalign(&ret,64,size);
       alloc_memalign(&ret, 64, size);
       return ret;
     }
-
+*/
     uint32_t GetLevel() {
       return hdr.level;
     }
@@ -477,6 +460,7 @@ class bpnode{
               clflush((char*)&(records[*num_entries+1].ptr), sizeof(char*));
           }
 
+          //二分查找存不存在该key存在直接update  不存在进行后续insert操作
           // FAST
           for(i = *num_entries - 1; i >= 0; i--) {
             if(key < records[i].key ) {
@@ -500,7 +484,7 @@ class bpnode{
               }
             }
             else{
-              records[i+1].ptr = records[i].ptr;
+              records[i+1].ptr = records[i].ptr;//保证ptr不一样的时候 是插入完成
               records[i+1].key = key;
               records[i+1].ptr = ptr;
               // clflush((char *)(&records[i+1]), sizeof(entry));
@@ -882,3 +866,60 @@ class bpnode{
 static inline bpnode* NewBpNode() {
     return new bpnode();
 }
+
+
+class subtree {
+  private:
+    bpnode* dram_ptr;
+    nvmpage* nvm_ptr;
+    TOID(subtreeroot) sibling_ptr;
+    uint64_t heat;
+    PMEMobjpool *pop;
+    NVMAllocator* log_alloc;
+    bool flag;
+    // true:dram   false:nvm
+  public:
+    void constructor(PMEMobjpool *pop, bpnode* dram_ptr, uint64_t heat = 0, bool flag = true) {
+      this->flag = flag;
+      this->dram_ptr = dram_ptr;
+      this->nvm_ptr.oid.off = 0;
+      this->heat = heat;
+      this->pop = pop;
+
+      pmemobj_persist(pop, this, sizeof(subtreeroot));
+    }
+
+    void constructor(PMEMobjpool *pop, uint64_t off, uint64_t heat = 0, bool flag = false) {
+      this->flag = flag;
+      this->dram_ptr = nullptr;
+      this->nvm_ptr.oid.off = off;
+      this->heat = heat;
+      this->pop = pop;
+
+      pmemobj_persist(pop, this, sizeof(subtreeroot));
+    }
+
+    void subtree_insert(entry_key_t key, char* right);
+    void subtree_delete(entry_key_t);
+    char *subtree_search(entry_key_t);
+    void subtree_search_range(entry_key_t, entry_key_t, unsigned long *); 
+    //void subtree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
+    void subtree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
+
+    // nvm --> dram
+    char* btree::DFS(nvmpage* root);
+    void nvm_to_dram();
+
+    // dram --> nvm
+    char* btree::DFS(char* root);
+    void dram_to_nvm();
+
+    // sync dram --> nvm
+    void sync_subtree();
+
+    // 分裂 热度减半
+    void split();
+
+    // 合并 热度相加
+    void merge();
+};

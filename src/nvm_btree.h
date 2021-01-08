@@ -14,12 +14,9 @@
 #include "nvm_common.h"
 #include "nvm_allocator.h"
 
-#ifdef SINGLE_BTREE
 #include "single_btree.h"
-#else 
-#include "con_btree.h"
-#endif
 
+#include "single_pmdk.h"
 using namespace std;
 
 class NVMBtree{

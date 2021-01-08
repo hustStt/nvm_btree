@@ -25,8 +25,18 @@ void NVMBtree::Insert(const unsigned long key, const string &value) {
 
 void NVMBtree::Insert(const unsigned long key, char *pvalue) {
     if(bt) {
-        bt->btree_insert(key, pvalue);
-
+        /*
+        char* logvalue = log_alloc->AllocateAligned(18);
+        char* tmp = logvalue;
+        memset(logvalue, 0, 2);
+        logvalue += 2;
+        memcpy(logvalue, &key, 8);
+        logvalue += 8;
+        memcpy(logvalue, &pvalue, 8);
+        clflush(tmp, 18);
+        */
+        bt->btreeInsert(key, pvalue);
+        /*
         char *value = bt->btree_search(key);
 
         if((unsigned long)value != key) {
@@ -36,19 +46,28 @@ void NVMBtree::Insert(const unsigned long key, char *pvalue) {
         if(key == 0x509af66da8d1399dUL) {
             printf("Insert key %llx", key);
         }
+        */
     }
 }
 
-void NVMBtree::Delete(const unsigned long  key) {
+void NVMBtree::Delete(const unsigned long key) {
     if(bt) {
-        bt->btree_delete(key);
+        /*
+        char *logvalue = log_alloc->AllocateAligned(2 + 8);
+        char* tmp = logvalue;
+        memset(logvalue, 1, 2);
+        logvalue += 2;
+        memcpy(logvalue, &key, 8);
+        clflush(tmp, 10);
+        */
+        bt->btreeDelete(key);
     }
 }
 
 const string NVMBtree::Get(const unsigned long key) {
     char *pvalue = NULL;
     if(bt) {
-        pvalue = bt->btree_search(key);
+        pvalue = bt->btreeSearch(key);
     }
     if(pvalue) {
         // print_log(LV_DEBUG, "Get pvalue is %p.", pvalue);
@@ -59,8 +78,8 @@ const string NVMBtree::Get(const unsigned long key) {
 
 int NVMBtree::Get(const unsigned long key, char *&pvalue) {
     if(bt) {
-        pvalue = bt->btree_search(key);
-        printf("Get key %llx, pvalue %llx\n", key, pvalue);
+        pvalue = bt->btreeSearch(key);
+        //printf("Get key %llx, pvalue %llx\n", key, pvalue);
     }
     if(pvalue) {
         return 0;
@@ -90,7 +109,7 @@ void NVMBtree::Print() {
 void NVMBtree::PrintInfo() {
     if(bt) {
         bt->PrintInfo();
-        show_persist_data();
+        //show_persist_data();
     }
 }
 

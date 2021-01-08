@@ -96,9 +96,11 @@ private:
 
 extern NVMAllocator *node_alloc;
 extern NVMAllocator *value_alloc;
+extern NVMAllocator *log_alloc;
 
 int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 
                 uint64_t valuesize);
+int AllocatorInit(const std::string &logpath, uint64_t logsize);
 void AllocatorExit();
 
 // static inline void clflush(char *data, int len)

@@ -12,6 +12,8 @@ ARFLAGS = rs
 
 SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
+PMDK_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc single_pmdk.cc
+
 MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
 
 SKIPLIST_LIB_SOURCES = nvm_allocator.cc
@@ -28,12 +30,15 @@ LIBRARY = libnvmbtree.a
 default:  all
 
 # all:  clean single_test mult_test skiplist nvtree
-all: clean skiplist mult_test nvtree
+all: clean single_test
 
 clean: 
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
-	rm -f single_test mult_test
+	rm -f single_test mult_test pmdk_test
+
+pmdk_test:
+	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o pmdk_test $(LDFLAGS)
 
 single_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o single_test $(LDFLAGS)

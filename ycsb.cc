@@ -14,13 +14,13 @@ using namespace std;
 #include "src/nvm_nvtree.h"
 #include "src/nvm_skiplist.h"
 
-#define NODEPATH   "/pmem0/persistent"
-#define VALUEPATH "/pmem0/value_persistent"
+#define NODEPATH   "/mnt/pmem0/persistent"
+#define VALUEPATH "/mnt/pmem0/value_persistent"
 
 const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 100GB
 const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
 
-#define WORKLOADSDIR "/home/zhangyiwen/RECIPE/index-microbench/workloads/"
+#define WORKLOADSDIR "/root/sbh/RECIPE/index-microbench/workloads/"
 // index types
 enum {
     TYPE_FASTFAIR,
@@ -170,7 +170,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         {
             // Load
             auto starttime = std::chrono::system_clock::now();
-            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, LOAD_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
+            //tbb::parallel_for(tbb::blocked_range<uint64_t>(0, LOAD_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
                 for (uint64_t i = scope.begin(); i != scope.end(); i++) {
                     char *pvalue = (char *)init_keys[i];
                     bt->Insert(init_keys[i], pvalue);
@@ -178,7 +178,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                         printf("Load %d keys\n", i);
                     }
                 }
-            });
+            //});
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::system_clock::now() - starttime);
             printf("Throughput: load, %f ,ops/us\n", (LOAD_SIZE * 1.0) / duration.count());
@@ -187,7 +187,8 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
         {
             // Run
             auto starttime = std::chrono::system_clock::now();
-            tbb::parallel_for(tbb::blocked_range<uint64_t>(0, RUN_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
+            //tbb::parallel_for(tbb::blocked_range<uint64_t>(0, RUN_SIZE), [&](const tbb::blocked_range<uint64_t> &scope) {
+                std::cout<<"start: "<<scope.begin()<<std::endl;
                 for (uint64_t i = scope.begin(); i != scope.end(); i++) {
                     if (ops[i] == OP_INSERT) {
                         char *pvalue = (char *)keys[i];
@@ -211,7 +212,7 @@ void ycsb_load_run_randint(int index_type, int wl, int kt, int ap, int num_threa
                         bt->Delete(keys[i]);
                     }
                 }
-            });
+            //});
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::system_clock::now() - starttime);
             printf("Throughput: run, %f ,ops/us\n", (RUN_SIZE * 1.0) / duration.count());
@@ -288,7 +289,10 @@ int main(int argc, char **argv) {
         return 0;
     }
     int num_thread = atoi(argv[5]);
-    tbb::task_scheduler_init init(num_thread);
+    // tbb::task_scheduler_init init(tbb::task_scheduler_init::deferred);
+    // if (num_thread >= 1) {
+    //     init.initialize(num_thread);
+    // }
 
     if (kt != STRING_KEY) {
         std::vector<uint64_t> init_keys;
@@ -326,6 +330,9 @@ int main(int argc, char **argv) {
 
     //     ycsb_load_run_string(index_type, wl, kt, ap, num_thread, init_keys, keys, ranges, ops);
     }
+    // if (num_thread >= 1) {
+    //     init.terminate();
+    // }
     AllocatorExit();
     return 0;
 }

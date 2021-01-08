@@ -8,13 +8,15 @@
 #include "random.h"
 #include "debug.h"
 #include "statistic.h"
+#include "single_pmdk.h"
 
-#define NODEPATH   "/pmem0/persistent"
-#define VALUEPATH "/pmem0/value_persistent"
-
+#define NODEPATH   "/mnt/pmem0/persistent"
+#define VALUEPATH "/mnt/pmem0/value_persistent"
+#define LOGPATH "/mnt/pmem0/log_persistent"
 
 const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
+const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -24,7 +26,7 @@ uint64_t ops_num = 1000;
 uint64_t start_time, end_time, use_time;
 
 void function_test(NVMBtree *bt, uint64_t ops);
-void motivationtest(NVMBtree *bt);
+void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
@@ -33,7 +35,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if(AllocatorInit(NODEPATH, NVM_NODE_SIZE, VALUEPATH, NVM_VALUE_SIZE) < 0) {
+    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE) < 0) {
         print_log(LV_ERR, "Initial allocator failed");
         return 0;
     }
@@ -46,9 +48,25 @@ int main(int argc, char *argv[]) {
 
     NVMBtree *bt = new NVMBtree();
 
+    char* persistent_path = "/mnt/pmem0/mytest";
+
+    TOID(nvmbtree) nvmbt = TOID_NULL(nvmbtree);
+    PMEMobjpool *pop;
+
+    if (file_exists(persistent_path) != 0) {
+        pop = pmemobj_create(persistent_path, "btree", 30000000000,
+                            0666); // make 1GB memory pool
+        nvmbt = POBJ_ROOT(pop, nvmbtree);
+        D_RW(nvmbt)->constructor(pop);
+    } else {
+        pop = pmemobj_open(persistent_path, "btree");
+        nvmbt = POBJ_ROOT(pop, nvmbtree);
+        D_RW(nvmbt)->setMEMobjpool(pop);
+    }
+
     // bt->PrintInfo();
     if(test_type == 0) {
-        motivationtest(bt);
+        motivationtest(bt, ops_num, nvmbt);
     } else if(test_type == 1) {
         function_test(bt, ops_num);
     }
@@ -257,7 +275,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
 
-void motivationtest(NVMBtree *bt) {
+void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
     uint64_t i;
     uint64_t ops;
     Statistic stats;
@@ -268,7 +286,7 @@ void motivationtest(NVMBtree *bt) {
     vector<future<void>> futures(thread_num);
 
     //*插入初始化数据
-    ops = 400000000;
+    ops = load_num;
     start_time = get_now_micros();
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
@@ -312,8 +330,11 @@ void motivationtest(NVMBtree *bt) {
         }
     }
     futures.clear();
+    uint64_t start_time_s = get_now_micros();
+    bt->test(nvmbt);
     end_time = get_now_micros();
     use_time = end_time - start_time;
+    printf("sync time: %f s\n", (end_time - start_time_s) * 1e-6);
     printf("Initial_insert test finished\n");
     nvm_print(ops);
 
@@ -354,6 +375,7 @@ void motivationtest(NVMBtree *bt) {
     use_time = end_time - start_time;
     printf("Insert test finished\n");
     nvm_print(ops);
+    bt->PrintInfo();
 
     //* 随机读测试
     ops = 10000000;
