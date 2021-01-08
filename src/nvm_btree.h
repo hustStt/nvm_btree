@@ -21,7 +21,8 @@ using namespace std;
 
 class NVMBtree{
 public:
-    NVMBtree();
+    PMEMobjpool *pop;
+    NVMBtree(PMEMobjpool *pool);
     ~NVMBtree();
 
     void Insert(const unsigned long key, const string &value);

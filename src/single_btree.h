@@ -886,7 +886,7 @@ class subtree {
       this->heat = heat;
       this->pop = pop;
 
-      pmemobj_persist(pop, this, sizeof(subtreeroot));
+      pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void constructor(PMEMobjpool *pop, uint64_t off, uint64_t heat = 0, bool flag = false) {
@@ -896,7 +896,7 @@ class subtree {
       this->heat = heat;
       this->pop = pop;
 
-      pmemobj_persist(pop, this, sizeof(subtreeroot));
+      pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void subtree_insert(entry_key_t key, char* right);

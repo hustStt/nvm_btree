@@ -687,7 +687,7 @@ public:
     entry_key_t k;
 
     if (hdr.leftmost_ptr == NULL) { // Search a leaf node
-      do {s
+      do {
         previous_switch_counter = hdr.switch_counter;
         ret = NULL;
 
@@ -800,7 +800,7 @@ public:
       }*/
 
       if (ret) {
-        prinf("key: %ld  ret: %x", key, ret);
+        //printf("key: %ld  ret: %x", key, ret);
         return ret;
       } else
         return (char *)hdr.leftmost_ptr;

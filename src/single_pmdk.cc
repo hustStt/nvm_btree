@@ -78,7 +78,7 @@ void nvmbtree::btree_delete(entry_key_t key) {
     p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
   }
 
-  uint64_t t = (uint64_t)(D_RW(p)->linear_search(key);
+  uint64_t t = (uint64_t)(D_RW(p)->linear_search(key));
   /*
   while ((t = (uint64_t)(D_RW(p)->linear_search(key))) ==
          D_RW(p)->hdr.sibling_ptr.oid.off) {
