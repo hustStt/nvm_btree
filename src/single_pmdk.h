@@ -36,17 +36,17 @@
 
 class nvmbtree;
 class nvmpage;
+class subtree;
 
 POBJ_LAYOUT_BEGIN(btree);
 POBJ_LAYOUT_ROOT(btree, nvmbtree);
 POBJ_LAYOUT_TOID(btree, nvmpage);
+POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
 
 using entry_key_t = int64_t;
 
 using namespace std;
-
-class subtree;
 
 class nvmbtree {
 private:
@@ -58,7 +58,7 @@ public:
   PMEMobjpool *pop;
   nvmbtree();
   void constructor(PMEMobjpool *);
-  void setPMEMobjpopl(PMEMobjpool * pop) {
+  void setPMEMobjpool(PMEMobjpool * pop) {
     this->pop = pop;
   }
   void setNewRoot(TOID(nvmpage));
