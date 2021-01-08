@@ -49,8 +49,6 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
-    NVMBtree *bt = new NVMBtree();
-
     char* persistent_path = "/mnt/pmem0/mytest";
 
     TOID(nvmbtree) nvmbt = TOID_NULL(nvmbtree);
@@ -66,6 +64,8 @@ int main(int argc, char *argv[]) {
         nvmbt = POBJ_ROOT(pop, nvmbtree);
         D_RW(nvmbt)->setPMEMobjpool(pop);
     }
+
+    NVMBtree *bt = new NVMBtree(pop);
 
     // bt->PrintInfo();
     if(test_type == 0) {

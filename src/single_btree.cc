@@ -533,16 +533,16 @@ void btree::deform() {
       tmp = tmp->hdr.sibling_ptr;
     }
     printf("****subtree level %d, node num %d, entry num %d****\n",
-               tmp->hdr_.level_, tmpcnt, valuecnt);
+               tmp->hdr.level, tmpcnt, valuecnt);
   }
 
     bpnode* q = p;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)pmemobj_oid(newSubtreeRoot((bpnode *)q->hdr.leftmost_ptr)).off;
         for (int i = 0; i <= q->hdr.last_index; i++) {
-            q->records[i].ptr = (bpnode *)pmemobj_oid(newSubtreeRoot((bpnode *)q->records[i].ptr)).off
+            q->records[i].ptr = (char *)pmemobj_oid(newSubtreeRoot((bpnode *)q->records[i].ptr)).off
         }
-        q = q->hrd.sibling_ptr;
+        q = q->hdr.sibling_ptr;
     }
     flag = true;
 }
@@ -705,7 +705,7 @@ char* subtree::DFS(char* root) {
         return nullptr;
     }
     TOID(nvmpage) nvm_node;
-    POBJ_NEW(bt->pop, &nvm_node, nvmpage, NULL, NULL);
+    POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
     D_RW(nvm_node)->constructor();
     nvmpage* nvm_node_ptr = D_RW(nvm_node);
     bpnode* node = (bpnode *)root;
