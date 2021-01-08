@@ -137,6 +137,7 @@ class entry{
 
     friend class bpnode;
     friend class btree;
+    friend class subtree;
 };
 
 const int cardinality = (PAGESIZE-sizeof(header))/sizeof(entry);

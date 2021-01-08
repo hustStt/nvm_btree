@@ -696,7 +696,7 @@ void subtree::dram_to_nvm() {
     return ;
   }
 
-  nvm_ptr = DFS((char *)dram_ptr);
+  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr);
   // delete log
 }
 
