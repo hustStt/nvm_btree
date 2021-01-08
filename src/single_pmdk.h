@@ -113,6 +113,7 @@ public:
   friend class nvmpage;
   friend class nvmbtree;
   friend class btree;
+  friend class subtree;
 };
 
 const int nvm_cardinality = (PAGESIZE - sizeof(nvmheader)) / sizeof(nvmentry);
@@ -126,6 +127,7 @@ private:
 public:
   friend class nvmbtree;
   friend class btree;
+  friend class subtree;
 
   void constructor(uint32_t level = 0) {
     hdr.constructor();

@@ -27,7 +27,7 @@
 #include "nvm_common.h"
 #include "single_pmdk.h"
 
-#define PAGESIZE 256
+//#define PAGESIZE 256
 
 // #define CPU_FREQ_MHZ (1994)
 // #define DELAY_IN_NS (1000)
@@ -61,7 +61,7 @@ class btree{
     int height;
     char* root;
     bool flag;
-    int tar_level;
+    uint32_t tar_level;
     uint64_t total_size;
 
   public:
@@ -87,13 +87,13 @@ class btree{
     void CalcuRootLevel();
 
     subtree* newSubtreeRoot(bpnode *subtree_root) {
-      TOID(subtree) node;
+      TOID(subtree) node = TOID_NULL(subtree);
       POBJ_NEW(pop, &node, subtree, NULL, NULL);
       D_RW(node)->constructor(pop, subtree_root);
       return D_RW(node);
     }
 
-    char* findSubtreeRoot();
+    char* findSubtreeRoot(entry_key_t);
 
     friend class bpnode;
 };
@@ -110,6 +110,7 @@ class header{
 
     friend class bpnode;
     friend class btree;
+    friend class subtree;
 
   public:
     header() {
@@ -883,17 +884,17 @@ class subtree {
     void constructor(PMEMobjpool *pop, bpnode* dram_ptr, uint64_t heat = 0, bool flag = true) {
       this->flag = flag;
       this->dram_ptr = dram_ptr;
-      this->nvm_ptr.oid.off = 0;
+      this->nvm_ptr = nullptr;
       this->heat = heat;
       this->pop = pop;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
 
-    void constructor(PMEMobjpool *pop, uint64_t off, uint64_t heat = 0, bool flag = false) {
+    void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, uint64_t heat = 0, bool flag = false) {
       this->flag = flag;
       this->dram_ptr = nullptr;
-      this->nvm_ptr.oid.off = off;
+      this->nvm_ptr = nvm_ptr;
       this->heat = heat;
       this->pop = pop;
 

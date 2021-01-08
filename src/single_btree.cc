@@ -268,7 +268,7 @@ char *btree::findSubtreeRoot(entry_key_t key) {
 
 char *btree::btreeSearch(entry_key_t key) {
     if (flag) {
-        TO_ID(subtree) sub_root;
+        TOID(subtree) sub_root;
         sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
         return D_RW(sub_root)->subtree_search(key);
     } else {
@@ -298,7 +298,7 @@ void btree::btreeInsert(entry_key_t key, char* right) {
         deform();
     }
     if (flag) {
-        TO_ID(subtree) sub_root;
+        TOID(subtree) sub_root;
         sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
         D_RW(sub_root)->subtree_insert(key, right);
     } else {
@@ -338,7 +338,7 @@ void btree::btree_insert_internal
 
 void btree::btreeDelete(entry_key_t key) {
     if (flag) {
-        TO_ID(subtree) sub_root;
+        TOID(subtree) sub_root;
         sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
         D_RW(sub_root)->subtree_delete(key);
     } else {
@@ -512,7 +512,7 @@ void btree::deform() {
       tmp = tmp->hdr.sibling_ptr;
     }
     printf("****tmp level %d, node num %d, entry num %d****\n",
-               tmp->hdr_.level_, tmpcnt, valuecnt);
+               tmp->hdr.level, tmpcnt, valuecnt);
   }
 
   // 找到root nodes层
@@ -538,11 +538,11 @@ void btree::deform() {
 
     bpnode* q = p;
     while(q) {
-        q->hdr.leftmost_ptr = (bpnode *)pmemobj_oid(newSubtreeRoot(q->hdr.leftmost_ptr)).off;
+        q->hdr.leftmost_ptr = (bpnode *)pmemobj_oid(newSubtreeRoot((bpnode *)q->hdr.leftmost_ptr)).off;
         for (int i = 0; i <= q->hdr.last_index; i++) {
-            q->records[i].ptr = (bpnode *)pmemobj_oid(newSubtreeRoot(q->records[i].ptr)).off
+            q->records[i].ptr = (bpnode *)pmemobj_oid(newSubtreeRoot((bpnode *)q->records[i].ptr)).off
         }
-        q = q->sibling_ptr;
+        q = q->hrd.sibling_ptr;
     }
     flag = true;
 }

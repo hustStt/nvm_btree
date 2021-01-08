@@ -30,6 +30,9 @@ void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
+static inline int file_exists(char const *file) { return access(file, F_OK); }
+
+
 int main(int argc, char *argv[]) {
     if(parse_input(argc, argv) != 0) {
         return 0;
@@ -61,7 +64,7 @@ int main(int argc, char *argv[]) {
     } else {
         pop = pmemobj_open(persistent_path, "btree");
         nvmbt = POBJ_ROOT(pop, nvmbtree);
-        D_RW(nvmbt)->setMEMobjpool(pop);
+        D_RW(nvmbt)->setPMEMobjpool(pop);
     }
 
     // bt->PrintInfo();
