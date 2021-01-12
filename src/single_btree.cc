@@ -258,7 +258,7 @@ char *btree::findSubtreeRoot(entry_key_t key) {
 
     bpnode* p = (bpnode *)root;
     while (p->hdr.level != tar_level && p->hdr.leftmost_ptr != nullptr) {
-        p = p->hdr.leftmost_ptr;
+        p = (bpnode *)p->linear_search(key);
     }
 
     char *ret = p->linear_search(key);
@@ -267,9 +267,8 @@ char *btree::findSubtreeRoot(entry_key_t key) {
 
 char *btree::btreeSearch(entry_key_t key) {
     if (flag) {
-        TOID(subtree) sub_root;
-        sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
-        return D_RW(sub_root)->subtree_search(key);
+        subtree* sub_root = (subtree*)findSubtreeRoot(key);
+        return sub_root->subtree_search(key);
     } else {
         return btree_search(key);
     }
@@ -297,10 +296,8 @@ void btree::btreeInsert(entry_key_t key, char* right) {
         deform();
     }
     if (flag) {
-        TOID(subtree) sub_root;
-        sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
-        printf("sub_root.oid.off %x", sub_root.oid.off);
-        D_RW(sub_root)->subtree_insert(this, key, right);
+        subtree* sub_root = (subtree*)findSubtreeRoot(key);
+        sub_root->subtree_insert(this, key, right);
     } else {
         btree_insert(key, right);
         total_size += sizeof(key) + sizeof(right);
@@ -338,9 +335,8 @@ void btree::btree_insert_internal
 
 void btree::btreeDelete(entry_key_t key) {
     if (flag) {
-        TOID(subtree) sub_root;
-        sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
-        D_RW(sub_root)->subtree_delete(this, key);
+        subtree* sub_root = (subtree*)findSubtreeRoot(key);
+        sub_root->subtree_delete(this, key);
     } else {
         btree_delete(key);
     }
@@ -539,7 +535,7 @@ void btree::deform() {
     printf("subtree root start\n");
     bpnode* q = p;
     while(q) {
-        q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, (bpnode *)q->hdr.leftmost_ptr);
+        q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
         }
