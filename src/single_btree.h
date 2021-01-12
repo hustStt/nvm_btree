@@ -580,15 +580,11 @@ class bpnode{
           }
 
           // Set a new root or insert the split key to the parent
-          if(bt->root == (char *)this) { // only one node can update the root ptr
-            bpnode* new_root = new bpnode((bpnode*)this, split_key, sibling, 
-                hdr.level + 1);
-            bt->setNewRoot((char *)new_root);
-          }
-          else if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
+          
+          if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
             subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root->sibling_ptr);
             sub_root->sibling_ptr = (subtree *)pmemobj_oid(next).off;
-            pmemobj_persist(pop, sub_root, sizeof(subtree));
+            pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
             bt->btree_insert_internal(NULL, split_key, (char *)next, 
                 hdr.level + 1);
@@ -596,6 +592,10 @@ class bpnode{
           else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
             sub_root->btree_insert_internal(NULL, split_key, (char *)sibling, 
                 hdr.level + 1);
+          } else if (bt->root == (char *)this) { // only one node can update the root ptr
+            bpnode* new_root = new bpnode((bpnode*)this, split_key, sibling, 
+                hdr.level + 1);
+            bt->setNewRoot((char *)new_root);
           }
           else { // internal node
             bt->btree_insert_internal(NULL, split_key, (char *)sibling, 

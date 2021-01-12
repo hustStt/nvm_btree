@@ -250,7 +250,6 @@ btree::btree(bpnode *root_) {
 
 void btree::setNewRoot(char *new_root) {
   this->root = (char*)new_root;
-  clflush((char*)&(this->root),sizeof(char*));
   ++height;
 }
 
@@ -340,7 +339,7 @@ void btree::btreeDelete(entry_key_t key) {
     if (flag) {
         TOID(subtree) sub_root;
         sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
-        D_RW(sub_root)->subtree_delete(key);
+        D_RW(sub_root)->subtree_delete(this, key);
     } else {
         btree_delete(key);
     }
@@ -758,15 +757,15 @@ void subtree::merge() {
 
 void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level) {
     if (flag) {
-        if(level > ((bpnode *)dram_ptr)->hdr.level)
+        if(level > dram_ptr->hdr.level)
             return;
 
-        bpnode *p = (bpnode *)this->dram_ptr;
+        bpnode *p = dram_ptr;
 
         while(p->hdr.level > level) 
             p = (bpnode *)p->linear_search(key);
 
-        if(!p->store(this, NULL, key, right, this)) {
+        if(!p->store(dram_ptr, NULL, key, right, this)) {
             btree_insert_internal(left, key, right, level);
         }
     } else {
