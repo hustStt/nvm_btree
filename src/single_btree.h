@@ -44,6 +44,42 @@ using namespace std;
 
 class bpnode;
 
+
+class btree{
+  private:
+    int height;
+    char* root;
+    bool flag;
+    uint32_t tar_level;
+    uint64_t total_size;
+
+  public:
+    PMEMobjpool *pop;
+    btree(PMEMobjpool *pool);
+    btree(bpnode *root);
+    void setNewRoot(char *);
+    void btreeInsert(entry_key_t, char*);
+    void btree_insert(entry_key_t, char*);
+    void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
+    void btreeDelete(entry_key_t);
+    void btree_delete(entry_key_t);
+    void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
+    char *btreeSearch(entry_key_t);
+    char *btree_search(entry_key_t);
+    void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
+    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
+    void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
+    void printAll();
+    void PrintInfo();
+    void CalculateSapce(uint64_t &space);
+    void deform();
+    void CalcuRootLevel();
+
+    char* findSubtreeRoot(entry_key_t);
+
+    friend class bpnode;
+};
+
 class subtree {
   private:
     bpnode* dram_ptr;
@@ -106,48 +142,12 @@ class subtree {
     friend class bpnode;
 };
 
-
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
     TOID(subtree) node = TOID_NULL(subtree);
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
     D_RW(node)->constructor(pop, subtree_root, next);
     return D_RW(node);
 }
-
-class btree{
-  private:
-    int height;
-    char* root;
-    bool flag;
-    uint32_t tar_level;
-    uint64_t total_size;
-
-  public:
-    PMEMobjpool *pop;
-    btree(PMEMobjpool *pool);
-    btree(bpnode *root);
-    void setNewRoot(char *);
-    void btreeInsert(entry_key_t, char*);
-    void btree_insert(entry_key_t, char*);
-    void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
-    void btreeDelete(entry_key_t);
-    void btree_delete(entry_key_t);
-    void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, bpnode **);
-    char *btreeSearch(entry_key_t);
-    char *btree_search(entry_key_t);
-    void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
-    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
-    void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
-    void printAll();
-    void PrintInfo();
-    void CalculateSapce(uint64_t &space);
-    void deform();
-    void CalcuRootLevel();
-
-    char* findSubtreeRoot(entry_key_t);
-
-    friend class bpnode;
-};
 
 class header{
   private:
