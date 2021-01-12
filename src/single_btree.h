@@ -120,7 +120,7 @@ class subtree {
     //void subtree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void subtree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
 
-    void btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree* root);
+    void btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree* bt);
 
     // nvm --> dram
     char* DFS(nvmpage* root);
@@ -591,7 +591,7 @@ class bpnode{
           }
           else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
             sub_root->btree_insert_internal(NULL, split_key, (char *)sibling, 
-                hdr.level + 1, this);
+                hdr.level + 1, bt);
           } else if (bt->root == (char *)this) { // only one node can update the root ptr
             bpnode* new_root = new bpnode((bpnode*)this, split_key, sibling, 
                 hdr.level + 1);

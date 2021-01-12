@@ -494,7 +494,7 @@ void btree::PrintInfo() {
 }
 
 void btree::CalcuRootLevel() {
-    tar_level = 6;
+    tar_level = 5;
 }
 
 void btree::deform() {
@@ -755,7 +755,7 @@ void subtree::merge() {
 
 }
 
-void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree *root) {
+void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree *bt) {
     if (flag) {
         if(level > dram_ptr->hdr.level)
             return;
@@ -765,8 +765,8 @@ void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, ui
         while(p->hdr.level > level) 
             p = (bpnode *)p->linear_search(key);
 
-        if(!p->store(root, NULL, key, right, this)) {
-            btree_insert_internal(left, key, right, level, root);
+        if(!p->store(bt, NULL, key, right, this)) {
+            btree_insert_internal(left, key, right, level, bt);
         }
     } else {
         // TOID(nvmpage) root;
