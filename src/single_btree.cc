@@ -292,13 +292,14 @@ char *btree::btree_search(entry_key_t key){
 }
 
 void btree::btreeInsert(entry_key_t key, char* right) {
-    if (total_size >= MAX_DRAM_BTREE_SIZE) {
+    if (!flag && total_size >= MAX_DRAM_BTREE_SIZE) {
         CalcuRootLevel();
         deform();
     }
     if (flag) {
         TOID(subtree) sub_root;
         sub_root.oid.off = (uint64_t)findSubtreeRoot(key);
+        printf("sub_root.oid.off %x", sub_root.oid.off);
         D_RW(sub_root)->subtree_insert(this, key, right);
     } else {
         btree_insert(key, right);
