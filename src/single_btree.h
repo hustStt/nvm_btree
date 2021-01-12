@@ -343,7 +343,7 @@ class bpnode{
         left_sibling = left_subtree_sibling->dram_ptr;
       } else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
         sub_root->btree_delete_internal(key, (char *)this, hdr.level + 1,
-          &deleted_key_from_parent, &is_leftmost_node, &left_sibling, this);
+          &deleted_key_from_parent, &is_leftmost_node, &left_sibling, bt);
       } else {
         bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
@@ -457,7 +457,7 @@ class bpnode{
           if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
             sub_root->dram_ptr = new_sibling;
             pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
-            
+
             bt->btree_insert_internal
               ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
           }
