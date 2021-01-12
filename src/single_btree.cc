@@ -494,7 +494,7 @@ void btree::PrintInfo() {
 }
 
 void btree::CalcuRootLevel() {
-    tar_level = 5;
+    tar_level = 4;
 }
 
 void btree::deform() {
@@ -535,6 +535,7 @@ void btree::deform() {
                tmp->hdr.level, tmpcnt, valuecnt);
   }
 
+    printf("subtree root start\n");
     bpnode* q = p;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, (bpnode *)q->hdr.leftmost_ptr);
@@ -544,6 +545,7 @@ void btree::deform() {
         q = q->hdr.sibling_ptr;
     }
     flag = true;
+    printf("subtree root end\n");
 }
 
 void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
