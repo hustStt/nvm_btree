@@ -121,6 +121,8 @@ class subtree {
     void subtree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
 
     void btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree* bt);
+    void btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+        bool *is_leftmost_node, bpnode **left_sibling, btree* bt);
 
     // nvm --> dram
     char* DFS(nvmpage* root);
@@ -295,7 +297,7 @@ class bpnode{
       return shift;
     }
 
-    bool remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true) {
+    bool remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true, subtree* sub_root = NULL) {
       if(!only_rebalance) {
         register int num_entries_before = count();
 
@@ -332,10 +334,23 @@ class bpnode{
       entry_key_t deleted_key_from_parent = 0;
       bool is_leftmost_node = false;
       bpnode *left_sibling;
-      bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
+      subtree *left_subtree_sibling;
+
+      if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
+        bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
+        left_subtree_sibling = (subtree *)left_sibling;
+        left_sibling = left_subtree_sibling->dram_ptr;
+      } else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+        sub_root->btree_delete_internal(key, (char *)this, hdr.level + 1,
+          &deleted_key_from_parent, &is_leftmost_node, &left_sibling, this);
+      } else {
+        bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
+          &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
+      }
 
       if(is_leftmost_node) {
+        // only rebalance
         hdr.sibling_ptr->remove(bt, hdr.sibling_ptr->records[0].key, true,
             with_lock);
         return true;
@@ -438,7 +453,18 @@ class bpnode{
             left_sibling->hdr.sibling_ptr = new_sibling;
           }
 
-          if(left_sibling == ((bpnode *)bt->root)) {
+          // update new dram ptr
+          if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
+            sub_root->dram_ptr = new_sibling;
+            pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
+            
+            bt->btree_insert_internal
+              ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
+          }
+          else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+            sub_root->btree_insert_internal
+              ((char *)left_sibling, parent_key, (char *)new_sibling, hdr.level + 1, bt);
+          } else if (left_sibling == ((bpnode *)bt->root)) {
             bpnode* new_root = new bpnode(left_sibling, parent_key, new_sibling, hdr.level + 1);
             bt->setNewRoot((char *)new_root);
           }
@@ -459,6 +485,13 @@ class bpnode{
         }
 
         left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
+ 
+        // subtree root
+        if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
+          //delete sub_root
+          left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+          pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
+        }
       }
 
       return true;

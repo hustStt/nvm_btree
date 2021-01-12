@@ -580,7 +580,7 @@ void subtree::subtree_delete(btree* root, entry_key_t key) {
 
     bpnode *t = (bpnode *)p->linear_search(key);
     if(p && t) {
-      if(!p->remove(root, key)) {
+      if(!p->remove(root, key, false, true, this)) {
         subtree_delete(root, key);
       }
     }
@@ -781,5 +781,47 @@ void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, ui
         // if (!D_RW(p)->store(this, NULL, key, right, true)) {
         //     btree_insert_internal(left, key, right, level);
         // }
+    }
+}
+
+void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+                        bool *is_leftmost_node, bpnode **left_sibling, btree *bt) {
+    if (flag) {
+        if(level > this->dram_ptr->hdr.level)
+            return;
+
+        bpnode *p = this->dram_ptr;
+
+        while(p->hdr.level > level) {
+            p = (bpnode *)p->linear_search(key);
+        }
+
+        if((char *)p->hdr.leftmost_ptr == ptr) {
+            *is_leftmost_node = true;
+            return;
+        }
+
+        *is_leftmost_node = false;
+
+        for(int i=0; p->records[i].ptr != NULL; ++i) {
+            if(p->records[i].ptr == ptr) {
+                if(i == 0) {
+                    if((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = p->hdr.leftmost_ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }
+                }
+                else {
+                    if(p->records[i - 1].ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = (bpnode *)p->records[i - 1].ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
