@@ -337,14 +337,17 @@ class bpnode{
       subtree *left_subtree_sibling;
 
       if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
+        printf("subtree root del key %x level %d\n", key, hdr.level + 1);
         bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
         left_subtree_sibling = (subtree *)left_sibling;
         left_sibling = left_subtree_sibling->dram_ptr;
       } else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+        printf("subtree node del key %x level %d\n", key, hdr.level + 1);
         sub_root->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling, bt);
       } else {
+        printf("internal del key %x level %d\n", key, hdr.level + 1);
         bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
       }
@@ -352,7 +355,7 @@ class bpnode{
       if(is_leftmost_node) {
         // only rebalance
         hdr.sibling_ptr->remove(bt, hdr.sibling_ptr->records[0].key, true,
-            with_lock);
+            with_lock, sub_root);
         return true;
       }
 
@@ -400,7 +403,14 @@ class bpnode{
             left_sibling->hdr.last_index = m - 1;
           }
 
-          if(left_sibling == ((bpnode *)bt->root)) {
+          if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
+            bt->btree_insert_internal
+              ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
+          }
+          else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+            sub_root->btree_insert_internal
+              ((char *)left_sibling, parent_key, (char *)this, hdr.level + 1, bt);
+          } else if(left_sibling == ((bpnode *)bt->root)) {
             bpnode* new_root = new bpnode(left_sibling, parent_key, this, hdr.level + 1);
             bt->setNewRoot((char *)new_root);
           }
