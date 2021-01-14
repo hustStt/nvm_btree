@@ -448,7 +448,7 @@ public:
             if (key < (k = records[i].key)) {
               if ((t = records[i - 1].ptr) != records[i].ptr) {
                 ret = t;
-                printf("i: %d last_index: %d key: %ld  ret: %x\n", i , hdr.last_index, key, ret);
+                //printf("i: %d last_index: %d key: %ld  ret: %x\n", i , hdr.last_index, key, ret);
                 break;
               }
             }
@@ -456,7 +456,7 @@ public:
 
           if (!ret) {
             ret = records[i - 1].ptr;
-            printf("i: %d last_index: %d key: %ld  ret: %x\n", i , hdr.last_index, key, ret);
+            //printf("i: %d last_index: %d key: %ld  ret: %x\n", i , hdr.last_index, key, ret);
             continue;
           }
         } else { // search from right to left
