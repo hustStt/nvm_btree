@@ -606,6 +606,7 @@ class subtree {
     }
 
     friend class bpnode;
+    friend class nvmpage;
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
