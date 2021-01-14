@@ -136,11 +136,11 @@ class subtree {
     void sync_subtree();
 
     nvmpage *to_nvmpage(nvmpage *off) {
-      return off + (nvmpage *)pop;
+      return (nvmpage *)((uint64_t)off + (uint64_t)pop);
     }
 
     nvmpage *to_nvmpage(char *off) {
-      return (nvmpage *)off + (nvmpage *)pop;
+      return (nvmpage *)((uint64_t)off + (uint64_t)pop);
     }
 
     nvmpage *get_nvmroot_ptr() {

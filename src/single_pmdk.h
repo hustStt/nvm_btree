@@ -268,7 +268,7 @@ public:
     subtree * left_subtree_sibling;
     nvmpage * nvm_root = sub_root->get_nvmroot_ptr();
 
-    if (sub_root != NULL && hdr.level == nvm_root>hdr.level) { // subtree root
+    if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
         bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_subtree_sibling);
         left_sibling.oid.off = (uint64_t)left_subtree_sibling->nvm_ptr;
@@ -549,8 +549,8 @@ public:
   }
 
   // Insert a new key - FAST and FAIR
-  nvmpage *store(btree *bt = NULL, char *left, entry_key_t key, char *right, bool flush,
-              subtree *sub_root, nvmpage *invalid_sibling = NULL) {
+  nvmpage *store(btree *bt, char *left, entry_key_t key, char *right, bool flush,
+              subtree *sub_root = NULL, nvmpage *invalid_sibling = NULL) {
     // If this node has a sibling node,
     // if ((hdr.sibling_ptr.oid.off != 0) &&
     //     ((nvmpage *)hdr.sibling_ptr.oid.off != invalid_sibling)) {
