@@ -559,85 +559,88 @@ void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, ui
             p = to_nvmpage(p->linear_search(key));
 
         if (!p->store(bt, NULL, key, right, true, this)) {
-            btree_insert_internal(left, key, right, level);
+            btree_insert_internal(left, key, right, level, bt);
         }
     }
 }
 
 void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
                         bool *is_leftmost_node, bpnode **left_sibling, btree *bt) {
-    if (flag) {
-        if(level > this->dram_ptr->hdr.level)
-            return;
+    if(!flag) return;
+    if(level > this->dram_ptr->hdr.level)
+        return;
 
-        bpnode *p = this->dram_ptr;
+    bpnode *p = this->dram_ptr;
 
-        while(p->hdr.level > level) {
-            p = (bpnode *)p->linear_search(key);
-        }
+    while(p->hdr.level > level) {
+        p = (bpnode *)p->linear_search(key);
+    }
 
-        if((char *)p->hdr.leftmost_ptr == ptr) {
-            *is_leftmost_node = true;
-            return;
-        }
+    if((char *)p->hdr.leftmost_ptr == ptr) {
+        *is_leftmost_node = true;
+        return;
+    }
 
-        *is_leftmost_node = false;
+    *is_leftmost_node = false;
 
-        for(int i=0; p->records[i].ptr != NULL; ++i) {
-            if(p->records[i].ptr == ptr) {
-                if(i == 0) {
-                    if((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
-                        *deleted_key = p->records[i].key;
-                        *left_sibling = p->hdr.leftmost_ptr;
-                        p->remove(bt, *deleted_key, false, false, this);
-                        break;
-                    }
+    for(int i=0; p->records[i].ptr != NULL; ++i) {
+        if(p->records[i].ptr == ptr) {
+            if(i == 0) {
+                if((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+                    *deleted_key = p->records[i].key;
+                    *left_sibling = p->hdr.leftmost_ptr;
+                    p->remove(bt, *deleted_key, false, false, this);
+                    break;
                 }
-                else {
-                    if(p->records[i - 1].ptr != p->records[i].ptr) {
-                        *deleted_key = p->records[i].key;
-                        *left_sibling = (bpnode *)p->records[i - 1].ptr;
-                        p->remove(bt, *deleted_key, false, false, this);
-                        break;
-                    }
+            }
+            else {
+                if(p->records[i - 1].ptr != p->records[i].ptr) {
+                    *deleted_key = p->records[i].key;
+                    *left_sibling = (bpnode *)p->records[i - 1].ptr;
+                    p->remove(bt, *deleted_key, false, false, this);
+                    break;
                 }
             }
         }
-    } else {
-        nvmpage* root = get_nvmroot_ptr();
-        if (level > root->hdr.level)
-            return;
+    }
+}
 
-        nvmpage* p = root;
+void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+                        bool *is_leftmost_node, nvmpage **left_sibling, btree *bt) {
+    if(flag)  return;
+    nvmpage* root = get_nvmroot_ptr();
+    if (level > root->hdr.level)
+        return;
 
-        while (p->hdr.level > level) {
-            p = to_nvmpage(p->linear_search(key));
-        }
+    nvmpage* p = root;
 
-        if ((char *)p->hdr.leftmost_ptr == ptr) {
-            *is_leftmost_node = true;
-            return;
-        }
+    while (p->hdr.level > level) {
+        p = to_nvmpage(p->linear_search(key));
+    }
 
-        *is_leftmost_node = false;
+    if ((char *)p->hdr.leftmost_ptr == ptr) {
+        *is_leftmost_node = true;
+        return;
+    }
 
-        for (int i = 0; p->records[i].ptr != NULL; ++i) {
-            if (p->records[i].ptr == ptr) {
-                if (i == 0) {
-                    if ((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
-                        *deleted_key = p->records[i].key;
-                        *left_sibling = p->hdr.leftmost_ptr;
-                        p->remove(bt, *deleted_key, false, false, this);
-                        break;
-                    }
-                } else {
-                    if (p->records[i - 1].ptr != p->records[i].ptr) {
-                        *deleted_key = p->records[i].key;
-                        *left_sibling = (nvmpage *)p->records[i - 1].ptr;
-                        p->remove(bt, *deleted_key, false, false, this);
-                        break;
-                    }     
+    *is_leftmost_node = false;
+
+    for (int i = 0; p->records[i].ptr != NULL; ++i) {
+        if (p->records[i].ptr == ptr) {
+            if (i == 0) {
+                if ((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+                    *deleted_key = p->records[i].key;
+                    *left_sibling = p->hdr.leftmost_ptr;
+                    p->remove(bt, *deleted_key, false, false, this);
+                    break;
                 }
+            } else {
+                if (p->records[i - 1].ptr != p->records[i].ptr) {
+                    *deleted_key = p->records[i].key;
+                    *left_sibling = (nvmpage *)p->records[i - 1].ptr;
+                    p->remove(bt, *deleted_key, false, false, this);
+                    break;
+                }     
             }
         }
     }

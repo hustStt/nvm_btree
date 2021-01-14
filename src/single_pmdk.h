@@ -581,6 +581,8 @@ class subtree {
     void btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree* bt);
     void btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
         bool *is_leftmost_node, bpnode **left_sibling, btree* bt);
+    void btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+        bool *is_leftmost_node, nvmpage **left_sibling, btree* bt);
 
     // nvm --> dram
     char* DFS(nvmpage* root);
