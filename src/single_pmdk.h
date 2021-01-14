@@ -204,7 +204,7 @@ public:
             subtree *sub_root = NULL, nvmpage *invalid_sibling = NULL);
 
 
-  inline void nvmpage::insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
+  inline void insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
                         int *num_entries, bool flush = true,
                         bool update_last_index = true) {
     // update switch_counter
@@ -518,7 +518,7 @@ public:
     printf("\n");
   }
 
-  void nvmpage::printAll() {
+  void printAll() {
     TOID(nvmpage) p = TOID_NULL(nvmpage);
     TOID_ASSIGN(p, pmemobj_oid(this));
 
