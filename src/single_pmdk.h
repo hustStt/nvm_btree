@@ -281,7 +281,7 @@ public:
 
 
   // Search keys with linear search
-  void nvmpage::linear_search_range(entry_key_t min, entry_key_t max,
+  void linear_search_range(entry_key_t min, entry_key_t max,
                             unsigned long *buf) {
     int i, off = 0;
     uint8_t previous_switch_counter;
@@ -363,7 +363,7 @@ public:
     }
   }
 
-  char *nvmpage::linear_search(entry_key_t key) {
+  char *linear_search(entry_key_t key) {
     int i = 1;
     uint8_t previous_switch_counter;
     char *ret = NULL;
@@ -494,7 +494,7 @@ public:
   }
 
   // print a node
-  void nvmpage::print() {
+  void print() {
     if (hdr.leftmost_ptr == NULL)
       printf("[%d] leaf %x \n", this->hdr.level, (uint64_t)pmemobj_oid(this).off);
     else
