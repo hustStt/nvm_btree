@@ -43,18 +43,19 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   // Remove a key from the parent node
   entry_key_t deleted_key_from_parent = 0;
   bool is_leftmost_node = false;
-  TOID(nvmpage) left_sibling;
-  left_sibling.oid.pool_uuid_lo = bt->root.oid.pool_uuid_lo;
+  nvmpage* left_sibling;
+  //left_sibling.oid.pool_uuid_lo = bt->root.oid.pool_uuid_lo;
   subtree * left_subtree_sibling;
   nvmpage * nvm_root = sub_root->get_nvmroot_ptr();
 
   if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
       bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
-        &deleted_key_from_parent, &is_leftmost_node, &left_subtree_sibling);
-      left_sibling.oid.off = (uint64_t)left_subtree_sibling->nvm_ptr;
+        &deleted_key_from_parent, &is_leftmost_node, (bpnode **)&left_sibling);
+      left_subtree_sibling = (subtree *)left_sibling;
+      left_sibling = left_subtree_sibling->get_nvmroot_ptr();
   } else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
       sub_root->btree_delete_internal(key, (char *)pmemobj_oid(this).off, hdr.level + 1,
-        &deleted_key_from_parent, &is_leftmost_node, (nvmpage **)&left_sibling.oid.off, bt);
+        &deleted_key_from_parent, &is_leftmost_node, &left_sibling, bt);
   } else {
       printf("remove error\n");
   }
@@ -66,7 +67,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   }
 
   register int num_entries = count();
-  register int left_num_entries = D_RW(left_sibling)->count();
+  register int left_num_entries = left_sibling->count();
 
   // Merge or Redistribution
   int total_num_entries = num_entries + left_num_entries;
@@ -81,16 +82,16 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     if (num_entries < left_num_entries) { // left -> right
       if (hdr.leftmost_ptr == nullptr) {
         for (int i = left_num_entries - 1; i >= m; i--) {
-          insert_key(bt->pop, D_RW(left_sibling)->records[i].key,
-                      D_RW(left_sibling)->records[i].ptr, &num_entries);
+          insert_key(bt->pop, left_sibling->records[i].key,
+                      left_sibling->records[i].ptr, &num_entries);
         }
 
-        D_RW(left_sibling)->records[m].ptr = nullptr;
-        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->records[m].ptr),
+        left_sibling->records[m].ptr = nullptr;
+        pmemobj_persist(bt->pop, &(left_sibling->records[m].ptr),
                         sizeof(char *));
 
-        D_RW(left_sibling)->hdr.last_index = m - 1;
-        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.last_index),
+        left_sibling->hdr.last_index = m - 1;
+        pmemobj_persist(bt->pop, &(left_sibling->hdr.last_index),
                         sizeof(int16_t));
 
         parent_key = records[0].key;
@@ -99,31 +100,31 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
                     &num_entries);
 
         for (int i = left_num_entries - 1; i > m; i--) {
-          insert_key(bt->pop, D_RO(left_sibling)->records[i].key,
-                      D_RO(left_sibling)->records[i].ptr, &num_entries);
+          insert_key(bt->pop, left_sibling->records[i].key,
+                      left_sibling->records[i].ptr, &num_entries);
         }
 
-        parent_key = D_RO(left_sibling)->records[m].key;
+        parent_key = left_sibling->records[m].key;
 
-        hdr.leftmost_ptr = (nvmpage *)D_RO(left_sibling)->records[m].ptr;
+        hdr.leftmost_ptr = (nvmpage *)left_sibling->records[m].ptr;
         pmemobj_persist(bt->pop, &(hdr.leftmost_ptr), sizeof(nvmpage *));
 
-        D_RW(left_sibling)->records[m].ptr = nullptr;
-        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->records[m].ptr),
+        left_sibling->records[m].ptr = nullptr;
+        pmemobj_persist(bt->pop, &(left_sibling->records[m].ptr),
                         sizeof(char *));
 
-        D_RW(left_sibling)->hdr.last_index = m - 1;
-        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.last_index),
+        left_sibling->hdr.last_index = m - 1;
+        pmemobj_persist(bt->pop, &(left_sibling->hdr.last_index),
                         sizeof(int16_t));
       }
 
       if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
           bt->btree_insert_internal
-            ((char *)left_sibling.oid.off, parent_key, (char *)sub_root, hdr.level + 1);
+            ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
       }
       else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
           sub_root->btree_insert_internal
-            ((char *)left_sibling.oid.off, parent_key, (char *)pmemobj_oid(this).off, hdr.level + 1, bt);
+            ((char *)left_sibling, parent_key, (char *)pmemobj_oid(this).off, hdr.level + 1, bt);
       } else {
           printf("Redistribution left --> right error\n");
       }
@@ -154,8 +155,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
 
       if (hdr.leftmost_ptr == nullptr) {
         for (int i = 0; i < num_dist_entries; i++) {
-          D_RW(left_sibling)
-              ->insert_key(bt->pop, records[i].key, records[i].ptr,
+          left_sibling->insert_key(bt->pop, records[i].key, records[i].ptr,
                             &left_num_entries);
         }
 
@@ -167,19 +167,17 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
 
         pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
 
-        D_RW(left_sibling)->hdr.sibling_ptr = new_sibling;
-        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.sibling_ptr),
+        left_sibling->hdr.sibling_ptr = new_sibling;
+        pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                         sizeof(nvmpage *));
 
         parent_key = D_RO(new_sibling)->records[0].key;
       } else {
-        D_RW(left_sibling)
-            ->insert_key(bt->pop, deleted_key_from_parent,
+        left_sibling->insert_key(bt->pop, deleted_key_from_parent,
                           (char *)hdr.leftmost_ptr, &left_num_entries);
 
         for (int i = 0; i < num_dist_entries - 1; i++) {
-          D_RW(left_sibling)
-              ->insert_key(bt->pop, records[i].key, records[i].ptr,
+          left_sibling->insert_key(bt->pop, records[i].key, records[i].ptr,
                             &left_num_entries);
         }
 
@@ -194,8 +192,8 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
         }
         pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
 
-        D_RW(left_sibling)->hdr.sibling_ptr = new_sibling;
-        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.sibling_ptr),
+        left_sibling->hdr.sibling_ptr = new_sibling;
+        pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                         sizeof(nvmpage *));
       }
 
@@ -204,11 +202,11 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
           pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
           bt->btree_insert_internal
-            ((char *)left_sibling.oid.off, parent_key, (char *)sub_root, hdr.level + 1);
+            ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
       }
       else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
           sub_root->btree_insert_internal
-            ((char *)left_sibling.oid.off, parent_key, (char *)new_sibling.oid.off, hdr.level + 1, bt);
+            ((char *)left_sibling, parent_key, (char *)new_sibling.oid.off, hdr.level + 1, bt);
       }
 
       // if (left_sibling.oid.off == bt->root.oid.off) {
@@ -228,18 +226,16 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     pmemobj_persist(bt->pop, &(hdr.is_deleted), sizeof(uint8_t));
 
     if (hdr.leftmost_ptr)
-      D_RW(left_sibling)
-          ->insert_key(bt->pop, deleted_key_from_parent,
+      left_sibling->insert_key(bt->pop, deleted_key_from_parent,
                         (char *)hdr.leftmost_ptr, &left_num_entries);
 
     for (int i = 0; records[i].ptr != NULL; ++i) {
-      D_RW(left_sibling)
-          ->insert_key(bt->pop, records[i].key, records[i].ptr,
+      left_sibling->insert_key(bt->pop, records[i].key, records[i].ptr,
                         &left_num_entries);
     }
 
-    D_RW(left_sibling)->hdr.sibling_ptr = hdr.sibling_ptr;
-    pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.sibling_ptr),
+    left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
+    pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                     sizeof(nvmpage *));
 
     // subtree root
@@ -630,14 +626,14 @@ void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, 
             if (i == 0) {
                 if ((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
                     *deleted_key = p->records[i].key;
-                    *left_sibling = p->hdr.leftmost_ptr;
+                    *left_sibling = to_nvmpage(p->hdr.leftmost_ptr);
                     p->remove(bt, *deleted_key, false, false, this);
                     break;
                 }
             } else {
                 if (p->records[i - 1].ptr != p->records[i].ptr) {
                     *deleted_key = p->records[i].key;
-                    *left_sibling = (nvmpage *)p->records[i - 1].ptr;
+                    *left_sibling = to_nvmpage(p->records[i - 1].ptr);
                     p->remove(bt, *deleted_key, false, false, this);
                     break;
                 }     
