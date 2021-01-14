@@ -13,7 +13,7 @@ ARFLAGS = rs
 
 SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
-PMDK_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc single_pmdk.cc
+PMDK_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
 MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
 

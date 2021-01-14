@@ -34,47 +34,19 @@
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
-class nvmbtree;
 class nvmpage;
 class subtree;
 class btree;
 
 POBJ_LAYOUT_BEGIN(btree);
-POBJ_LAYOUT_ROOT(btree, nvmbtree);
+POBJ_LAYOUT_ROOT(btree, subtree);
 POBJ_LAYOUT_TOID(btree, nvmpage);
-POBJ_LAYOUT_TOID(btree, subtree);
+//POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
 
 using entry_key_t = int64_t;
 
 using namespace std;
-
-class nvmbtree {
-private:
-  int height;
-  TOID(nvmpage) root;
-  
-
-public:
-  PMEMobjpool *pop;
-  nvmbtree();
-  void constructor(PMEMobjpool *);
-  void setPMEMobjpool(PMEMobjpool * pop) {
-    this->pop = pop;
-  }
-  void setNewRoot(TOID(nvmpage));
-  void btree_insert(entry_key_t, char *);
-  void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
-  void btree_delete(entry_key_t);
-  void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *,
-                             bool *, nvmpage **);
-  char *btree_search(entry_key_t);
-  void btree_search_range(entry_key_t, entry_key_t, unsigned long *);
-  void printAll();
-  void randScounter();
-
-  friend class nvmpage;
-};
 
 class nvmheader {
 private:
@@ -86,7 +58,6 @@ private:
   int16_t last_index;     // 2 bytes
 
   friend class nvmpage;
-  friend class nvmbtree;
   friend class subtree;
 
 public:
@@ -112,7 +83,6 @@ public:
   }
 
   friend class nvmpage;
-  friend class nvmbtree;
   friend class btree;
   friend class subtree;
 };
@@ -126,7 +96,6 @@ private:
   nvmentry records[nvm_cardinality]; // slots in persistent memory, 16 bytes * n
 
 public:
-  friend class nvmbtree;
   friend class btree;
   friend class subtree;
 
@@ -424,7 +393,7 @@ public:
             pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
             bt->btree_insert_internal
-              ((char *)eft_sibling.oid.off, parent_key, (char *)sub_root, hdr.level + 1);
+              ((char *)left_sibling.oid.off, parent_key, (char *)sub_root, hdr.level + 1);
         }
         else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
             sub_root->btree_insert_internal

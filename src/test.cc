@@ -26,7 +26,7 @@ uint64_t ops_num = 1000;
 uint64_t start_time, end_time, use_time;
 
 void function_test(NVMBtree *bt, uint64_t ops);
-void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt);
+void motivationtest(NVMBtree *bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
@@ -51,31 +51,32 @@ int main(int argc, char *argv[]) {
 
     char* persistent_path = "/mnt/pmem0/mytest";
 
-    TOID(nvmbtree) nvmbt = TOID_NULL(nvmbtree);
+    //TOID(subtree) nvmbt = TOID_NULL(nvmbtree);
     PMEMobjpool *pop;
 
     if (file_exists(persistent_path) != 0) {
         pop = pmemobj_create(persistent_path, "btree", 30000000000,
                             0666); // make 1GB memory pool
-        nvmbt = POBJ_ROOT(pop, nvmbtree);
-        D_RW(nvmbt)->constructor(pop);
+        //nvmbt = POBJ_ROOT(pop, nvmbtree);
+        //D_RW(nvmbt)->constructor(pop);
     } else {
         pop = pmemobj_open(persistent_path, "btree");
-        nvmbt = POBJ_ROOT(pop, nvmbtree);
-        D_RW(nvmbt)->setPMEMobjpool(pop);
+        //nvmbt = POBJ_ROOT(pop, nvmbtree);
+        //D_RW(nvmbt)->setPMEMobjpool(pop);
     }
 
     NVMBtree *bt = new NVMBtree(pop);
 
     // bt->PrintInfo();
     if(test_type == 0) {
-        motivationtest(bt, ops_num, nvmbt);
+        motivationtest(bt, ops_num);
     } else if(test_type == 1) {
         function_test(bt, ops_num);
     }
 
     delete bt;
     AllocatorExit();
+    pmemobj_close(pop);
     return 0;
 }
 
@@ -278,7 +279,7 @@ void function_test(NVMBtree *bt, uint64_t ops_param) {
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
 
-void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
+void motivationtest(NVMBtree *bt, uint64_t load_num) {
     uint64_t i;
     uint64_t ops;
     Statistic stats;
@@ -312,7 +313,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
                 stats.end();
                 stats.add_put();
 
-                if ((i % 1000) == 0) {
+                if ((i % 50000) == 0) {
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
@@ -378,7 +379,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
     use_time = end_time - start_time;
     printf("Insert test finished\n");
     nvm_print(ops);
-    bt->PrintInfo();
+    //bt->PrintInfo();
 
     //* 随机读测试
     ops = 10000000;
@@ -414,7 +415,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
     use_time = end_time - start_time;
     printf("Get test finished\n");
     nvm_print(ops);
-
+/*
     //* Scan测试
     ops = 100;
     start_time = get_now_micros();
@@ -456,7 +457,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
     scan_count *= 10;
     scantimes --;
     }
-
+*/
     //* 删除测试
     ops = 10000000;
     start_time = get_now_micros();
@@ -487,8 +488,8 @@ void motivationtest(NVMBtree *bt, uint64_t load_num, TOID(nvmbtree) nvmbt) {
     printf("Delete test finished\n");
     nvm_print(ops);
 
-    bt->PrintStorage();
-    bt->PrintInfo();
+    //bt->PrintStorage();
+    //bt->PrintInfo();
     print_log(LV_INFO, "end!");
 }
 
