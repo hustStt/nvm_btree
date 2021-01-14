@@ -547,7 +547,7 @@ void btree::deform() {
     printf("subtree root end\n");
 }
 
-bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true, subtree* sub_root = NULL) {
+bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock, subtree* sub_root) {
   if(!only_rebalance) {
     register int num_entries_before = count();
 
@@ -755,7 +755,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance = false, boo
 }
 
 bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
-       subtree* sub_root = NULL, bpnode *invalid_sibling = NULL) {
+       subtree* sub_root, bpnode *invalid_sibling) {
   // If this node has a sibling node,
   // if(hdr.sibling_ptr && (hdr.sibling_ptr != invalid_sibling)) {
   //   // Compare this key with the first key of the sibling

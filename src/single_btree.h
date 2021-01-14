@@ -227,7 +227,7 @@ class bpnode{
       return shift;
     }
 
-    bool remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock, subtree* sub_root);
+    bool remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true, subtree* sub_root = NULL);
 
     inline void 
       insert_key(entry_key_t key, char* ptr, int *num_entries) {
@@ -278,7 +278,7 @@ class bpnode{
 
     // Insert a new key - FAST and FAIR
     bpnode *store(btree* bt, char* left, entry_key_t key, char* right,
-       subtree* sub_root, bpnode *invalid_sibling);
+       subtree* sub_root = NULL, bpnode *invalid_sibling = NULL);
 
     // Search keys with linear search
     void linear_search_range
