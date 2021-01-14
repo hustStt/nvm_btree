@@ -1,193 +1,1069 @@
 #include "single_pmdk.h"
+#include "single_btree.h"
 
 /*
  * class nvmbtree
  */
-void nvmbtree::constructor(PMEMobjpool *pool) {
-  pop = pool;
-  POBJ_NEW(pop, &root, nvmpage, NULL, NULL);
-  D_RW(root)->constructor();
-  height = 1;
-}
 
-void nvmbtree::setNewRoot(TOID(nvmpage) new_root) {
-  root = new_root;
-  pmemobj_persist(pop, &root, sizeof(TOID(nvmpage)));
-  ++height;
-}
-
-char *nvmbtree::btree_search(entry_key_t key) {
-  TOID(nvmpage) p = root;
-
-  while (D_RO(p)->hdr.leftmost_ptr != NULL) {
-    p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
+void nvmpage::constructor(uint32_t level = 0) {
+  hdr.constructor();
+  for (int i = 0; i < nvm_cardinality; i++) {
+    records[i].key = LONG_MAX;
+    records[i].ptr = NULL;
   }
 
-  uint64_t t = (uint64_t)D_RW(p)->linear_search(key);
-  /*
-  while ((t = (uint64_t)D_RW(p)->linear_search(key)) ==
-         D_RO(p)->hdr.sibling_ptr.oid.off) {
-    p.oid.off = t;
-    printf("sibling_ptr search\n");
-    if (!t) {
-      break;
+  hdr.level = level;
+  records[0].ptr = NULL;
+}
+
+// this is called when tree grows
+void nvmpage::constructor(PMEMobjpool *pop, nvmpage *left, entry_key_t key, nvmpage *right,
+                  uint32_t level = 0) {
+  hdr.constructor();
+  for (int i = 0; i < nvm_cardinality; i++) {
+    records[i].key = LONG_MAX;
+    records[i].ptr = NULL;
+  }
+
+  hdr.leftmost_ptr = left;
+  hdr.level = level;
+  records[0].key = key;
+  records[0].ptr = (char *)right;
+  records[1].ptr = NULL;
+
+  hdr.last_index = 0;
+
+  pmemobj_persist(pop, this, sizeof(nvmpage));
+}
+
+inline int nvmpage::count() {
+  uint8_t previous_switch_counter;
+  int count = 0;
+
+  do {
+    previous_switch_counter = hdr.switch_counter;
+    count = hdr.last_index + 1;
+
+    while (count >= 0 && records[count].ptr != NULL) {
+      if (IS_FORWARD(previous_switch_counter))
+        ++count;
+      else
+        --count;
+    }
+
+    if (count < 0) {
+      count = 0;
+      while (records[count].ptr != NULL) {
+        ++count;
+      }
+    }
+
+  } while (previous_switch_counter != hdr.switch_counter);
+
+  return count;
+}
+
+inline bool nvmpage::remove_key(PMEMobjpool *pop, entry_key_t key) {
+  // Set the switch_counter
+  if (IS_FORWARD(hdr.switch_counter))
+    ++hdr.switch_counter;
+
+  bool shift = false;
+  int i;
+  for (i = 0; records[i].ptr != NULL; ++i) {
+    if (!shift && records[i].key == key) {
+      records[i].ptr =
+          (i == 0) ? (char *)hdr.leftmost_ptr : records[i - 1].ptr;
+      shift = true;
+    }
+
+    if (shift) {
+      records[i].key = records[i + 1].key;
+      records[i].ptr = records[i + 1].ptr;
+
+      // flush
+      uint64_t records_ptr = (uint64_t)(&records[i]);
+      int remainder = records_ptr % CACHE_LINE_SIZE;
+      bool do_flush =
+          (remainder == 0) ||
+          ((((int)(remainder + sizeof(nvmentry)) / CACHE_LINE_SIZE) == 1) &&
+            ((remainder + sizeof(nvmentry)) % CACHE_LINE_SIZE) != 0);
+      if (do_flush) {
+        pmemobj_persist(pop, (void *)records_ptr, CACHE_LINE_SIZE);
+      }
     }
   }
-sc*/
-  if (!t) {
-    printf("NOT FOUND %lu, t = %x\n", key, t);
-    return NULL;
-  }
 
-  return (char *)t;
+  if (shift) {
+    --hdr.last_index;
+  }
+  return shift;
 }
 
-// insert the key in the leaf node
-void nvmbtree::btree_insert(entry_key_t key, char *right) {
-  TOID(nvmpage) p = root;
+bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance = false,
+            bool with_lock = true, subtree* sub_root = NULL) {
+  if (!only_rebalance) {
+    register int num_entries_before = count();
 
-  while (D_RO(p)->hdr.leftmost_ptr != NULL) {
-    p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
+    // This node is root
+    // if (this == D_RO(bt->root)) {
+    //   if (hdr.level > 0) {
+    //     if (num_entries_before == 1 && (hdr.sibling_ptr.oid.off == 0)) {
+    //       bt->root.oid.off = (uint64_t)hdr.leftmost_ptr;
+    //       pmemobj_persist(bt->pop, &(bt->root), sizeof(TOID(nvmpage)));
+
+    //       hdr.is_deleted = 1;
+    //     }
+    //   }
+
+    //   // Remove the key from this node
+    //   bool ret = remove_key(bt->pop, key);
+    //   return true;
+    // }
+
+    bool should_rebalance = true;
+    // check the node utilization
+    if (num_entries_before - 1 >= (int)((nvm_cardinality - 1) * 0.5)) {
+      should_rebalance = false;
+    }
+
+    // Remove the key from this node
+    bool ret = remove_key(bt->pop, key);
+
+    if (!should_rebalance) {
+      return (hdr.leftmost_ptr == NULL) ? ret : true;
+    }
   }
 
-  if (!D_RW(p)->store(this, NULL, key, right, true)) { // store
-    btree_insert(key, right);
-  }
-}
+  // Remove a key from the parent node
+  entry_key_t deleted_key_from_parent = 0;
+  bool is_leftmost_node = false;
+  TOID(nvmpage) left_sibling;
+  left_sibling.oid.pool_uuid_lo = bt->root.oid.pool_uuid_lo;
+  subtree * left_subtree_sibling;
+  nvmpage * nvm_root = sub_root->get_nvmroot_ptr();
 
-// store the key into the node at the given level
-void nvmbtree::btree_insert_internal(char *left, entry_key_t key, char *right,
-                                  uint32_t level) {
-  if (level > D_RO(root)->hdr.level)
-    return;
-
-  TOID(nvmpage) p = root;
-
-  while (D_RO(p)->hdr.level > level)
-    p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
-
-  if (!D_RW(p)->store(this, NULL, key, right, true)) {
-    btree_insert_internal(left, key, right, level);
-  }
-}
-
-void nvmbtree::btree_delete(entry_key_t key) {
-  TOID(nvmpage) p = root;
-
-  while (D_RO(p)->hdr.leftmost_ptr != NULL) {
-    p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
+  if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
+      bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
+        &deleted_key_from_parent, &is_leftmost_node, &left_subtree_sibling);
+      left_sibling.oid.off = (uint64_t)left_subtree_sibling->nvm_ptr;
+  } else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
+      sub_root->btree_delete_internal(key, (char *)pmemobj_oid(this).off, hdr.level + 1,
+        &deleted_key_from_parent, &is_leftmost_node, (nvmpage **)&left_sibling.oid.off, bt);
+  } else {
+      printf("remove error\n");
   }
 
-  uint64_t t = (uint64_t)(D_RW(p)->linear_search(key));
-  /*
-  while ((t = (uint64_t)(D_RW(p)->linear_search(key))) ==
-         D_RW(p)->hdr.sibling_ptr.oid.off) {
-    p.oid.off = t;
-    printf("sibling_ptr delete\n");
-    if (!t)
-      break;
+  if (is_leftmost_node) {
+    D_RW(hdr.sibling_ptr)
+        ->remove(bt, D_RW(hdr.sibling_ptr)->records[0].key, true, with_lock);
+    return true;
   }
-  */
-  if (t) {
-    if (!D_RW(p)->remove(this, key)) {
-      btree_delete(key);
+
+  register int num_entries = count();
+  register int left_num_entries = D_RW(left_sibling)->count();
+
+  // Merge or Redistribution
+  int total_num_entries = num_entries + left_num_entries;
+  if (hdr.leftmost_ptr)
+    ++total_num_entries;
+
+  entry_key_t parent_key;
+
+  if (total_num_entries > nvm_cardinality - 1) { // Redistribution
+    register int m = (int)ceil(total_num_entries / 2);
+
+    if (num_entries < left_num_entries) { // left -> right
+      if (hdr.leftmost_ptr == nullptr) {
+        for (int i = left_num_entries - 1; i >= m; i--) {
+          insert_key(bt->pop, D_RW(left_sibling)->records[i].key,
+                      D_RW(left_sibling)->records[i].ptr, &num_entries);
+        }
+
+        D_RW(left_sibling)->records[m].ptr = nullptr;
+        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->records[m].ptr),
+                        sizeof(char *));
+
+        D_RW(left_sibling)->hdr.last_index = m - 1;
+        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.last_index),
+                        sizeof(int16_t));
+
+        parent_key = records[0].key;
+      } else {
+        insert_key(bt->pop, deleted_key_from_parent, (char *)hdr.leftmost_ptr,
+                    &num_entries);
+
+        for (int i = left_num_entries - 1; i > m; i--) {
+          insert_key(bt->pop, D_RO(left_sibling)->records[i].key,
+                      D_RO(left_sibling)->records[i].ptr, &num_entries);
+        }
+
+        parent_key = D_RO(left_sibling)->records[m].key;
+
+        hdr.leftmost_ptr = (nvmpage *)D_RO(left_sibling)->records[m].ptr;
+        pmemobj_persist(bt->pop, &(hdr.leftmost_ptr), sizeof(nvmpage *));
+
+        D_RW(left_sibling)->records[m].ptr = nullptr;
+        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->records[m].ptr),
+                        sizeof(char *));
+
+        D_RW(left_sibling)->hdr.last_index = m - 1;
+        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.last_index),
+                        sizeof(int16_t));
+      }
+
+      if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
+          bt->btree_insert_internal
+            ((char *)left_sibling.oid.off, parent_key, (char *)sub_root, hdr.level + 1);
+      }
+      else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
+          sub_root->btree_insert_internal
+            ((char *)left_sibling.oid.off, parent_key, (char *)pmemobj_oid(this).off, hdr.level + 1, bt);
+      } else {
+          printf("Redistribution left --> right error\n");
+      }
+
+      // if (left_sibling.oid.off == bt->root.oid.off) {
+      //   TOID(nvmpage) new_root;
+      //   POBJ_NEW(bt->pop, &new_root, nvmpage, NULL, NULL);
+      //   D_RW(new_root)->constructor(bt->pop, (nvmpage *)left_sibling.oid.off,
+      //                               parent_key, (nvmpage *)pmemobj_oid(this).off,
+      //                               hdr.level + 1);
+      //   bt->setNewRoot(new_root);
+      // } else {
+      //   bt->btree_insert_internal((char *)left_sibling.oid.off, parent_key,
+      //                             (char *)pmemobj_oid(this).off,
+      //                             hdr.level + 1);
+      // }
+    } else { // from leftmost case
+      hdr.is_deleted = 1;
+      pmemobj_persist(bt->pop, &(hdr.is_deleted), sizeof(uint8_t));
+
+      TOID(nvmpage) new_sibling;
+      POBJ_NEW(bt->pop, &new_sibling, nvmpage, NULL, NULL);
+      D_RW(new_sibling)->constructor(hdr.level);
+      D_RW(new_sibling)->hdr.sibling_ptr = hdr.sibling_ptr;
+
+      int num_dist_entries = num_entries - m;
+      int new_sibling_cnt = 0;
+
+      if (hdr.leftmost_ptr == nullptr) {
+        for (int i = 0; i < num_dist_entries; i++) {
+          D_RW(left_sibling)
+              ->insert_key(bt->pop, records[i].key, records[i].ptr,
+                            &left_num_entries);
+        }
+
+        for (int i = num_dist_entries; records[i].ptr != NULL; i++) {
+          D_RW(new_sibling)
+              ->insert_key(bt->pop, records[i].key, records[i].ptr,
+                            &new_sibling_cnt, false);
+        }
+
+        pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
+
+        D_RW(left_sibling)->hdr.sibling_ptr = new_sibling;
+        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.sibling_ptr),
+                        sizeof(nvmpage *));
+
+        parent_key = D_RO(new_sibling)->records[0].key;
+      } else {
+        D_RW(left_sibling)
+            ->insert_key(bt->pop, deleted_key_from_parent,
+                          (char *)hdr.leftmost_ptr, &left_num_entries);
+
+        for (int i = 0; i < num_dist_entries - 1; i++) {
+          D_RW(left_sibling)
+              ->insert_key(bt->pop, records[i].key, records[i].ptr,
+                            &left_num_entries);
+        }
+
+        parent_key = records[num_dist_entries - 1].key;
+
+        D_RW(new_sibling)->hdr.leftmost_ptr =
+            (nvmpage *)records[num_dist_entries - 1].ptr;
+        for (int i = num_dist_entries; records[i].ptr != NULL; i++) {
+          D_RW(new_sibling)
+              ->insert_key(bt->pop, records[i].key, records[i].ptr,
+                            &new_sibling_cnt, false);
+        }
+        pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
+
+        D_RW(left_sibling)->hdr.sibling_ptr = new_sibling;
+        pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.sibling_ptr),
+                        sizeof(nvmpage *));
+      }
+
+      if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
+          sub_root->nvm_ptr = (nvmpage *)new_sibling.oid.off;
+          pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
+
+          bt->btree_insert_internal
+            ((char *)left_sibling.oid.off, parent_key, (char *)sub_root, hdr.level + 1);
+      }
+      else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
+          sub_root->btree_insert_internal
+            ((char *)left_sibling.oid.off, parent_key, (char *)new_sibling.oid.off, hdr.level + 1, bt);
+      }
+
+      // if (left_sibling.oid.off == bt->root.oid.off) {
+      //   TOID(nvmpage) new_root;
+      //   POBJ_NEW(bt->pop, &new_root, nvmpage, NULL, NULL);
+      //   D_RW(new_root)->constructor(bt->pop, (nvmpage *)left_sibling.oid.off,
+      //                               parent_key, (nvmpage *)new_sibling.oid.off,
+      //                               hdr.level + 1);
+      //   bt->setNewRoot(new_root);
+      // } else {
+      //   bt->btree_insert_internal((char *)left_sibling.oid.off, parent_key,
+      //                             (char *)new_sibling.oid.off, hdr.level + 1);
+      // }
     }
   } else {
-    printf("not found the key to delete %lu\n", key);
+    hdr.is_deleted = 1;
+    pmemobj_persist(bt->pop, &(hdr.is_deleted), sizeof(uint8_t));
+
+    if (hdr.leftmost_ptr)
+      D_RW(left_sibling)
+          ->insert_key(bt->pop, deleted_key_from_parent,
+                        (char *)hdr.leftmost_ptr, &left_num_entries);
+
+    for (int i = 0; records[i].ptr != NULL; ++i) {
+      D_RW(left_sibling)
+          ->insert_key(bt->pop, records[i].key, records[i].ptr,
+                        &left_num_entries);
+    }
+
+    D_RW(left_sibling)->hdr.sibling_ptr = hdr.sibling_ptr;
+    pmemobj_persist(bt->pop, &(D_RW(left_sibling)->hdr.sibling_ptr),
+                    sizeof(nvmpage *));
+
+    // subtree root
+    if (sub_root != NULL && hdr.level == nvm_root->hdr.level) {
+      //delete sub_root
+      left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+      pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
+    }
   }
+
+  return true;
 }
 
-void nvmbtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level,
-                                  entry_key_t *deleted_key,
-                                  bool *is_leftmost_node, nvmpage **left_sibling) {
-  if (level > D_RO(root)->hdr.level)
-    return;
+inline void nvmpage::insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
+                        int *num_entries, bool flush = true,
+                        bool update_last_index = true) {
+  // update switch_counter
+  if (!IS_FORWARD(hdr.switch_counter))
+    ++hdr.switch_counter;
 
-  TOID(nvmpage) p = root;
+  // FAST
+  if (*num_entries == 0) { // this nvmpage is empty
+    nvmentry *new_entry = (nvmentry *)&records[0];
+    nvmentry *array_end = (nvmentry *)&records[1];
+    new_entry->key = (entry_key_t)key;
+    new_entry->ptr = (char *)ptr;
 
-  while (D_RW(p)->hdr.level > level) {
-    p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
-  }
+    array_end->ptr = (char *)NULL;
 
-  if ((char *)D_RO(p)->hdr.leftmost_ptr == ptr) {
-    *is_leftmost_node = true;
-    return;
-  }
+    if (flush) {
+      pmemobj_persist(pop, this, CACHE_LINE_SIZE);
+    }
+  } else {
+    int i = *num_entries - 1, inserted = 0, to_flush_cnt = 0;
+    records[*num_entries + 1].ptr = records[*num_entries].ptr;
 
-  *is_leftmost_node = false;
+    if (flush) {
+      if ((uint64_t) & (records[*num_entries + 1]) % CACHE_LINE_SIZE == 0)
+        pmemobj_persist(pop, &records[*num_entries + 1].ptr, sizeof(char *));
+    }
 
-  for (int i = 0; D_RO(p)->records[i].ptr != NULL; ++i) {
-    if (D_RO(p)->records[i].ptr == ptr) {
-      if (i == 0) {
-        if ((char *)D_RO(p)->hdr.leftmost_ptr != D_RO(p)->records[i].ptr) {
-          *deleted_key = D_RO(p)->records[i].key;
-          *left_sibling = D_RO(p)->hdr.leftmost_ptr;
-          D_RW(p)->remove(this, *deleted_key, false, false);
-          break;
+    // FAST
+    for (i = *num_entries - 1; i >= 0; i--) {
+      if (key < records[i].key) {
+        records[i + 1].ptr = records[i].ptr;
+        records[i + 1].key = records[i].key;
+
+        if (flush) {
+          uint64_t records_ptr = (uint64_t)(&records[i + 1]);
+
+          int remainder = records_ptr % CACHE_LINE_SIZE;
+          bool do_flush =
+              (remainder == 0) ||
+              ((((int)(remainder + sizeof(nvmentry)) / CACHE_LINE_SIZE) == 1) &&
+                ((remainder + sizeof(nvmentry)) % CACHE_LINE_SIZE) != 0);
+          if (do_flush) {
+            pmemobj_persist(pop, (void *)records_ptr, CACHE_LINE_SIZE);
+            to_flush_cnt = 0;
+          } else
+            ++to_flush_cnt;
         }
       } else {
-        if (D_RO(p)->records[i - 1].ptr != D_RO(p)->records[i].ptr) {
-          *deleted_key = D_RO(p)->records[i].key;
-          *left_sibling = (nvmpage *)D_RO(p)->records[i - 1].ptr;
-          D_RW(p)->remove(this, *deleted_key, false, false);
-          break;
-        }
+        records[i + 1].ptr = records[i].ptr;
+        records[i + 1].key = key;
+        records[i + 1].ptr = ptr;
+
+        if (flush)
+          pmemobj_persist(pop, &records[i + 1], sizeof(nvmentry));
+        inserted = 1;
+        break;
       }
     }
+    if (inserted == 0) {
+      records[0].ptr = (char *)hdr.leftmost_ptr;
+      records[0].key = key;
+      records[0].ptr = ptr;
+
+      if (flush)
+        pmemobj_persist(pop, &records[0], sizeof(nvmentry));
+    }
   }
+
+  if (update_last_index) {
+    hdr.last_index = *num_entries;
+  }
+  ++(*num_entries);
 }
 
-// Function to search keys from "min" to "max"
-void nvmbtree::btree_search_range(entry_key_t min, entry_key_t max,
-                               unsigned long *buf) {
-  TOID(nvmpage) p = root;
+// Insert a new key - FAST and FAIR
+nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, bool flush,
+            subtree *sub_root = NULL, nvmpage *invalid_sibling = NULL) {
+  // If this node has a sibling node,
+  // if ((hdr.sibling_ptr.oid.off != 0) &&
+  //     ((nvmpage *)hdr.sibling_ptr.oid.off != invalid_sibling)) {
+  //   // Compare this key with the first key of the sibling
+  //   if (key > D_RO(hdr.sibling_ptr)->records[0].key) {
+  //     return D_RW(hdr.sibling_ptr)
+  //         ->store(bt, NULL, key, right, true, invalid_sibling);
+  //   }
+  // }
 
-  while (p.oid.off != 0) {
-    if (D_RO(p)->hdr.leftmost_ptr != NULL) {
-      // The current nvmpage is internal
-      p.oid.off = (uint64_t)D_RW(p)->linear_search(min);
+  register int num_entries = count();
+
+  // FAST
+  if (num_entries < nvm_cardinality - 1) {
+    insert_key(bt->pop, key, right, &num_entries, flush);
+    return (nvmpage *)pmemobj_oid(this).off;
+  } else { // FAIR
+    // overflow
+    // create a new node
+    TOID(nvmpage) sibling;
+    POBJ_NEW(bt->pop, &sibling, nvmpage, NULL, NULL);
+    D_RW(sibling)->constructor(hdr.level);
+    nvmpage *sibling_ptr = D_RW(sibling);
+    register int m = (int)ceil(num_entries / 2);
+    entry_key_t split_key = records[m].key;
+
+    // migrate half of keys into the sibling
+    int sibling_cnt = 0;
+    if (hdr.leftmost_ptr == NULL) { // leaf node
+      for (int i = m; i < num_entries; ++i) {
+        sibling_ptr->insert_key(bt->pop, records[i].key, records[i].ptr,
+                                &sibling_cnt, false);
+      }
+    } else { // internal node
+      for (int i = m + 1; i < num_entries; ++i) {
+        sibling_ptr->insert_key(bt->pop, records[i].key, records[i].ptr,
+                                &sibling_cnt, false);
+      }
+      sibling_ptr->hdr.leftmost_ptr = (nvmpage *)records[m].ptr;
+    }
+
+    sibling_ptr->hdr.sibling_ptr = hdr.sibling_ptr;
+    pmemobj_persist(bt->pop, sibling_ptr, sizeof(nvmpage));
+
+    hdr.sibling_ptr = sibling;
+    pmemobj_persist(bt->pop, &hdr, sizeof(hdr));
+
+    // set to NULL
+    if (IS_FORWARD(hdr.switch_counter))
+      hdr.switch_counter += 2;
+    else
+      ++hdr.switch_counter;
+    records[m].ptr = NULL;
+    pmemobj_persist(bt->pop, &records[m], sizeof(nvmentry));
+
+    hdr.last_index = m - 1;
+    pmemobj_persist(bt->pop, &hdr.last_index, sizeof(int16_t));
+
+    num_entries = hdr.last_index + 1;
+
+    nvmpage *ret;
+
+    // insert the key
+    if (key < split_key) {
+      insert_key(bt->pop, key, right, &num_entries);
+      ret = (nvmpage *)pmemobj_oid(this).off;
     } else {
-      // Found a leaf
-      D_RW(p)->linear_search_range(min, max, buf);
+      sibling_ptr->insert_key(bt->pop, key, right, &sibling_cnt);
+      ret = (nvmpage *)sibling.oid.off;
+    }
 
-      break;
+    nvmpage * nvm_root = sub_root->get_nvmroot_ptr();
+    
+    // Set a new root or insert the split key to the parent
+    if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
+      subtree* next = newSubtreeRoot(bt->pop, (nvmpage *)sibling.oid.off, sub_root->sibling_ptr);
+      sub_root->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+      pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
+
+      bt->btree_insert_internal(NULL, split_key, (char *)next, 
+          hdr.level + 1);
+    }
+    else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
+      sub_root->btree_insert_internal(NULL, split_key, (char *)sibling.oid.off, 
+          hdr.level + 1, bt);
+    } 
+    else { // internal node
+      printf("nvm subtree insert error\n");
+    }
+
+    return ret;
+  }
+}
+
+// Search keys with linear search
+void nvmpage::linear_search_range(entry_key_t min, entry_key_t max,
+                          unsigned long *buf) {
+  int i, off = 0;
+  uint8_t previous_switch_counter;
+  nvmpage *current = this;
+
+  while (current) {
+    int old_off = off;
+    do {
+      previous_switch_counter = current->hdr.switch_counter;
+      off = old_off;
+
+      entry_key_t tmp_key;
+      char *tmp_ptr;
+
+      if (IS_FORWARD(previous_switch_counter)) {
+        if ((tmp_key = current->records[0].key) > min) {
+          if (tmp_key < max) {
+            if ((tmp_ptr = current->records[0].ptr) != NULL) {
+              if (tmp_key == current->records[0].key) {
+                if (tmp_ptr) {
+                  buf[off++] = (unsigned long)tmp_ptr;
+                }
+              }
+            }
+          } else {
+            return;
+          }
+        }
+
+        for (i = 1; current->records[i].ptr != NULL; ++i) {
+          if ((tmp_key = current->records[i].key) > min) {
+            if (tmp_key < max) {
+              if ((tmp_ptr = current->records[i].ptr) !=
+                  current->records[i - 1].ptr) {
+                if (tmp_key == current->records[i].key) {
+                  if (tmp_ptr)
+                    buf[off++] = (unsigned long)tmp_ptr;
+                }
+              }
+            } else {
+              return;
+            }
+          }
+        }
+      } else {
+        for (i = current->count() - 1; i > 0; --i) {
+          if ((tmp_key = current->records[i].key) > min) {
+            if (tmp_key < max) {
+              if ((tmp_ptr = current->records[i].ptr) !=
+                  current->records[i - 1].ptr) {
+                if (tmp_key == current->records[i].key) {
+                  if (tmp_ptr)
+                    buf[off++] = (unsigned long)tmp_ptr;
+                }
+              }
+            } else {
+              return;
+            }
+          }
+        }
+
+        if ((tmp_key = current->records[0].key) > min) {
+          if (tmp_key < max) {
+            if ((tmp_ptr = current->records[0].ptr) != NULL) {
+              if (tmp_key == current->records[0].key) {
+                if (tmp_ptr) {
+                  buf[off++] = (unsigned long)tmp_ptr;
+                }
+              }
+            }
+          } else {
+            return;
+          }
+        }
+      }
+    } while (previous_switch_counter != current->hdr.switch_counter);
+
+    current = D_RW(current->hdr.sibling_ptr);
+  }
+}
+
+char *nvmpage::linear_search(entry_key_t key) {
+  int i = 1;
+  uint8_t previous_switch_counter;
+  char *ret = NULL;
+  char *t;
+  entry_key_t k;
+
+  if (hdr.leftmost_ptr == NULL) { // Search a leaf node
+    do {
+      previous_switch_counter = hdr.switch_counter;
+      ret = NULL;
+
+      // search from left ro right
+      if (IS_FORWARD(previous_switch_counter)) {
+        if ((k = records[0].key) == key) {
+          if ((t = records[0].ptr) != NULL) {
+            if (k == records[0].key) {
+              ret = t;
+              continue;
+            }
+          }
+        }
+
+        for (i = 1; records[i].ptr != NULL; ++i) {
+          if ((k = records[i].key) == key) {
+            if (records[i - 1].ptr != (t = records[i].ptr)) {
+              if (k == records[i].key) {
+                ret = t;
+                break;
+              }
+            }
+          }
+        }
+      } else { // search from right to left
+        for (i = count() - 1; i > 0; --i) {
+          if ((k = records[i].key) == key) {
+            if (records[i - 1].ptr != (t = records[i].ptr) && t) {
+              if (k == records[i].key) {
+                ret = t;
+                break;
+              }
+            }
+          }
+        }
+
+        if (!ret) {
+          if ((k = records[0].key) == key) {
+            if (NULL != (t = records[0].ptr) && t) {
+              if (k == records[0].key) {
+                ret = t;
+                continue;
+              }
+            }
+          }
+        }
+      }
+    } while (hdr.switch_counter != previous_switch_counter);
+
+    if (ret) {
+      return ret;
+    }
+    /*
+    if ((t = (char *)hdr.sibling_ptr.oid.off) &&
+        key >= D_RW(hdr.sibling_ptr)->records[0].key) {
+      return t;
+    }
+    */
+    return NULL;
+  } else { // internal node
+    do {
+      previous_switch_counter = hdr.switch_counter;
+      ret = NULL;
+
+      if (IS_FORWARD(previous_switch_counter)) {
+        if (key < (k = records[0].key)) {
+          if ((t = (char *)hdr.leftmost_ptr) != records[0].ptr) {
+            ret = t;
+            continue;
+          }
+        }
+
+        for (i = 1; i <= hdr.last_index && records[i].ptr != NULL; ++i) {
+          if (key < (k = records[i].key)) {
+            if ((t = records[i - 1].ptr) != records[i].ptr) {
+              ret = t;
+              printf("i: %d last_index: %d key: %ld  ret: %x\n", i , hdr.last_index, key, ret);
+              break;
+            }
+          }
+        }
+
+        if (!ret) {
+          ret = records[i - 1].ptr;
+          printf("i: %d last_index: %d key: %ld  ret: %x\n", i , hdr.last_index, key, ret);
+          continue;
+        }
+      } else { // search from right to left
+        for (i = count() - 1; i >= 0; --i) {
+          if (key >= (k = records[i].key)) {
+            if (i == 0) {
+              if ((char *)hdr.leftmost_ptr != (t = records[i].ptr)) {
+                ret = t;
+                break;
+              }
+            } else {
+              if (records[i - 1].ptr != (t = records[i].ptr)) {
+                ret = t;
+                break;
+              }
+            }
+          }
+        }
+      }
+    } while (hdr.switch_counter != previous_switch_counter);
+    /*
+    if ((t = (char *)hdr.sibling_ptr.oid.off) != NULL) {
+      if (key >= D_RW(hdr.sibling_ptr)->records[0].key)
+        return t;
+    }*/
+
+    if (ret) {
+      //printf("key: %ld  ret: %x", key, ret);
+      return ret;
+    } else
+      return (char *)hdr.leftmost_ptr;
+  }
+
+  return NULL;
+}
+
+// print a node
+void nvmpage::print() {
+  if (hdr.leftmost_ptr == NULL)
+    printf("[%d] leaf %x \n", this->hdr.level, (uint64_t)pmemobj_oid(this).off);
+  else
+    printf("[%d] internal %x \n", this->hdr.level, pmemobj_oid(this).off);
+  printf("last_index: %d\n", hdr.last_index);
+  printf("switch_counter: %d\n", hdr.switch_counter);
+  printf("search direction: ");
+  if (IS_FORWARD(hdr.switch_counter))
+    printf("->\n");
+  else
+    printf("<-\n");
+
+  if (hdr.leftmost_ptr != NULL)
+    printf("%x ", hdr.leftmost_ptr);
+
+  for (int i = 0; records[i].ptr != NULL; ++i)
+    printf("%ld,%x ", records[i].key, records[i].ptr);
+
+  printf("%x ", (uint64_t)hdr.sibling_ptr.oid.off);
+
+  printf("\n");
+}
+
+void nvmpage::printAll() {
+  TOID(nvmpage) p = TOID_NULL(nvmpage);
+  TOID_ASSIGN(p, pmemobj_oid(this));
+
+  if (hdr.leftmost_ptr == NULL) {
+    printf("printing leaf node: ");
+    print();
+  } else {
+    printf("printing internal node: ");
+    print();
+    p.oid.off = (uint64_t)hdr.leftmost_ptr;
+    D_RW(p)->printAll();
+    for (int i = 0; records[i].ptr != NULL; ++i) {
+      p.oid.off = (uint64_t)records[i].ptr;
+      D_RW(p)->printAll();
     }
   }
 }
 
-void nvmbtree::printAll() {
-  int total_keys = 0;
-  TOID(nvmpage) leftmost = root;
-  printf("root: %x\n", root.oid.off);
-  if (root.oid.off) {
-    do {
-      TOID(nvmpage) sibling = leftmost;
-      while (sibling.oid.off) {
-        if (D_RO(sibling)->hdr.level == 0) {
-          total_keys += D_RO(sibling)->hdr.last_index + 1;
-        }
-        D_RW(sibling)->print();
-        sibling = D_RO(sibling)->hdr.sibling_ptr;
-      }
-      printf("-----------------------------------------\n");
-      leftmost.oid.off = (uint64_t)D_RO(leftmost)->hdr.leftmost_ptr;
-    } while (leftmost.oid.off != 0);
-  }
+void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
+  if (flag) {
+    // write log
+    bpnode *p = dram_ptr;
 
-  printf("total number of keys: %d\n", total_keys);
+    while(p->hdr.leftmost_ptr != NULL) {
+      p = (bpnode*)p->linear_search(key);
+    }
+
+    if(!p->store(root, NULL, key, right, this)) { // store 
+      subtree_insert(root, key, right);
+    }
+  } else {
+    nvmpage* p = get_nvmroot_ptr();
+
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
+
+    if (!p->store(root, NULL, key, right, true, this)) { // store
+      subtree_insert(root, key, right);
+    }
+  }
 }
 
-void nvmbtree::randScounter() {
-  TOID(nvmpage) leftmost = root;
-  srand(time(NULL));
-  if (root.oid.off) {
-    do {
-      TOID(nvmpage) sibling = leftmost;
-      while (sibling.oid.off) {
-        D_RW(sibling)->hdr.switch_counter = rand() % 100;
-        sibling = D_RO(sibling)->hdr.sibling_ptr;
+void subtree::subtree_delete(btree* root, entry_key_t key) {
+  if (flag) {
+    bpnode* p = dram_ptr;
+
+    while(p->hdr.leftmost_ptr != NULL){
+      p = (bpnode*) p->linear_search(key);
+    }
+
+    bpnode *t = (bpnode *)p->linear_search(key);
+    if(p && t) {
+      if(!p->remove(root, key, false, true, this)) {
+        subtree_delete(root, key);
       }
-      leftmost.oid.off = (uint64_t)D_RO(leftmost)->hdr.leftmost_ptr;
-    } while (leftmost.oid.off != 0);
+    }
+    else {
+        ;
+      // printf("not found the key to delete %llx\n", key);
+    }
+  } else {
+    nvmpage* p = get_nvmroot_ptr();
+
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
+
+    uint64_t t = (uint64_t)p->linear_search(key);
+    if (t) {
+      if (!p->remove(root, key)) {
+        subtree_delete(root, key);
+      }
+    } else {
+      // printf("not found the key to delete %lu\n", key);
+    }
   }
+}
+
+char* subtree::subtree_search(entry_key_t key) {
+  if (flag) {
+    bpnode* p = dram_ptr;
+    while(p->hdr.leftmost_ptr != NULL) {
+      p = (bpnode *)p->linear_search(key);
+    }
+
+    bpnode *t = (bpnode *)p->linear_search(key);
+    if(!t) {
+      // printf("NOT FOUND %llx, t = %x\n", key, t);
+      return NULL;
+    }
+
+    return (char *)t;
+  } else {
+    nvmpage* p = get_nvmroot_ptr();
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
+
+    uint64_t t = (uint64_t)p->linear_search(key);
+    if (!t) {
+      printf("NOT FOUND %lu, t = %x\n", key, t);
+      return NULL;
+    }
+
+    return (char *)t;
+  }
+}
+
+void subtree::nvm_to_dram() {
+  if (flag) {
+    return ;
+  }
+  flag = true;
+  dram_ptr = (bpnode *)DFS(nvm_ptr);
+}
+
+char* subtree::DFS(nvmpage* root) {
+    if(root == nullptr) {
+        return nullptr;
+    }
+    TOID(nvmpage) nvm_node;
+    nvm_node.oid.off = (uint64_t)root;
+    nvmpage* nvm_node_ptr = D_RW(nvm_node);
+    bpnode* node = new bpnode();
+    
+    int count = 0;
+    
+    node->hdr.is_deleted = nvm_node_ptr->hdr.is_deleted;
+    node->hdr.last_index = nvm_node_ptr->hdr.last_index;
+    node->hdr.level = nvm_node_ptr->hdr.level;
+    node->hdr.switch_counter = nvm_node_ptr->hdr.switch_counter;
+    
+    node->hdr.leftmost_ptr = (bpnode *)DFS(nvm_node_ptr->hdr.leftmost_ptr);
+    while(nvm_node_ptr->records[count].ptr != NULL) {
+        node->records[count].key = nvm_node_ptr->records[count].key;
+        if (nvm_node_ptr->hdr.leftmost_ptr != nullptr) {
+            node->records[count].ptr = DFS(nvm_node_ptr->records[count].ptr);
+        } else {
+            node->records[count].ptr = nvm_node_ptr->records[count].ptr;
+        }
+        ++count;
+    }
+
+    node->records[count].ptr = nullptr;
+    // sibling_ptr
+    bpnode* tmp = (bpnode *)(node->records[node->hdr.last_index].ptr);
+    if (node->hdr.leftmost_ptr != nullptr && tmp->hdr.leftmost_ptr != nullptr) {
+        ((bpnode *)tmp->records[tmp->hdr.last_index].ptr)->hdr.sibling_ptr = (bpnode *)tmp->hdr.sibling_ptr->records[0].ptr;
+    }
+    return (char *)node;
+}
+
+void subtree::dram_to_nvm() {
+  if (!flag) {
+    return ;
+  }
+
+  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr);
+  flag = false;
+  // delete log
+}
+
+char* subtree::DFS(char* root) {
+    if(root == nullptr) {
+        return nullptr;
+    }
+    TOID(nvmpage) nvm_node;
+    POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
+    D_RW(nvm_node)->constructor();
+    nvmpage* nvm_node_ptr = D_RW(nvm_node);
+    bpnode* node = (bpnode *)root;
+    
+    int count = 0;
+    nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
+    nvm_node_ptr->hdr.last_index = node->hdr.last_index;
+    nvm_node_ptr->hdr.level = node->hdr.level;
+    nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
+    //sibling 
+    
+    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr);
+    while(node->records[count].ptr != NULL) {
+        nvm_node_ptr->records[count].key = node->records[count].key;
+        if (node->hdr.leftmost_ptr != nullptr) {
+            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr);
+        } else {
+            nvm_node_ptr->records[count].ptr = node->records[count].ptr;
+        }
+        ++count;
+    }
+    nvm_node_ptr->records[count].ptr = nullptr;
+    pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
+    delete node;
+    return (char *)nvm_node.oid.off;
+}
+
+void subtree::sync_subtree() {
+  if (flag == false) {
+    return ;
+  }
+}
+
+void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree *bt) {
+    if (flag) {
+        if(level > dram_ptr->hdr.level)
+            return;
+
+        bpnode *p = dram_ptr;
+
+        while(p->hdr.level > level) 
+            p = (bpnode *)p->linear_search(key);
+
+        if(!p->store(bt, NULL, key, right, this)) {
+            btree_insert_internal(left, key, right, level, bt);
+        }
+    } else {
+        nvmpage* root = get_nvmroot_ptr();
+        if (level > root->hdr.level)
+            return;
+
+        nvmpage* p = root;
+        while (p->hdr.level > level)
+            p = to_nvmpage(p->linear_search(key));
+
+        if (!p->store(bt, NULL, key, right, true, this)) {
+            btree_insert_internal(left, key, right, level);
+        }
+    }
+}
+
+void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+                        bool *is_leftmost_node, bpnode **left_sibling, btree *bt) {
+    if (flag) {
+        if(level > this->dram_ptr->hdr.level)
+            return;
+
+        bpnode *p = this->dram_ptr;
+
+        while(p->hdr.level > level) {
+            p = (bpnode *)p->linear_search(key);
+        }
+
+        if((char *)p->hdr.leftmost_ptr == ptr) {
+            *is_leftmost_node = true;
+            return;
+        }
+
+        *is_leftmost_node = false;
+
+        for(int i=0; p->records[i].ptr != NULL; ++i) {
+            if(p->records[i].ptr == ptr) {
+                if(i == 0) {
+                    if((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = p->hdr.leftmost_ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }
+                }
+                else {
+                    if(p->records[i - 1].ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = (bpnode *)p->records[i - 1].ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }
+                }
+            }
+        }
+    } else {
+        nvmpage* root = get_nvmroot_ptr();
+        if (level > root->hdr.level)
+            return;
+
+        nvmpage* p = root;
+
+        while (p->hdr.level > level) {
+            p = to_nvmpage(p->linear_search(key));
+        }
+
+        if ((char *)p->hdr.leftmost_ptr == ptr) {
+            *is_leftmost_node = true;
+            return;
+        }
+
+        *is_leftmost_node = false;
+
+        for (int i = 0; p->records[i].ptr != NULL; ++i) {
+            if (p->records[i].ptr == ptr) {
+                if (i == 0) {
+                    if ((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = p->hdr.leftmost_ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }
+                } else {
+                    if (p->records[i - 1].ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = (nvmpage *)p->records[i - 1].ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }     
+                }
+            }
+        }
+    }
 }

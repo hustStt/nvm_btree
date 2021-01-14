@@ -8,6 +8,7 @@
    interest in the Software, including all intellectual property rights therein
    shall remain in UNIST. 
 */
+#pragma once 
 
 #include <unistd.h>
 #include <stdio.h>
@@ -79,90 +80,6 @@ class btree{
 
     friend class bpnode;
 };
-
-class subtree {
-  private:
-    bpnode* dram_ptr;
-    nvmpage* nvm_ptr; // off 
-    subtree* sibling_ptr; // off
-    uint64_t heat;
-    PMEMobjpool *pop;
-    NVMAllocator* log_alloc;
-    bool flag;
-    // true:dram   false:nvm
-  public:
-    void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
-      this->flag = flag;
-      this->dram_ptr = dram_ptr;
-      this->nvm_ptr = nullptr;
-      this->heat = heat;
-      this->pop = pop;
-      this->sibling_ptr = next;
-
-      pmemobj_persist(pop, this, sizeof(subtree));
-    }
-
-    void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = false) {
-      this->flag = flag;
-      this->dram_ptr = nullptr;
-      this->nvm_ptr = nvm_ptr;
-      this->heat = heat;
-      this->pop = pop;
-      this->sibling_ptr = next;
-
-      pmemobj_persist(pop, this, sizeof(subtree));
-    }
-
-    void subtree_insert(btree* root, entry_key_t key, char* right);
-    void subtree_delete(btree* root, entry_key_t);
-    char *subtree_search(entry_key_t);
-    void subtree_search_range(entry_key_t, entry_key_t, unsigned long *); 
-    //void subtree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
-    void subtree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
-
-    void btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree* bt);
-    void btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
-        bool *is_leftmost_node, bpnode **left_sibling, btree* bt);
-
-    // nvm --> dram
-    char* DFS(nvmpage* root);
-    void nvm_to_dram();
-
-    // dram --> nvm
-    char* DFS(char* root);
-    void dram_to_nvm();
-
-    // sync dram --> nvm
-    void sync_subtree();
-
-    nvmpage *to_nvmpage(nvmpage *off) {
-      return (nvmpage *)((uint64_t)off + (uint64_t)pop);
-    }
-
-    nvmpage *to_nvmpage(char *off) {
-      return (nvmpage *)((uint64_t)off + (uint64_t)pop);
-    }
-
-    nvmpage *get_nvmroot_ptr() {
-      return to_nvmpage(nvm_ptr);
-    }
-
-    friend class bpnode;
-};
-
-static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
-    TOID(subtree) node = TOID_NULL(subtree);
-    POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, next);
-    return D_RW(node);
-}
-
-static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * next = nullptr) {
-    TOID(subtree) node = TOID_NULL(subtree);
-    POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, next);
-    return D_RW(node);
-}
 
 class header{
   private:
