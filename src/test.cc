@@ -10,9 +10,9 @@
 #include "statistic.h"
 #include "single_pmdk.h"
 
-#define NODEPATH   "/mnt/pmem0/persistent"
-#define VALUEPATH "/mnt/pmem0/value_persistent"
-#define LOGPATH "/mnt/pmem0/log_persistent"
+#define NODEPATH   "/pmem1/persistent"
+#define VALUEPATH "/pmem1/value_persistent"
+#define LOGPATH "/pmem1/log_persistent"
 
 const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
 const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
-    char* persistent_path = "/mnt/pmem0/mytest";
+    char* persistent_path = "/pmem1/mytest";
 
     //TOID(subtree) nvmbt = TOID_NULL(nvmbtree);
     PMEMobjpool *pop;
