@@ -536,6 +536,8 @@ void btree::deform() {
     bpnode* q = p;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
+        subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
+        tmp->dram_to_nvm();
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
         }
@@ -558,15 +560,15 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
       subtree_insert(root, key, right);
     }
   } else {
-    // TOID(nvmpage) p = nvm_ptr;
+    nvmpage* p = get_nvmroot_ptr();
 
-    // while (D_RO(p)->hdr.leftmost_ptr != NULL) {
-    //   p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
-    // }
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
 
-    // if (!D_RW(p)->store(root, NULL, key, right, true)) { // store
-    //   subtree_insert(root, key, right);
-    // }
+    if (!p->store(root, NULL, key, right, true, this)) { // store
+      subtree_insert(root, key, right);
+    }
   }
 }
 
@@ -589,20 +591,20 @@ void subtree::subtree_delete(btree* root, entry_key_t key) {
       // printf("not found the key to delete %llx\n", key);
     }
   } else {
-    // TOID(nvmpage) p = nvm_ptr;
+    nvmpage* p = get_nvmroot_ptr();
 
-    // while (D_RO(p)->hdr.leftmost_ptr != NULL) {
-    //   p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
-    // }
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
 
-    // uint64_t t = (uint64_t)D_RW(p)->linear_search(key);
-    // if (t) {
-    //   if (!D_RW(p)->remove(root, key)) {
-    //     subtree_delete(root, key);
-    //   }
-    // } else {
-    //   // printf("not found the key to delete %lu\n", key);
-    // }
+    uint64_t t = (uint64_t)p->linear_search(key);
+    if (t) {
+      if (!p->remove(root, key)) {
+        subtree_delete(root, key);
+      }
+    } else {
+      // printf("not found the key to delete %lu\n", key);
+    }
   }
 }
 
@@ -621,23 +623,23 @@ char* subtree::subtree_search(entry_key_t key) {
 
     return (char *)t;
   } else {
-    // TOID(nvmpage) p = nvm_ptr;
-    // while (D_RO(p)->hdr.leftmost_ptr != NULL) {
-    //   p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
-    // }
+    nvmpage* p = get_nvmroot_ptr();
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
 
-    // uint64_t t = (uint64_t)D_RW(p)->linear_search(key);
-    // if (!t) {
-    //   printf("NOT FOUND %lu, t = %x\n", key, t);
-    //   return NULL;
-    // }
+    uint64_t t = (uint64_t)p->linear_search(key);
+    if (!t) {
+      printf("NOT FOUND %lu, t = %x\n", key, t);
+      return NULL;
+    }
 
-    // return (char *)t;
+    return (char *)t;
   }
 }
 
 void subtree::nvm_to_dram() {
-  if (flag == true) {
+  if (flag) {
     return ;
   }
   flag = true;
@@ -665,13 +667,6 @@ char* subtree::DFS(nvmpage* root) {
         node->records[count].key = nvm_node_ptr->records[count].key;
         if (nvm_node_ptr->hdr.leftmost_ptr != nullptr) {
             node->records[count].ptr = DFS(nvm_node_ptr->records[count].ptr);
-            // sibling_ptr
-            if (count == 0) {
-              node->hdr.leftmost_ptr->hdr.sibling_ptr = (bpnode *)nvm_node_ptr->records[count].ptr;
-            } else {
-              bpnode* tmp = (bpnode *)nvm_node_ptr->records[count - 1].ptr;
-              tmp->hdr.sibling_ptr = (bpnode *)nvm_node_ptr->records[count].ptr;
-            }
         } else {
             node->records[count].ptr = nvm_node_ptr->records[count].ptr;
         }
@@ -688,11 +683,12 @@ char* subtree::DFS(nvmpage* root) {
 }
 
 void subtree::dram_to_nvm() {
-  if (flag == false) {
+  if (!flag) {
     return ;
   }
 
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr);
+  flag = false;
   // delete log
 }
 
@@ -718,15 +714,6 @@ char* subtree::DFS(char* root) {
         nvm_node_ptr->records[count].key = node->records[count].key;
         if (node->hdr.leftmost_ptr != nullptr) {
             nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr);
-            TOID(nvmpage) tmp;
-            if (count == 0) {
-              tmp.oid.off = (uint64_t)node->hdr.leftmost_ptr;
-              D_RW(tmp)->hdr.sibling_ptr.oid.off = (uint64_t)node->records[count].ptr;
-            } else {
-              tmp.oid.off = (uint64_t)node->records[count - 1].ptr;
-              D_RW(tmp)->hdr.sibling_ptr.oid.off = (uint64_t)node->records[count].ptr;
-            }
-            pmemobj_persist(pop, &(D_RW(tmp)->hdr), sizeof(D_RW(tmp)->hdr));
         } else {
             nvm_node_ptr->records[count].ptr = node->records[count].ptr;
         }
@@ -744,16 +731,6 @@ void subtree::sync_subtree() {
   }
 }
 
-// 子树高度增加需要分裂 热度减半
-void subtree::split() {
-
-}
-
-// 合并 热度相加
-void subtree::merge() {
-
-}
-
 void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree *bt) {
     if (flag) {
         if(level > dram_ptr->hdr.level)
@@ -768,19 +745,17 @@ void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, ui
             btree_insert_internal(left, key, right, level, bt);
         }
     } else {
-        // TOID(nvmpage) root;
-        // root.oid.off = (uint64_t)nvm_ptr;
-        // if (level > D_RO(root)->hdr.level)
-        //     return;
+        nvmpage* root = get_nvmroot_ptr();
+        if (level > root->hdr.level)
+            return;
 
-        // TOID(nvmpage) p = root;
+        nvmpage* p = root;
+        while (p->hdr.level > level)
+            p = to_nvmpage(p->linear_search(key));
 
-        // while (D_RO(p)->hdr.level > level)
-        //     p.oid.off = (uint64_t)D_RW(p)->linear_search(key);
-
-        // if (!D_RW(p)->store(this, NULL, key, right, true)) {
-        //     btree_insert_internal(left, key, right, level);
-        // }
+        if (!p->store(bt, NULL, key, right, true, this)) {
+            btree_insert_internal(left, key, right, level);
+        }
     }
 }
 
@@ -820,6 +795,43 @@ void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, 
                         p->remove(bt, *deleted_key, false, false, this);
                         break;
                     }
+                }
+            }
+        }
+    } else {
+        nvmpage* root = get_nvmroot_ptr();
+        if (level > root->hdr.level)
+            return;
+
+        nvmpage* p = root;
+
+        while (p->hdr.level > level) {
+            p = to_nvmpage(p->linear_search(key));
+        }
+
+        if ((char *)p->hdr.leftmost_ptr == ptr) {
+            *is_leftmost_node = true;
+            return;
+        }
+
+        *is_leftmost_node = false;
+
+        for (int i = 0; p->records[i].ptr != NULL; ++i) {
+            if (p->records[i].ptr == ptr) {
+                if (i == 0) {
+                    if ((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = p->hdr.leftmost_ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }
+                } else {
+                    if (p->records[i - 1].ptr != p->records[i].ptr) {
+                        *deleted_key = p->records[i].key;
+                        *left_sibling = (nvmpage *)p->records[i - 1].ptr;
+                        p->remove(bt, *deleted_key, false, false, this);
+                        break;
+                    }     
                 }
             }
         }

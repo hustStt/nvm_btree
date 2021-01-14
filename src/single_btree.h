@@ -83,8 +83,8 @@ class btree{
 class subtree {
   private:
     bpnode* dram_ptr;
-    nvmpage* nvm_ptr;
-    subtree* sibling_ptr;
+    nvmpage* nvm_ptr; // off 
+    subtree* sibling_ptr; // off
     uint64_t heat;
     PMEMobjpool *pop;
     NVMAllocator* log_alloc;
@@ -135,16 +135,29 @@ class subtree {
     // sync dram --> nvm
     void sync_subtree();
 
-    // 分裂 热度减半
-    void split();
+    nvmpage *to_nvmpage(nvmpage *off) {
+      return off + (nvmpage *)pop;
+    }
 
-    // 合并 热度相加
-    void merge();
+    nvmpage *to_nvmpage(char *off) {
+      return (nvmpage *)off + (nvmpage *)pop;
+    }
+
+    nvmpage *get_nvmroot_ptr() {
+      return to_nvmpage(nvm_ptr);
+    }
 
     friend class bpnode;
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
+    TOID(subtree) node = TOID_NULL(subtree);
+    POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    D_RW(node)->constructor(pop, subtree_root, next);
+    return D_RW(node);
+}
+
+static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * next = nullptr) {
     TOID(subtree) node = TOID_NULL(subtree);
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
     D_RW(node)->constructor(pop, subtree_root, next);
@@ -337,17 +350,14 @@ class bpnode{
       subtree *left_subtree_sibling;
 
       if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
-        printf("subtree root del key %x level %d\n", key, hdr.level + 1);
         bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
         left_subtree_sibling = (subtree *)left_sibling;
         left_sibling = left_subtree_sibling->dram_ptr;
       } else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
-        printf("subtree node del key %x level %d\n", key, hdr.level + 1);
         sub_root->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling, bt);
       } else {
-        printf("internal del key %x level %d\n", key, hdr.level + 1);
         bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
           &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
       }
