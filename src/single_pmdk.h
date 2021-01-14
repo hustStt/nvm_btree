@@ -37,6 +37,7 @@
 class nvmpage;
 class subtree;
 class btree;
+class bpnode;
 
 POBJ_LAYOUT_BEGIN(btree);
 //POBJ_LAYOUT_ROOT(btree, subtree);
