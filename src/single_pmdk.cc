@@ -554,7 +554,7 @@ char* subtree::DFS(char* root) {
     }
     nvm_node_ptr->records[count].ptr = nullptr;
     delete node;
-    return nvm_node_ptr;
+    return (char *)nvm_node_ptr;
 }
 
 void subtree::sync_subtree() {

@@ -531,8 +531,9 @@ void btree::deform() {
     printf("****subtree level %d, node num %d, entry num %d****\n",
                tmp->hdr.level, tmpcnt, valuecnt);
   }
-
-    printf("subtree root start\n");
+    uint64_t start_time, end_time;
+    start_time = get_now_micros();
+    printf("subtree root start \n");
     bpnode* q = p;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
@@ -546,7 +547,8 @@ void btree::deform() {
         q = q->hdr.sibling_ptr;
     }
     flag = true;
-    printf("subtree root end\n");
+    end_time = get_now_micros();
+    printf("subtree root end  time: %f s\n", (end_time - start_time) * 1e-6);
 }
 
 bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock, subtree* sub_root) {
