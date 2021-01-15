@@ -62,6 +62,7 @@ private:
 
   friend class nvmpage;
   friend class subtree;
+  friend class btree;
 
 public:
   void constructor() {

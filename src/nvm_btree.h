@@ -53,6 +53,10 @@ public:
         value_alloc->PrintStorage();
     }
 
+    void test() {
+        bt->to_nvm_test();
+    }
+
 private:
     btree *bt;
 };

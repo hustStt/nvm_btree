@@ -79,7 +79,7 @@ class btree{
 
     char* findSubtreeRoot(entry_key_t);
     void to_nvm_test();
-    char* DFS(char* root)
+    char* DFS(char* root);
 
     friend class bpnode;
 };
