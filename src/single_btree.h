@@ -424,10 +424,10 @@ class bpnode{
         if(ret) {
           return ret;
         }
-
+/*
         if((t = (char *)hdr.sibling_ptr) && key >= ((bpnode *)t)->records[0].key)
           return t;
-
+*/
         return NULL;
       }
       else { // internal node
@@ -476,12 +476,12 @@ class bpnode{
             }
           }
         } while(hdr.switch_counter != previous_switch_counter);
-
+/*
         if((t = (char *)hdr.sibling_ptr) != NULL) {
           if(key >= ((bpnode *)t)->records[0].key)
             return t;
         }
-
+*/
         if(ret) {
           return ret;
         }

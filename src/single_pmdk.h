@@ -44,7 +44,7 @@ class bpnode;
 POBJ_LAYOUT_BEGIN(btree);
 //POBJ_LAYOUT_ROOT(btree, subtree);
 POBJ_LAYOUT_TOID(btree, nvmpage);
-POBJ_LAYOUT_TOID(btree, subtree);
+//POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
 
 using entry_key_t = int64_t;
@@ -557,7 +557,7 @@ class subtree {
       this->pop = pop;
       this->sibling_ptr = next;
 
-      pmemobj_persist(pop, this, sizeof(subtree));
+      //pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = false) {
@@ -568,7 +568,7 @@ class subtree {
       this->pop = pop;
       this->sibling_ptr = next;
 
-      pmemobj_persist(pop, this, sizeof(subtree));
+      //pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void subtree_insert(btree* root, entry_key_t key, char* right);
@@ -595,15 +595,15 @@ class subtree {
     // sync dram --> nvm
     void sync_subtree();
 
-    nvmpage *to_nvmpage(nvmpage *off) {
+    inline nvmpage *to_nvmpage(nvmpage *off) {
       return (nvmpage *)((uint64_t)off + (uint64_t)pop);
     }
 
-    nvmpage *to_nvmpage(char *off) {
+    inline nvmpage *to_nvmpage(char *off) {
       return (nvmpage *)((uint64_t)off + (uint64_t)pop);
     }
 
-    nvmpage *get_nvmroot_ptr() {
+    inline nvmpage *get_nvmroot_ptr() {
       return to_nvmpage(nvm_ptr);
     }
 
@@ -612,15 +612,21 @@ class subtree {
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
-    TOID(subtree) node = TOID_NULL(subtree);
-    POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, next);
-    return D_RW(node);
+    //TOID(subtree) node = TOID_NULL(subtree);
+    //POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    //D_RW(node)->constructor(pop, subtree_root, next);
+    //return D_RW(node);
+    subtree *node = new subtree;
+    node->constructor(pop, subtree_root, next);
+    return node;
 }
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * next = nullptr) {
-    TOID(subtree) node = TOID_NULL(subtree);
-    POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, next);
-    return D_RW(node);
+    //TOID(subtree) node = TOID_NULL(subtree);
+    //POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    //D_RW(node)->constructor(pop, subtree_root, next);
+    //return D_RW(node);
+    subtree *node = new subtree;
+    node->constructor(pop, subtree_root, next);
+    return node;
 }
