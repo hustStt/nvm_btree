@@ -853,7 +853,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
 
 void btree::to_nvm_test() {
-  test_root = (nvmpage *)DFS((char *)dram_ptr);
+  test_root = (nvmpage *)DFS(root);
 }
 
 char* btree::DFS(char* root) {
@@ -872,7 +872,6 @@ char* btree::DFS(char* root) {
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
     //sibling 
-    pmemobj_persist(pop, &(nvm_node_ptr->hdr), sizeof(nvmheader));
     
     nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr);
     while(node->records[count].ptr != NULL) {
@@ -884,8 +883,8 @@ char* btree::DFS(char* root) {
         }
         ++count;
     }
-    nvm_node_ptr->records[count].ptr = nullptr;
-    pmemobj_persist(pop, &(nvm_node_ptr->records), sizeof(nvm_node_ptr->records));
-    delete node;
-    return (char *)nvm_node.oid.off;
+    //nvm_node_ptr->records[count].ptr = nullptr;
+    pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
+    //delete node;
+    return (char *)nvm_node_ptr;
 }
