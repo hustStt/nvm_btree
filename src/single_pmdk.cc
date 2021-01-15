@@ -488,11 +488,11 @@ void subtree::dram_to_nvm() {
     return ;
   }
 
-  dram_ptr = (bpnode *)DFS((char *)dram_ptr);
-  flag = true;
+  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr);
+  flag = false;
   // delete log
 }
-/*
+
 char* subtree::DFS(char* root) {
     if(root == nullptr) {
         return nullptr;
@@ -526,7 +526,8 @@ char* subtree::DFS(char* root) {
     delete node;
     return (char *)nvm_node.oid.off;
 }
-*/
+
+/*
 char* subtree::DFS(char* root) {
     if(root == nullptr) {
         return nullptr;
@@ -556,7 +557,7 @@ char* subtree::DFS(char* root) {
     delete node;
     return (char *)nvm_node_ptr;
 }
-
+*/
 void subtree::sync_subtree() {
   if (flag == false) {
     return ;
