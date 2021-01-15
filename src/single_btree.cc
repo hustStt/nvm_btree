@@ -292,8 +292,8 @@ char *btree::btree_search(entry_key_t key){
 
 void btree::btreeInsert(entry_key_t key, char* right) {
     if (!flag && total_size >= MAX_DRAM_BTREE_SIZE) {
-        //CalcuRootLevel();
-        //deform();
+        CalcuRootLevel();
+        deform();
     }
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(key);

@@ -509,7 +509,6 @@ char* subtree::DFS(char* root) {
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
     //sibling 
-    pmemobj_persist(pop, &(nvm_node_ptr->hdr), sizeof(nvmheader));
     
     nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr);
     while(node->records[count].ptr != NULL) {
@@ -522,42 +521,11 @@ char* subtree::DFS(char* root) {
         ++count;
     }
     nvm_node_ptr->records[count].ptr = nullptr;
-    pmemobj_persist(pop, &(nvm_node_ptr->records), sizeof(nvm_node_ptr->records));
+    pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
     delete node;
     return (char *)nvm_node.oid.off;
 }
 
-/*
-char* subtree::DFS(char* root) {
-    if(root == nullptr) {
-        return nullptr;
-    }
-    
-    bpnode* nvm_node_ptr = new bpnode();
-    bpnode* node = (bpnode *)root;
-    
-    int count = 0;
-    nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
-    nvm_node_ptr->hdr.last_index = node->hdr.last_index;
-    nvm_node_ptr->hdr.level = node->hdr.level;
-    nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
-    //sibling 
-    
-    nvm_node_ptr->hdr.leftmost_ptr = (bpnode *)DFS((char *)node->hdr.leftmost_ptr);
-    while(node->records[count].ptr != NULL) {
-        nvm_node_ptr->records[count].key = node->records[count].key;
-        if (node->hdr.leftmost_ptr != nullptr) {
-            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr);
-        } else {
-            nvm_node_ptr->records[count].ptr = node->records[count].ptr;
-        }
-        ++count;
-    }
-    nvm_node_ptr->records[count].ptr = nullptr;
-    delete node;
-    return (char *)nvm_node_ptr;
-}
-*/
 void subtree::sync_subtree() {
   if (flag == false) {
     return ;
