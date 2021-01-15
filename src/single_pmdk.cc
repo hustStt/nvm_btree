@@ -509,6 +509,7 @@ char* subtree::DFS(char* root) {
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
     //sibling 
+    pmemobj_persist(pop, &(nvm_node_ptr->hdr), sizeof(nvmheader));
     
     nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr);
     while(node->records[count].ptr != NULL) {
@@ -521,7 +522,7 @@ char* subtree::DFS(char* root) {
         ++count;
     }
     nvm_node_ptr->records[count].ptr = nullptr;
-    pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
+    pmemobj_persist(pop, &(nvm_node_ptr->records), sizeof(vm_node_ptr->records));
     delete node;
     return (char *)nvm_node.oid.off;
 }
