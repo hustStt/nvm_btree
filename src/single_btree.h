@@ -50,6 +50,7 @@ class btree{
   private:
     int height;
     char* root;
+    nvmpage* test_root;
     bool flag;
     uint32_t tar_level;
     uint64_t total_size;
@@ -77,6 +78,8 @@ class btree{
     void CalcuRootLevel();
 
     char* findSubtreeRoot(entry_key_t);
+    void to_nvm_test();
+    char* DFS(char* root)
 
     friend class bpnode;
 };

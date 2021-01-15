@@ -292,8 +292,8 @@ char *btree::btree_search(entry_key_t key){
 
 void btree::btreeInsert(entry_key_t key, char* right) {
     if (!flag && total_size >= MAX_DRAM_BTREE_SIZE) {
-        CalcuRootLevel();
-        deform();
+        //CalcuRootLevel();
+        //deform();
     }
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(key);
@@ -849,4 +849,43 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
     return ret;
   }
+}
+
+
+void btree::to_nvm_test() {
+  test_root = (nvmpage *)DFS((char *)dram_ptr);
+}
+
+char* btree::DFS(char* root) {
+    if(root == nullptr) {
+        return nullptr;
+    }
+    TOID(nvmpage) nvm_node;
+    POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
+    D_RW(nvm_node)->constructor();
+    nvmpage* nvm_node_ptr = D_RW(nvm_node);
+    bpnode* node = (bpnode *)root;
+    
+    int count = 0;
+    nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
+    nvm_node_ptr->hdr.last_index = node->hdr.last_index;
+    nvm_node_ptr->hdr.level = node->hdr.level;
+    nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
+    //sibling 
+    pmemobj_persist(pop, &(nvm_node_ptr->hdr), sizeof(nvmheader));
+    
+    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr);
+    while(node->records[count].ptr != NULL) {
+        nvm_node_ptr->records[count].key = node->records[count].key;
+        if (node->hdr.leftmost_ptr != nullptr) {
+            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr);
+        } else {
+            nvm_node_ptr->records[count].ptr = node->records[count].ptr;
+        }
+        ++count;
+    }
+    nvm_node_ptr->records[count].ptr = nullptr;
+    pmemobj_persist(pop, &(nvm_node_ptr->records), sizeof(nvm_node_ptr->records));
+    delete node;
+    return (char *)nvm_node.oid.off;
 }
