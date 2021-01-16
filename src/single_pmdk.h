@@ -44,7 +44,7 @@ class bpnode;
 POBJ_LAYOUT_BEGIN(btree);
 //POBJ_LAYOUT_ROOT(btree, subtree);
 POBJ_LAYOUT_TOID(btree, nvmpage);
-//POBJ_LAYOUT_TOID(btree, subtree);
+POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
 
 using entry_key_t = int64_t;
@@ -558,7 +558,7 @@ class subtree {
       this->pop = pop;
       this->sibling_ptr = next;
 
-      //pmemobj_persist(pop, this, sizeof(subtree));
+      pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = false) {
@@ -569,7 +569,7 @@ class subtree {
       this->pop = pop;
       this->sibling_ptr = next;
 
-      //pmemobj_persist(pop, this, sizeof(subtree));
+      pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void subtree_insert(btree* root, entry_key_t key, char* right);
@@ -613,21 +613,21 @@ class subtree {
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
-    //TOID(subtree) node = TOID_NULL(subtree);
-    //POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    //D_RW(node)->constructor(pop, subtree_root, next);
-    //return D_RW(node);
-    subtree *node = new subtree;
-    node->constructor(pop, subtree_root, next);
-    return node;
+    TOID(subtree) node = TOID_NULL(subtree);
+    POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    D_RW(node)->constructor(pop, subtree_root, next);
+    return D_RW(node);
+    // subtree *node = new subtree;
+    // node->constructor(pop, subtree_root, next);
+    // return node;
 }
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * next = nullptr) {
-    //TOID(subtree) node = TOID_NULL(subtree);
-    //POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    //D_RW(node)->constructor(pop, subtree_root, next);
-    //return D_RW(node);
-    subtree *node = new subtree;
-    node->constructor(pop, subtree_root, next);
-    return node;
+    TOID(subtree) node = TOID_NULL(subtree);
+    POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    D_RW(node)->constructor(pop, subtree_root, next);
+    return D_RW(node);
+    // subtree *node = new subtree;
+    // node->constructor(pop, subtree_root, next);
+    // return node;
 }
