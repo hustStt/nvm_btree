@@ -522,6 +522,20 @@ char* subtree::DFS(char* root) {
     }
     nvm_node_ptr->records[count].ptr = nullptr;
     pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
+
+    TOID(nvmpage) tmp1 = nvm_node;
+    TOID(nvmpage) tmp2 = nvm_node;
+    if (node->hdr.leftmost_ptr != nullptr) {
+        tmp1.oid.off = (uint64_t)nvm_node_ptr->hdr.leftmost_ptr;
+        tmp2.oid.off = (uint64_t)nvm_node_ptr->records[0].ptr;
+        D_RW(tmp1)->hdr.sibling_ptr = tmp2;
+        pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
+        for (int i = 0; i < node->hdr.last_index;++i) {
+            tmp1.oid.off = (uint64_t)nvm_node_ptr->records[i].ptr;
+            tmp2.oid.off = (uint64_t)nvm_node_ptr->records[i+1].ptr;
+            pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
+        }
+    }
     delete node;
     return (char *)nvm_node.oid.off;
 }
