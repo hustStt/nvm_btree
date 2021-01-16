@@ -335,7 +335,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
     }
     futures.clear();
     uint64_t start_time_s = get_now_micros();
-    bt->test();
+    //bt->test();
     end_time = get_now_micros();
     use_time = end_time - start_time;
     printf("sync time: %f s\n", (end_time - start_time_s) * 1e-6);
