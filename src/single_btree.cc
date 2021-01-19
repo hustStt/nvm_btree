@@ -460,18 +460,22 @@ void btree::printAll(){
   bpnode *leftmost = (bpnode *)root;
   printf("root: %x\n", root);
   if(root) {
-    do {
-      bpnode *sibling = leftmost;
-      while(sibling) {
-        if(sibling->hdr.level == 0) {
-          total_keys += sibling->hdr.last_index + 1;
+    if (flag) {
+
+    } else {
+      do {
+        bpnode *sibling = leftmost;
+        while(sibling) {
+          if(sibling->hdr.level == 0) {
+            total_keys += sibling->hdr.last_index + 1;
+          }
+          sibling->print();
+          sibling = sibling->hdr.sibling_ptr;
         }
-        sibling->print();
-        sibling = sibling->hdr.sibling_ptr;
-      }
-      printf("-----------------------------------------\n");
-      leftmost = leftmost->hdr.leftmost_ptr;
-    } while(leftmost);
+        printf("-----------------------------------------\n");
+        leftmost = leftmost->hdr.leftmost_ptr;
+      } while(leftmost);
+    }
   }
 
   printf("total number of keys: %d\n", total_keys);
