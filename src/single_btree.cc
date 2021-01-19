@@ -438,6 +438,15 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std
     }
 }
 
+void btree::btreeSearchRange(entry_key_t min, entry_key_t max, void **values, int &size) {
+    if (flag) {
+        subtree* sub_root = (subtree*)findSubtreeRoot(min);
+        sub_root->subtree_search_range(min, max, values, size);
+    } else {
+        btree_search_range(min, max, values, size);
+    }
+}
+
 void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
     bpnode *p = (bpnode *)root;
 

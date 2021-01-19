@@ -282,6 +282,8 @@ public:
 
 
   // Search keys with linear search
+  void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size);
+
   void linear_search_range(entry_key_t min, entry_key_t max,
                             unsigned long *buf) {
     int i, off = 0;
