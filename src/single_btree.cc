@@ -595,7 +595,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
   subtree *left_subtree_sibling;
 
   if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
-    bt->btree_delete_internal(key, (char *)this, hdr.level + 1,
+    bt->btree_delete_internal(key, (char *)sub_root, hdr.level + 1,
       &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
     left_subtree_sibling = (subtree *)left_sibling;
     left_sibling = left_subtree_sibling->dram_ptr;
