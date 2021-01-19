@@ -599,7 +599,7 @@ char* subtree::DFS(nvmpage* root) {
             tmp1 = (bpnode *)node->records[i].ptr;
             tmp2 = (bpnode *)node->records[i+1].ptr;
             tmp1->hdr.sibling_ptr = tmp2;
-            if (tmp->hdr.leftmost_ptr != nullptr) {
+            if (tmp1->hdr.leftmost_ptr != nullptr) {
                 tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
                 tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
                 tmp3->hdr.sibling_ptr = tmp4;
@@ -856,14 +856,14 @@ void subtree::subtree_search_range(entry_key_t min, entry_key_t max, void **valu
   if (flag) {
     bpnode* p = dram_ptr;
     while(p->hdr.leftmost_ptr != NULL) {
-      p = (bpnode *)p->linear_search(key);
+      p = (bpnode *)p->linear_search(min);
     }
 
     p->linear_search_range(min, max, values, size);
   } else {
     nvmpage* p = get_nvmroot_ptr();
     while (p->hdr.leftmost_ptr != NULL) {
-      p = to_nvmpage(p->linear_search(key));
+      p = to_nvmpage(p->linear_search(min));
     }
 
     p->linear_search_range(min, max, values, size);

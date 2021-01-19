@@ -71,6 +71,7 @@ class btree{
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
+    void btreeSearchRange(entry_key_t , entry_key_t , void **values, int &size);
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
