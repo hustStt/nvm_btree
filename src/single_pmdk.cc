@@ -239,7 +239,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
     pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                     sizeof(nvmpage *));
-    printf("left_sibling del off %p %lx\n", left_sibling, left_sibling->hdr.sibling_ptr.oid.off);
+    //printf("left_sibling del off %p %lx\n", left_sibling, left_sibling->hdr.sibling_ptr.oid.off);
 
     // subtree root
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) {
@@ -478,11 +478,6 @@ char* subtree::DFS(nvmpage* root) {
     }
 
     node->records[count].ptr = nullptr;
-    // sibling_ptr
-    bpnode* tmp = (bpnode *)(node->records[node->hdr.last_index].ptr);
-    if (node->hdr.leftmost_ptr != nullptr && tmp->hdr.leftmost_ptr != nullptr) {
-        ((bpnode *)tmp->records[tmp->hdr.last_index].ptr)->hdr.sibling_ptr = (bpnode *)tmp->hdr.sibling_ptr->records[0].ptr;
-    }
     return (char *)node;
 }
 
