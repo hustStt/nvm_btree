@@ -391,13 +391,14 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
               if ((tmp_ptr = current->records[i].ptr) !=
                   current->records[i - 1].ptr) {
                 if (tmp_key == current->records[i].key) {
-                  if (tmp_ptr)
+                  if (tmp_ptr) {
                     //buf[off++] = (unsigned long)tmp_ptr;
                     values[off] = tmp_ptr;
                     off++;
                     if(off >= size) {
                       return ;
                     }
+                  }
                 }
               }
             } else {
@@ -413,13 +414,14 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
               if ((tmp_ptr = current->records[i].ptr) !=
                   current->records[i - 1].ptr) {
                 if (tmp_key == current->records[i].key) {
-                  if (tmp_ptr)
+                  if (tmp_ptr) {
                     //buf[off++] = (unsigned long)tmp_ptr;
                     values[off] = tmp_ptr;
                     off++;
                     if(off >= size) {
                         return ;
                     }
+                  }
                 }
               }
             } else {
