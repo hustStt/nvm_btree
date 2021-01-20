@@ -548,7 +548,7 @@ class subtree {
     subtree* sibling_ptr; // off
     uint64_t heat;
     PMEMobjpool *pop;
-    NVMAllocator* log_alloc;
+    LogAllocator* log_alloc;
     bool flag;
     // true:dram   false:nvm
   public:
