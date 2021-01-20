@@ -43,7 +43,7 @@ public:
 
     void Print();
     void PrintInfo();
-
+/*
     bool StorageIsFull() {
         return node_alloc->StorageIsFull() || value_alloc->StorageIsFull();
     }
@@ -52,7 +52,7 @@ public:
         node_alloc->PrintStorage();
         value_alloc->PrintStorage();
     }
-
+*/
     void test() {
         bt->to_nvm_test();
     }

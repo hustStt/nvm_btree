@@ -13,6 +13,8 @@ const uint64_t NVMSectorSize = 256;
 const uint64_t MemReserved = (10 << 20);  // 保留 10M 空间
 const uint64_t LogSize = (200 << 20);
 
+class NVMAllocator;
+
 class LogAllocator {
 private:
     char* pmemaddr_;
@@ -66,10 +68,6 @@ private:
         return result;
     }
 
-    void ResetZero() {
-        pmem_memset_persist(pmemaddr_, 0, mapped_len_);
-    }
-
     void PrintStorage(void) {
         printf("Storage capacity is %lluG %lluM %lluK %lluB\n", capacity_ >> 30, capacity_ >> 20 & (1024 - 1),
                         capacity_ >> 10 & (1024 - 1), capacity_ & (1024 - 1));
@@ -108,7 +106,7 @@ public:
     }
 
     char* getNewLog() {
-        for (int i = 0; i < log_num_ / 8; i++) {
+        for (uint64_t i = 0; i < log_num_ / 8; i++) {
             if (pmemaddr_[i] == 0xFF) {
                 continue;
             }
@@ -125,6 +123,10 @@ public:
         pmem_memset_persist(addr, 0, LogSize);
         uint64_t i = (addr - begin_addr) / LogSize;
         pmemaddr_[i / 8] &= ~(1 << (i % 8)); 
+    }
+
+    void ResetZero() {
+        pmem_memset_persist(pmemaddr_, 0, mapped_len_);
     }
 
 private:
