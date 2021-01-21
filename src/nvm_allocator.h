@@ -11,11 +11,11 @@
 
 const uint64_t NVMSectorSize = 256;
 const uint64_t MemReserved = (10 << 20);  // 保留 10M 空间
-const uint64_t LogSize = (200 << 20);
+const uint64_t LogSize = 100 * (1 << 20);
 
 class NVMAllocator {
 public:
-    NVMAllocator(const std::string path, size_t size, uint64_t log_num) {
+    NVMAllocator(const std::string path, size_t size) {
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
         pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
@@ -26,9 +26,9 @@ public:
         } else {
             printf("%s: map at %p \n", __FUNCTION__, pmemaddr_);
         }
-        begin_addr = pmemaddr_ + log_num / 8;
+        log_num_ = size / LogSize;
+        begin_addr = pmemaddr_ + log_num_ / 8;
         capacity_ = size;
-        log_num_ = log_num;
     }
 
 
@@ -78,7 +78,7 @@ private:
     std::mutex mut;
     char* cur_index_;
     NVMAllocator* nvm_alloc;
-    
+
 public:
     LogAllocator(NVMAllocator *log) {
         nvm_alloc = log;
