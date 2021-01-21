@@ -61,8 +61,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   }
 
   if (is_leftmost_node) {
-    D_RW(hdr.sibling_ptr)
-        ->remove(bt, D_RW(hdr.sibling_ptr)->records[0].key, true, with_lock, sub_root);
+    left_sibling->remove(bt, D_RW(hdr.sibling_ptr)->records[0].key, true, with_lock, sub_root);
     return true;
   }
 
@@ -558,6 +557,7 @@ void subtree::nvm_to_dram() {
   }
   flag = true;
   dram_ptr = (bpnode *)DFS(nvm_ptr);
+  log_alloc = getNewLogAllocator();
 }
 
 char* subtree::DFS(nvmpage* root) {
@@ -622,6 +622,8 @@ void subtree::dram_to_nvm() {
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr);
   flag = false;
   // delete log
+  delete log_alloc;
+  log_alloc = nullptr;
 }
 
 char* subtree::DFS(char* root) {
@@ -830,6 +832,7 @@ void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, 
 
     if ((char *)p->hdr.leftmost_ptr == ptr) {
         *is_leftmost_node = true;
+        *left_sibling = to_nvmpage(p->records[0].ptr);
         return;
     }
 
