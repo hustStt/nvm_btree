@@ -579,11 +579,11 @@ char* subtree::DFS(nvmpage* root, bpnode *pre) {
     node->hdr.switch_counter = nvm_node_ptr->hdr.switch_counter;
     node->hdr.nvmpage_off = (uint64_t)root;
     
-    node->hdr.leftmost_ptr = (bpnode *)DFS(nvm_node_ptr->hdr.leftmost_ptr);
+    node->hdr.leftmost_ptr = (bpnode *)DFS(nvm_node_ptr->hdr.leftmost_ptr, pre);
     while(nvm_node_ptr->records[count].ptr != NULL) {
         node->records[count].key = nvm_node_ptr->records[count].key;
         if (nvm_node_ptr->hdr.leftmost_ptr != nullptr) {
-            node->records[count].ptr = DFS((nvmpage *)nvm_node_ptr->records[count].ptr);
+            node->records[count].ptr = DFS((nvmpage *)nvm_node_ptr->records[count].ptr, pre);
         } else {
             node->records[count].ptr = nvm_node_ptr->records[count].ptr;
         }
@@ -638,11 +638,11 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
     //sibling 
     
-    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr);
+    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre);
     while(node->records[count].ptr != NULL) {
         nvm_node_ptr->records[count].key = node->records[count].key;
         if (node->hdr.leftmost_ptr != nullptr) {
-            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr);
+            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr, pre);
         } else {
             nvm_node_ptr->records[count].ptr = node->records[count].ptr;
         }
@@ -661,61 +661,7 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     delete node;
     return ret;
 }
-/*
-char* subtree::DFS(char* root) {
-    if(root == nullptr) {
-        return nullptr;
-    }
-    bpnode* nvm_node_ptr = new bpnode();
-    bpnode* node = (bpnode *)root;
-    
-    int count = 0;
-    nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
-    nvm_node_ptr->hdr.last_index = node->hdr.last_index;
-    nvm_node_ptr->hdr.level = node->hdr.level;
-    nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
-    //sibling 
-    
-    nvm_node_ptr->hdr.leftmost_ptr = (bpnode *)DFS((char *)node->hdr.leftmost_ptr);
-    while(node->records[count].ptr != NULL) {
-        nvm_node_ptr->records[count].key = node->records[count].key;
-        if (node->hdr.leftmost_ptr != nullptr) {
-            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr);
-        } else {
-            nvm_node_ptr->records[count].ptr = node->records[count].ptr;
-        }
-        ++count;
-    }
-    nvm_node_ptr->records[count].ptr = nullptr;
 
-    bpnode *tmp1;
-    bpnode *tmp2;
-    bpnode *tmp3;
-    bpnode *tmp4;
-    if (node->hdr.leftmost_ptr != nullptr) {
-        tmp1 = (bpnode *)nvm_node_ptr->hdr.leftmost_ptr;
-        tmp2 = (bpnode *)nvm_node_ptr->records[0].ptr;
-        tmp1->hdr.sibling_ptr = tmp2;
-        if (tmp1->hdr.leftmost_ptr != nullptr) {
-            tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
-            tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
-            tmp3->hdr.sibling_ptr = tmp4;
-        }
-        for (int i = 0; i < node->hdr.last_index;++i) {
-            tmp1 = (bpnode *)nvm_node_ptr->records[i].ptr;
-            tmp2 = (bpnode *)nvm_node_ptr->records[i+1].ptr;
-            tmp1->hdr.sibling_ptr = tmp2;
-            if (tmp->hdr.leftmost_ptr != nullptr) {
-                tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
-                tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
-                tmp3->hdr.sibling_ptr = tmp4;
-            }
-        }
-    }
-    delete node;
-    return (char *)nvm_node_ptr;
-}
-*/
 void subtree::sync_subtree() {
   if (flag == false) {
     return ;

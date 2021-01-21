@@ -54,6 +54,7 @@ using namespace std;
 class nvmheader {
 private:
   nvmpage *sibling_ptr; // 16 bytes
+  char * none;
   nvmpage *leftmost_ptr;     // 8 bytes
   uint32_t level;         // 4 bytes
   uint8_t switch_counter; // 1 bytes
