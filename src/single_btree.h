@@ -93,7 +93,7 @@ class header{
     uint8_t switch_counter;     // 1 bytes
     uint8_t is_deleted;         // 1 bytes
     int16_t last_index;         // 2 bytes
-    char dummy[8];              // 8 bytes
+    uint64_t nvmpage_off;       // 8 bytes
 
     friend class bpnode;
     friend class btree;
@@ -106,6 +106,7 @@ class header{
       switch_counter = 0;
       last_index = -1;
       is_deleted = false;
+      nvmpage_off = -1;
     }
 
     ~header() {

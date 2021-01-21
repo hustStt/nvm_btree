@@ -191,9 +191,9 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
         }
         pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
 
-        left_sibling->hdr.sibling_ptr = new_sibling;
-        pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
-                        sizeof(nvmpage *));
+        // left_sibling->hdr.sibling_ptr = new_sibling;
+        // pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
+        //                 sizeof(nvmpage *));
       }
 
       if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
@@ -288,6 +288,8 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
         sibling_ptr->insert_key(bt->pop, records[i].key, records[i].ptr,
                                 &sibling_cnt, false);
       }
+      sibling_ptr->hdr.sibling_ptr = hdr.sibling_ptr;
+      pmemobj_persist(bt->pop, sibling_ptr, sizeof(nvmpage));
     } else { // internal node
       for (int i = m + 1; i < num_entries; ++i) {
         sibling_ptr->insert_key(bt->pop, records[i].key, records[i].ptr,
@@ -295,9 +297,6 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
       }
       sibling_ptr->hdr.leftmost_ptr = (nvmpage *)records[m].ptr;
     }
-
-    sibling_ptr->hdr.sibling_ptr = hdr.sibling_ptr;
-    pmemobj_persist(bt->pop, sibling_ptr, sizeof(nvmpage));
 
     hdr.sibling_ptr = sibling;
     pmemobj_persist(bt->pop, &hdr, sizeof(hdr));
@@ -574,6 +573,7 @@ char* subtree::DFS(nvmpage* root) {
     node->hdr.last_index = nvm_node_ptr->hdr.last_index;
     node->hdr.level = nvm_node_ptr->hdr.level;
     node->hdr.switch_counter = nvm_node_ptr->hdr.switch_counter;
+    node->hdr.nvmpage_off = (uint64_t)root;
     
     node->hdr.leftmost_ptr = (bpnode *)DFS(nvm_node_ptr->hdr.leftmost_ptr);
     while(nvm_node_ptr->records[count].ptr != NULL) {
@@ -630,11 +630,16 @@ char* subtree::DFS(char* root) {
     if(root == nullptr) {
         return nullptr;
     }
-    TOID(nvmpage) nvm_node;
-    POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
-    D_RW(nvm_node)->constructor();
-    nvmpage* nvm_node_ptr = D_RW(nvm_node);
     bpnode* node = (bpnode *)root;
+    nvmpage* nvm_node_ptr;
+    if (node->hdr.nvmpage_off != -1) { // 复用nvmpage
+      nvm_node_ptr = to_nvmpage((char *)node->hdr.nvmpage_off);
+    } else { // 新节点 重新申请nvmpage
+      TOID(nvmpage) nvm_node;
+      POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
+      D_RW(nvm_node)->constructor();
+      nvm_node_ptr = D_RW(nvm_node);
+    }
     
     int count = 0;
     nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
