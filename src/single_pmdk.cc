@@ -587,30 +587,30 @@ char* subtree::DFS(nvmpage* root) {
     }
     node->records[count].ptr = nullptr;
 
-    bpnode *tmp1;
-    bpnode *tmp2;
-    bpnode *tmp3;
-    bpnode *tmp4;
-    if (node->hdr.leftmost_ptr != nullptr) {
-        tmp1 = (bpnode *)node->hdr.leftmost_ptr;
-        tmp2 = (bpnode *)node->records[0].ptr;
-        tmp1->hdr.sibling_ptr = tmp2;
-        if (tmp1->hdr.leftmost_ptr != nullptr) {
-            tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
-            tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
-            tmp3->hdr.sibling_ptr = tmp4;
-        }
-        for (int i = 0; i < node->hdr.last_index;++i) {
-            tmp1 = (bpnode *)node->records[i].ptr;
-            tmp2 = (bpnode *)node->records[i+1].ptr;
-            tmp1->hdr.sibling_ptr = tmp2;
-            if (tmp1->hdr.leftmost_ptr != nullptr) {
-                tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
-                tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
-                tmp3->hdr.sibling_ptr = tmp4;
-            }
-        }
-    }
+    // bpnode *tmp1;
+    // bpnode *tmp2;
+    // bpnode *tmp3;
+    // bpnode *tmp4;
+    // if (node->hdr.leftmost_ptr != nullptr) {
+    //     tmp1 = (bpnode *)node->hdr.leftmost_ptr;
+    //     tmp2 = (bpnode *)node->records[0].ptr;
+    //     tmp1->hdr.sibling_ptr = tmp2;
+    //     if (tmp1->hdr.leftmost_ptr != nullptr) {
+    //         tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
+    //         tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
+    //         tmp3->hdr.sibling_ptr = tmp4;
+    //     }
+    //     for (int i = 0; i < node->hdr.last_index;++i) {
+    //         tmp1 = (bpnode *)node->records[i].ptr;
+    //         tmp2 = (bpnode *)node->records[i+1].ptr;
+    //         tmp1->hdr.sibling_ptr = tmp2;
+    //         if (tmp1->hdr.leftmost_ptr != nullptr) {
+    //             tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
+    //             tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
+    //             tmp3->hdr.sibling_ptr = tmp4;
+    //         }
+    //     }
+    // }
     return (char *)node;
 }
 

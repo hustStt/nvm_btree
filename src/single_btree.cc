@@ -553,10 +553,12 @@ void btree::deform() {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
         tmp->dram_to_nvm();
+        tmp->nvm_to_dram();
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
             tmp->dram_to_nvm();
+            tmp->nvm_to_dram();
         }
         q = q->hdr.sibling_ptr;
     }
