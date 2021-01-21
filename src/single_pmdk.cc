@@ -632,13 +632,16 @@ char* subtree::DFS(char* root) {
     }
     bpnode* node = (bpnode *)root;
     nvmpage* nvm_node_ptr;
+    TOID(nvmpage) nvm_node;
+    char * ret;
     if (node->hdr.nvmpage_off != -1) { // 复用nvmpage
       nvm_node_ptr = to_nvmpage((char *)node->hdr.nvmpage_off);
+      ret = (char *)node->hdr.nvmpage_off;
     } else { // 新节点 重新申请nvmpage
-      TOID(nvmpage) nvm_node;
       POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
       D_RW(nvm_node)->constructor();
       nvm_node_ptr = D_RW(nvm_node);
+      ret = (char *)nvm_node.oid.off;
     }
     
     int count = 0;
@@ -690,7 +693,7 @@ char* subtree::DFS(char* root) {
     //     }
     // }
     delete node;
-    return (char *)nvm_node.oid.off;
+    return ret;
 }
 /*
 char* subtree::DFS(char* root) {
