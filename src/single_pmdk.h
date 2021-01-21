@@ -58,7 +58,7 @@ private:
   nvmpage *leftmost_ptr;     // 8 bytes
   uint32_t level;         // 4 bytes
   uint8_t switch_counter; // 1 bytes
-  uint8_t is_deleted;     // 1 bytes
+  uint8_t status;     // 1 bytes
   int16_t last_index;     // 2 bytes
 
   friend class nvmpage;
@@ -73,7 +73,7 @@ public:
     sibling_ptr = nullptr;
     switch_counter = 0;
     last_index = -1;
-    is_deleted = false;
+    status = false;
   }
 };
 

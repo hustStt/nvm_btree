@@ -91,7 +91,7 @@ class header{
     bpnode* sibling_ptr;          // 8 bytes
     uint32_t level;             // 4 bytes
     uint8_t switch_counter;     // 1 bytes
-    uint8_t is_deleted;         // 1 bytes
+    uint8_t status;         // 1 bytes  0   1 delete   2 zang
     int16_t last_index;         // 2 bytes
     uint64_t nvmpage_off;       // 8 bytes
 
@@ -105,7 +105,7 @@ class header{
       sibling_ptr = NULL;
       switch_counter = 0;
       last_index = -1;
-      is_deleted = false;
+      status = 0;
       nvmpage_off = -1;
     }
 
@@ -228,6 +228,7 @@ class bpnode{
 
       if(shift) {
         --hdr.last_index;
+        hdr.status = 0;
       }
       return shift;
     }
@@ -279,6 +280,7 @@ class bpnode{
 
         hdr.last_index = *num_entries;
         ++(*num_entries);
+        hdr.status = 0;
       }
 
     // Insert a new key - FAST and FAIR

@@ -577,7 +577,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         if(num_entries_before == 1 && !hdr.sibling_ptr) {
           bt->root = (char *)hdr.leftmost_ptr;
 
-          hdr.is_deleted = 1;
+          hdr.status = 1;
         }
       }
 
@@ -687,10 +687,11 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       }
     }
     else{ // from leftmost case
-      hdr.is_deleted = 1;
+      hdr.status = 1;
 
       bpnode* new_sibling = new bpnode(hdr.level); 
       new_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
+      new_sibling->hdr.nvmpage_off = hdr.nvmpage_off;
 
       int num_dist_entries = num_entries - m;
       int new_sibling_cnt = 0;
@@ -752,7 +753,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     }
   }
   else {
-    hdr.is_deleted = 1;
+    hdr.status = 1;
     if(hdr.leftmost_ptr)
       left_sibling->insert_key(deleted_key_from_parent, 
           (char *)hdr.leftmost_ptr, &left_num_entries);
@@ -762,6 +763,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     }
 
     left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
+    left_sibling->hdr.nvmpage_off = hdr.nvmpage_off;
 
     // subtree root
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
@@ -883,7 +885,7 @@ char* btree::DFS(char* root) {
     bpnode* node = (bpnode *)root;
     
     int count = 0;
-    nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
+    nvm_node_ptr->hdr.status = node->hdr.status;
     nvm_node_ptr->hdr.last_index = node->hdr.last_index;
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;

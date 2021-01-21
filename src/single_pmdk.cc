@@ -573,7 +573,7 @@ char* subtree::DFS(nvmpage* root, bpnode *pre) {
     
     int count = 0;
     
-    node->hdr.is_deleted = nvm_node_ptr->hdr.is_deleted;
+    node->hdr.status = 2; //已经同步 不是脏节点
     node->hdr.last_index = nvm_node_ptr->hdr.last_index;
     node->hdr.level = nvm_node_ptr->hdr.level;
     node->hdr.switch_counter = nvm_node_ptr->hdr.switch_counter;
@@ -621,6 +621,17 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     nvmpage* nvm_node_ptr;
     TOID(nvmpage) nvm_node;
     char * ret;
+
+    if (node->hdr.status == 2) {
+      // 无修改
+      return (char *)node->hdr.nvmpage_off;
+    } else if (node->hdr.status == 1) {
+      // 已删除
+      printf("error : this node is deleted.\n");
+    } else if (node->hdr.status == 0){
+      // 脏节点
+    }
+
     if (node->hdr.nvmpage_off != -1) { // 复用nvmpage
       nvm_node_ptr = to_nvmpage((char *)node->hdr.nvmpage_off);
       ret = (char *)node->hdr.nvmpage_off;
@@ -632,7 +643,7 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     }
     
     int count = 0;
-    nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
+    //nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
     nvm_node_ptr->hdr.last_index = node->hdr.last_index;
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
