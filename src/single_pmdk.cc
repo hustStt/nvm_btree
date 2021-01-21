@@ -166,7 +166,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
 
         pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
 
-        left_sibling->hdr.sibling_ptr = new_sibling;
+        left_sibling->hdr.sibling_ptr = (nvmpage *)new_sibling.oid.off;
         pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                         sizeof(nvmpage *));
 
@@ -235,9 +235,11 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
                         &left_num_entries);
     }
 
-    left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
-    pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
-                    sizeof(nvmpage *));
+    if (hdr.leftmost_ptr == nullptr) {
+      left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
+      pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
+                      sizeof(nvmpage *));
+    }
     //printf("left_sibling del off %p %lx\n", left_sibling, left_sibling->hdr.sibling_ptr.oid.off);
 
     // subtree root
@@ -288,8 +290,6 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
         sibling_ptr->insert_key(bt->pop, records[i].key, records[i].ptr,
                                 &sibling_cnt, false);
       }
-      sibling_ptr->hdr.sibling_ptr = hdr.sibling_ptr;
-      pmemobj_persist(bt->pop, sibling_ptr, sizeof(nvmpage));
     } else { // internal node
       for (int i = m + 1; i < num_entries; ++i) {
         sibling_ptr->insert_key(bt->pop, records[i].key, records[i].ptr,
@@ -298,7 +298,10 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
       sibling_ptr->hdr.leftmost_ptr = (nvmpage *)records[m].ptr;
     }
 
-    hdr.sibling_ptr = sibling;
+    sibling_ptr->hdr.sibling_ptr = hdr.sibling_ptr;
+    pmemobj_persist(bt->pop, sibling_ptr, sizeof(nvmpage));
+
+    hdr.sibling_ptr = (nvmpage *)sibling.oid.off;
     pmemobj_persist(bt->pop, &hdr, sizeof(hdr));
 
     // set to NULL
@@ -451,7 +454,8 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
       }
     } while (previous_switch_counter != current->hdr.switch_counter);
 
-    current = D_RW(current->hdr.sibling_ptr);
+    // todo
+    current = current->hdr.sibling_ptr;
   }
 }
 
@@ -555,11 +559,11 @@ void subtree::nvm_to_dram() {
     return ;
   }
   flag = true;
-  dram_ptr = (bpnode *)DFS(nvm_ptr);
+  dram_ptr = (bpnode *)DFS(nvm_ptr, nullptr);
   log_alloc = getNewLogAllocator();
 }
 
-char* subtree::DFS(nvmpage* root) {
+char* subtree::DFS(nvmpage* root, bpnode *pre) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -587,30 +591,13 @@ char* subtree::DFS(nvmpage* root) {
     }
     node->records[count].ptr = nullptr;
 
-    // bpnode *tmp1;
-    // bpnode *tmp2;
-    // bpnode *tmp3;
-    // bpnode *tmp4;
-    // if (node->hdr.leftmost_ptr != nullptr) {
-    //     tmp1 = (bpnode *)node->hdr.leftmost_ptr;
-    //     tmp2 = (bpnode *)node->records[0].ptr;
-    //     tmp1->hdr.sibling_ptr = tmp2;
-    //     if (tmp1->hdr.leftmost_ptr != nullptr) {
-    //         tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
-    //         tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
-    //         tmp3->hdr.sibling_ptr = tmp4;
-    //     }
-    //     for (int i = 0; i < node->hdr.last_index;++i) {
-    //         tmp1 = (bpnode *)node->records[i].ptr;
-    //         tmp2 = (bpnode *)node->records[i+1].ptr;
-    //         tmp1->hdr.sibling_ptr = tmp2;
-    //         if (tmp1->hdr.leftmost_ptr != nullptr) {
-    //             tmp3 = (bpnode *)tmp1->records[tmp1->hdr.last_index].ptr;
-    //             tmp4 = (bpnode *)tmp2->hdr.leftmost_ptr;
-    //             tmp3->hdr.sibling_ptr = tmp4;
-    //         }
-    //     }
-    // }
+    if (node->hdr.leftmost_ptr == nullptr) {
+      if (pre != nullptr) {
+        pre->hdr.sibling_ptr = node;
+      }
+      pre = node;
+    }
+
     return (char *)node;
 }
 
@@ -619,14 +606,14 @@ void subtree::dram_to_nvm() {
     return ;
   }
 
-  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr);
+  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, nullptr);
   flag = false;
   // delete log
   delete log_alloc;
   log_alloc = nullptr;
 }
 
-char* subtree::DFS(char* root) {
+char* subtree::DFS(char* root, nvmpage *pre) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -664,34 +651,13 @@ char* subtree::DFS(char* root) {
     nvm_node_ptr->records[count].ptr = nullptr;
     pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
 
-    // TOID(nvmpage) tmp1 = nvm_node;
-    // TOID(nvmpage) tmp2 = nvm_node;
-    // TOID(nvmpage) tmp3 = nvm_node;
-    // TOID(nvmpage) tmp4 = nvm_node;
-    // if (node->hdr.leftmost_ptr != nullptr) {
-    //     tmp1.oid.off = (uint64_t)nvm_node_ptr->hdr.leftmost_ptr;
-    //     tmp2.oid.off = (uint64_t)nvm_node_ptr->records[0].ptr;
-    //     D_RW(tmp1)->hdr.sibling_ptr = tmp2;
-    //     pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
-    //     if (D_RW(tmp1)->hdr.leftmost_ptr != nullptr) {
-    //         tmp3.oid.off = (uint64_t)D_RW(tmp1)->records[D_RW(tmp1)->hdr.last_index].ptr;
-    //         tmp4.oid.off = (uint64_t)D_RW(tmp2)->hdr.leftmost_ptr;
-    //         D_RW(tmp3)->hdr.sibling_ptr = tmp4;
-    //     }
-    //     pmemobj_persist(pop, &(D_RW(tmp3)->hdr.sibling_ptr), sizeof(D_RW(tmp3)->hdr.sibling_ptr));
-    //     for (int i = 0; i < node->hdr.last_index;++i) {
-    //         tmp1.oid.off = (uint64_t)nvm_node_ptr->records[i].ptr;
-    //         tmp2.oid.off = (uint64_t)nvm_node_ptr->records[i+1].ptr;
-    //         D_RW(tmp1)->hdr.sibling_ptr = tmp2;
-    //         pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
-    //         if (D_RW(tmp1)->hdr.leftmost_ptr != nullptr) {
-    //             tmp3.oid.off = (uint64_t)D_RW(tmp1)->records[D_RW(tmp1)->hdr.last_index].ptr;
-    //             tmp4.oid.off = (uint64_t)D_RW(tmp2)->hdr.leftmost_ptr;
-    //             D_RW(tmp3)->hdr.sibling_ptr = tmp4;
-    //         }
-    //         pmemobj_persist(pop, &(D_RW(tmp3)->hdr.sibling_ptr), sizeof(D_RW(tmp3)->hdr.sibling_ptr));
-    //     }
-    // }
+    if (node->hdr.leftmost_ptr == nullptr) {
+      if (pre != nullptr) {
+        pre->hdr.sibling_ptr = (nvmpage *)ret;
+      }
+      pre = nvm_node_ptr;
+    }
+
     delete node;
     return ret;
 }

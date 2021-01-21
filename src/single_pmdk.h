@@ -53,7 +53,7 @@ using namespace std;
 
 class nvmheader {
 private:
-  TOID(nvmpage) sibling_ptr; // 16 bytes
+  nvmpage *sibling_ptr; // 16 bytes
   nvmpage *leftmost_ptr;     // 8 bytes
   uint32_t level;         // 4 bytes
   uint8_t switch_counter; // 1 bytes
@@ -67,8 +67,9 @@ private:
 public:
   void constructor() {
     leftmost_ptr = NULL;
-    TOID_ASSIGN(sibling_ptr, pmemobj_oid(this));
-    sibling_ptr.oid.off = 0;
+    //TOID_ASSIGN(sibling_ptr, pmemobj_oid(this));
+    //sibling_ptr.oid.off = 0;
+    sibling_ptr = nullptr;
     switch_counter = 0;
     last_index = -1;
     is_deleted = false;
@@ -362,7 +363,8 @@ public:
         }
       } while (previous_switch_counter != current->hdr.switch_counter);
 
-      current = D_RW(current->hdr.sibling_ptr);
+      // todo
+      current = current->hdr.sibling_ptr;
     }
   }
 
@@ -516,7 +518,7 @@ public:
     for (int i = 0; records[i].ptr != NULL; ++i)
       printf("%ld,%x ", records[i].key, records[i].ptr);
 
-    printf("%x ", (uint64_t)hdr.sibling_ptr.oid.off);
+    printf("%x ", (uint64_t)hdr.sibling_ptr);
 
     printf("\n");
   }
@@ -590,11 +592,11 @@ class subtree {
         bool *is_leftmost_node, nvmpage **left_sibling, btree* bt);
 
     // nvm --> dram
-    char* DFS(nvmpage* root);
+    char* DFS(nvmpage* root, bpnode *pre);
     void nvm_to_dram();
 
     // dram --> nvm
-    char* DFS(char* root);
+    char* DFS(char* root, nvmpage *pre);
     void dram_to_nvm();
 
     // sync dram --> nvm
