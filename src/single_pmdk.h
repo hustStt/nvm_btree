@@ -559,6 +559,7 @@ class subtree {
       this->heat = heat;
       this->pop = pop;
       this->sibling_ptr = next;
+      this->log_alloc = getNewLogAllocator();
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -570,6 +571,7 @@ class subtree {
       this->heat = heat;
       this->pop = pop;
       this->sibling_ptr = next;
+      this->log_alloc = nullptr;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }

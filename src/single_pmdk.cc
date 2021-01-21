@@ -461,6 +461,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
 void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
+    log_alloc->writeKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -485,6 +486,8 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
 
 void subtree::subtree_delete(btree* root, entry_key_t key) {
   if (flag) {
+    // write log
+    log_alloc->deleteKey(key);
     bpnode* p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL){
