@@ -78,7 +78,8 @@ private:
     std::mutex mut;
     char* cur_index_;
     NVMAllocator* nvm_alloc;
-
+    
+public:
     LogAllocator(NVMAllocator *log) {
         nvm_alloc = log;
         pmemaddr_ = nvm_alloc->getNewLog();

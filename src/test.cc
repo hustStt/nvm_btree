@@ -513,10 +513,11 @@ void single_thread_motivationtest(NVMBtree *bt) {
             stats.print_latency();
             stats.clear_period();
         }
-
+/*
         if(bt->StorageIsFull()) {
             break;
         }
+        */
     }
     stats.clear_period();
     end_time = get_now_micros();
@@ -537,10 +538,10 @@ void single_thread_motivationtest(NVMBtree *bt) {
             stats.print_latency();
             stats.clear_period();
         }
-
+/*
         if(bt->StorageIsFull()) {
             break;
-        }
+        }*/
     }
     stats.clear_period();
     end_time = get_now_micros();
@@ -620,7 +621,7 @@ void single_thread_motivationtest(NVMBtree *bt) {
     use_time = end_time - start_time;
     printf("Delete test finished\n");
     nvm_print(i-1);
-    bt->PrintStorage();
+    //bt->PrintStorage();
     bt->PrintInfo();
     print_log(LV_INFO, "end!");
 }
