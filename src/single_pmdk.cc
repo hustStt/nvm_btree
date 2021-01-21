@@ -61,7 +61,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   }
 
   if (is_leftmost_node) {
-    left_sibling->remove(bt, D_RW(hdr.sibling_ptr)->records[0].key, true, with_lock, sub_root);
+    left_sibling->remove(bt, left_sibling->records[0].key, true, with_lock, sub_root);
     return true;
   }
 
@@ -656,34 +656,34 @@ char* subtree::DFS(char* root) {
     nvm_node_ptr->records[count].ptr = nullptr;
     pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
 
-    TOID(nvmpage) tmp1 = nvm_node;
-    TOID(nvmpage) tmp2 = nvm_node;
-    TOID(nvmpage) tmp3 = nvm_node;
-    TOID(nvmpage) tmp4 = nvm_node;
-    if (node->hdr.leftmost_ptr != nullptr) {
-        tmp1.oid.off = (uint64_t)nvm_node_ptr->hdr.leftmost_ptr;
-        tmp2.oid.off = (uint64_t)nvm_node_ptr->records[0].ptr;
-        D_RW(tmp1)->hdr.sibling_ptr = tmp2;
-        pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
-        if (D_RW(tmp1)->hdr.leftmost_ptr != nullptr) {
-            tmp3.oid.off = (uint64_t)D_RW(tmp1)->records[D_RW(tmp1)->hdr.last_index].ptr;
-            tmp4.oid.off = (uint64_t)D_RW(tmp2)->hdr.leftmost_ptr;
-            D_RW(tmp3)->hdr.sibling_ptr = tmp4;
-        }
-        pmemobj_persist(pop, &(D_RW(tmp3)->hdr.sibling_ptr), sizeof(D_RW(tmp3)->hdr.sibling_ptr));
-        for (int i = 0; i < node->hdr.last_index;++i) {
-            tmp1.oid.off = (uint64_t)nvm_node_ptr->records[i].ptr;
-            tmp2.oid.off = (uint64_t)nvm_node_ptr->records[i+1].ptr;
-            D_RW(tmp1)->hdr.sibling_ptr = tmp2;
-            pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
-            if (D_RW(tmp1)->hdr.leftmost_ptr != nullptr) {
-                tmp3.oid.off = (uint64_t)D_RW(tmp1)->records[D_RW(tmp1)->hdr.last_index].ptr;
-                tmp4.oid.off = (uint64_t)D_RW(tmp2)->hdr.leftmost_ptr;
-                D_RW(tmp3)->hdr.sibling_ptr = tmp4;
-            }
-            pmemobj_persist(pop, &(D_RW(tmp3)->hdr.sibling_ptr), sizeof(D_RW(tmp3)->hdr.sibling_ptr));
-        }
-    }
+    // TOID(nvmpage) tmp1 = nvm_node;
+    // TOID(nvmpage) tmp2 = nvm_node;
+    // TOID(nvmpage) tmp3 = nvm_node;
+    // TOID(nvmpage) tmp4 = nvm_node;
+    // if (node->hdr.leftmost_ptr != nullptr) {
+    //     tmp1.oid.off = (uint64_t)nvm_node_ptr->hdr.leftmost_ptr;
+    //     tmp2.oid.off = (uint64_t)nvm_node_ptr->records[0].ptr;
+    //     D_RW(tmp1)->hdr.sibling_ptr = tmp2;
+    //     pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
+    //     if (D_RW(tmp1)->hdr.leftmost_ptr != nullptr) {
+    //         tmp3.oid.off = (uint64_t)D_RW(tmp1)->records[D_RW(tmp1)->hdr.last_index].ptr;
+    //         tmp4.oid.off = (uint64_t)D_RW(tmp2)->hdr.leftmost_ptr;
+    //         D_RW(tmp3)->hdr.sibling_ptr = tmp4;
+    //     }
+    //     pmemobj_persist(pop, &(D_RW(tmp3)->hdr.sibling_ptr), sizeof(D_RW(tmp3)->hdr.sibling_ptr));
+    //     for (int i = 0; i < node->hdr.last_index;++i) {
+    //         tmp1.oid.off = (uint64_t)nvm_node_ptr->records[i].ptr;
+    //         tmp2.oid.off = (uint64_t)nvm_node_ptr->records[i+1].ptr;
+    //         D_RW(tmp1)->hdr.sibling_ptr = tmp2;
+    //         pmemobj_persist(pop, &(D_RW(tmp1)->hdr.sibling_ptr), sizeof(D_RW(tmp1)->hdr.sibling_ptr));
+    //         if (D_RW(tmp1)->hdr.leftmost_ptr != nullptr) {
+    //             tmp3.oid.off = (uint64_t)D_RW(tmp1)->records[D_RW(tmp1)->hdr.last_index].ptr;
+    //             tmp4.oid.off = (uint64_t)D_RW(tmp2)->hdr.leftmost_ptr;
+    //             D_RW(tmp3)->hdr.sibling_ptr = tmp4;
+    //         }
+    //         pmemobj_persist(pop, &(D_RW(tmp3)->hdr.sibling_ptr), sizeof(D_RW(tmp3)->hdr.sibling_ptr));
+    //     }
+    // }
     delete node;
     return (char *)nvm_node.oid.off;
 }
@@ -790,6 +790,7 @@ void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, 
 
     if((char *)p->hdr.leftmost_ptr == ptr) {
         *is_leftmost_node = true;
+        *left_sibling = (bpnode *)p->records[0].ptr;
         return;
     }
 

@@ -375,6 +375,7 @@ bool *is_leftmost_node, bpnode **left_sibling) {
 
   if((char *)p->hdr.leftmost_ptr == ptr) {
     *is_leftmost_node = true;
+    *left_sibling = (bpnode *)p->records[0].ptr;
     return;
   }
 
@@ -618,7 +619,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
 
   if(is_leftmost_node) {
     // only rebalance
-    hdr.sibling_ptr->remove(bt, hdr.sibling_ptr->records[0].key, true,
+    left_sibling->remove(bt, left_sibling->records[0].key, true,
         with_lock, sub_root);
     return true;
   }
