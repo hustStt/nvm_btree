@@ -53,6 +53,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
         &deleted_key_from_parent, &is_leftmost_node, (bpnode **)&left_sibling);
       left_subtree_sibling = (subtree *)left_sibling;
       left_sibling = left_subtree_sibling->get_nvmroot_ptr();
+      // todo
   } else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
       sub_root->btree_delete_internal(key, (char *)pmemobj_oid(this).off, hdr.level + 1,
         &deleted_key_from_parent, &is_leftmost_node, &left_sibling, bt);
@@ -61,6 +62,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   }
 
   if (is_leftmost_node) {
+    // 此处left_sibling 是当前节点的右兄弟节点
     left_sibling->remove(bt, left_sibling->records[0].key, true, with_lock, sub_root);
     return true;
   }
@@ -332,8 +334,9 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
     
     // Set a new root or insert the split key to the parent
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
-      subtree* next = newSubtreeRoot(bt->pop, (nvmpage *)sibling.oid.off, sub_root->sibling_ptr);
+      subtree* next = newSubtreeRoot(bt->pop, (nvmpage *)sibling.oid.off, sub_root);
       sub_root->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+      sub_root->setHeat(sub_root->getHeat() / 2);
       pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
@@ -673,11 +676,6 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     return ret;
 }
 
-void subtree::sync_subtree() {
-  if (flag == false) {
-    return ;
-  }
-}
 
 void subtree::btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree *bt) {
     if (flag) {

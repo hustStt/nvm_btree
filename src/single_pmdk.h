@@ -58,7 +58,7 @@ private:
   nvmpage *leftmost_ptr;     // 8 bytes
   uint32_t level;         // 4 bytes
   uint8_t switch_counter; // 1 bytes
-  uint8_t status;     // 1 bytes
+  uint8_t is_deleted;     // 1 bytes
   int16_t last_index;     // 2 bytes
 
   friend class nvmpage;
@@ -73,7 +73,7 @@ public:
     sibling_ptr = nullptr;
     switch_counter = 0;
     last_index = -1;
-    status = false;
+    is_deleted = false;
   }
 };
 
@@ -615,24 +615,36 @@ class subtree {
       return to_nvmpage(nvm_ptr);
     }
 
+    uint64_t getHeat() {
+      return heat;
+    }
+
+    void setHeat(uint64_t heat) {
+      this->heat = heat;
+    }
+
+    void increaseHeat() {
+      ++heat;
+    }
+
     friend class bpnode;
     friend class nvmpage;
 };
 
-static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * next = nullptr) {
+static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * pre = nullptr) {
     TOID(subtree) node = TOID_NULL(subtree);
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, next);
+    D_RW(node)->constructor(pop, subtree_root, pre->sibling_ptr, pre->heat / 2);
     return D_RW(node);
     // subtree *node = new subtree;
     // node->constructor(pop, subtree_root, next);
     // return node;
 }
 
-static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * next = nullptr) {
+static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * pre = nullptr) {
     TOID(subtree) node = TOID_NULL(subtree);
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, next);
+    D_RW(node)->constructor(pop, subtree_root, pre->sibling_ptr, pre->heat / 2);
     return D_RW(node);
     // subtree *node = new subtree;
     // node->constructor(pop, subtree_root, next);

@@ -262,6 +262,7 @@ char *btree::findSubtreeRoot(entry_key_t key) {
     }
 
     char *ret = p->linear_search(key);
+    ((subtree *)ret)->increaseHeat();
     return ret;
 }
 
@@ -845,8 +846,9 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     // Set a new root or insert the split key to the parent
     
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
-      subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root->sibling_ptr);
+      subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root);
       sub_root->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+      sub_root->heat = sub_root->heat / 2;
       pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
