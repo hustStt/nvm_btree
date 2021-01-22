@@ -627,6 +627,10 @@ class subtree {
       ++heat;
     }
 
+    subtree * getSiblingPtr() {
+      return sibling_ptr;
+    }
+
     friend class bpnode;
     friend class nvmpage;
 };
@@ -634,7 +638,13 @@ class subtree {
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * pre = nullptr) {
     TOID(subtree) node = TOID_NULL(subtree);
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, pre->sibling_ptr, pre->heat / 2);
+    if (pre) {
+      // 分裂生成
+      D_RW(node)->constructor(pop, subtree_root, pre->getSiblingPtr(), pre->getHeat() / 2);
+    } else {
+      // 新生成
+      D_RW(node)->constructor(pop, subtree_root);
+    }
     return D_RW(node);
     // subtree *node = new subtree;
     // node->constructor(pop, subtree_root, next);
@@ -644,7 +654,13 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree *
 static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * pre = nullptr) {
     TOID(subtree) node = TOID_NULL(subtree);
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
-    D_RW(node)->constructor(pop, subtree_root, pre->sibling_ptr, pre->heat / 2);
+    if (pre) {
+      // 分裂生成
+      D_RW(node)->constructor(pop, subtree_root, pre->getSiblingPtr(), pre->getHeat() / 2);
+    } else {
+      // 新生成
+      D_RW(node)->constructor(pop, subtree_root);
+    }
     return D_RW(node);
     // subtree *node = new subtree;
     // node->constructor(pop, subtree_root, next);
