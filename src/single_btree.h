@@ -234,6 +234,7 @@ class bpnode{
     }
 
     bool remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true, subtree* sub_root = NULL);
+    bool merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling);
 
     inline void 
       insert_key(entry_key_t key, char* ptr, int *num_entries) {

@@ -203,6 +203,8 @@ public:
 
   bool remove(btree *bt, entry_key_t key, bool only_rebalance = false,
             bool with_lock = true, subtree* sub_root = NULL);
+  bool merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling);
+
   nvmpage *store(btree *bt, char *left, entry_key_t key, char *right, bool flush,
             subtree *sub_root = NULL, nvmpage *invalid_sibling = NULL);
 
@@ -629,6 +631,10 @@ class subtree {
 
     subtree * getSiblingPtr() {
       return sibling_ptr;
+    }
+
+    bool isNVMBtree() {
+      return !flag;
     }
 
     friend class bpnode;
