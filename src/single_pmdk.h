@@ -104,6 +104,7 @@ private:
 public:
   friend class btree;
   friend class subtree;
+  friend class bpnode;
 
   void constructor(uint32_t level = 0) {
     hdr.constructor();

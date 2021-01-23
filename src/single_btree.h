@@ -139,6 +139,7 @@ class bpnode{
   public:
     friend class btree;
     friend class subtree;
+    friend class nvmpage;
 
     bpnode(uint32_t level = 0) {
       hdr.level = level;
