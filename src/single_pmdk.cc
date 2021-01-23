@@ -300,7 +300,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
 
       if (hdr.leftmost_ptr == nullptr) {
         for (int i = 0; i < num_dist_entries; i++) {
-          left_sibling->insert_key(bt->pop, records[i].key, records[i].ptr,
+          left_sibling->insert_key(records[i].key, records[i].ptr,
                             &left_num_entries);
         }
 
@@ -317,11 +317,11 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
         parent_key = D_RO(new_sibling)->records[0].key;
       } else {
         bpnode * pre = nullptr;// todo
-        left_sibling->insert_key(bt->pop, deleted_key_from_parent,
+        left_sibling->insert_key(deleted_key_from_parent,
                           sub_root->DFS(hdr.leftmost_ptr, pre), &left_num_entries);
 
         for (int i = 0; i < num_dist_entries - 1; i++) {
-          left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS((nvmpage *)records[i].ptr, pre),
+          left_sibling->insert_key(records[i].key, sub_root->DFS((nvmpage *)records[i].ptr, pre),
                             &left_num_entries);
         }
 
@@ -349,11 +349,11 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
 
     bpnode * pre = nullptr;
     if (hdr.leftmost_ptr)
-      left_sibling->insert_key(bt->pop, deleted_key_from_parent,
+      left_sibling->insert_key(deleted_key_from_parent,
                         sub_root->DFS(hdr.leftmost_ptr, pre), &left_num_entries);
 
     for (int i = 0; records[i].ptr != NULL; ++i) {
-      left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS((nvmpage *)records[i].ptr, pre),
+      left_sibling->insert_key(records[i].key, sub_root->DFS((nvmpage *)records[i].ptr, pre),
                         &left_num_entries);
     }
 

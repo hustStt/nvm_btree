@@ -858,7 +858,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
 
       if(hdr.leftmost_ptr == nullptr){
         for(int i=0; i<num_dist_entries; i++){
-          left_sibling->insert_key(records[i].key, records[i].ptr,
+          left_sibling->insert_key(bt->pop, records[i].key, records[i].ptr,
               &left_num_entries); 
         } 
 
@@ -875,11 +875,11 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
       }
       else{
         nvmpage * pre;//todo
-        left_sibling->insert_key(deleted_key_from_parent,
+        left_sibling->insert_key(bt->pop, deleted_key_from_parent,
             sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
 
         for(int i=0; i<num_dist_entries - 1; i++){
-          left_sibling->insert_key(records[i].key, sub_root->DFS(records[i].ptr, pre),
+          left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, pre),
               &left_num_entries); 
         } 
 
@@ -906,11 +906,11 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
 
     nvmpage * pre;//todo
     if(hdr.leftmost_ptr)
-      left_sibling->insert_key(deleted_key_from_parent, 
+      left_sibling->insert_key(bt->pop, deleted_key_from_parent, 
           sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
 
     for(int i = 0; records[i].ptr != NULL; ++i) { 
-      left_sibling->insert_key(records[i].key, sub_root->DFS(records[i].ptr, pre), &left_num_entries);
+      left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, pre), &left_num_entries);
     }
 
     if (hdr.leftmost_ptr == nullptr) {
