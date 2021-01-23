@@ -371,6 +371,80 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
   return true;
 }
 
+inline void nvmpage::insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
+                      int *num_entries, bool flush,
+                      bool update_last_index) {
+  // update switch_counter
+  if (!IS_FORWARD(hdr.switch_counter))
+    ++hdr.switch_counter;
+
+  // FAST
+  if (*num_entries == 0) { // this nvmpage is empty
+    nvmentry *new_entry = (nvmentry *)&records[0];
+    nvmentry *array_end = (nvmentry *)&records[1];
+    new_entry->key = (entry_key_t)key;
+    new_entry->ptr = (char *)ptr;
+
+    array_end->ptr = (char *)NULL;
+
+    if (flush) {
+      pmemobj_persist(pop, this, CACHE_LINE_SIZE);
+    }
+  } else {
+    int i = *num_entries - 1, inserted = 0, to_flush_cnt = 0;
+    records[*num_entries + 1].ptr = records[*num_entries].ptr;
+
+    if (flush) {
+      if ((uint64_t) & (records[*num_entries + 1]) % CACHE_LINE_SIZE == 0)
+        pmemobj_persist(pop, &records[*num_entries + 1].ptr, sizeof(char *));
+    }
+
+    // FAST
+    for (i = *num_entries - 1; i >= 0; i--) {
+      if (key < records[i].key) {
+        records[i + 1].ptr = records[i].ptr;
+        records[i + 1].key = records[i].key;
+
+        if (flush) {
+          uint64_t records_ptr = (uint64_t)(&records[i + 1]);
+
+          int remainder = records_ptr % CACHE_LINE_SIZE;
+          bool do_flush =
+              (remainder == 0) ||
+              ((((int)(remainder + sizeof(nvmentry)) / CACHE_LINE_SIZE) == 1) &&
+                ((remainder + sizeof(nvmentry)) % CACHE_LINE_SIZE) != 0);
+          if (do_flush) {
+            pmemobj_persist(pop, (void *)records_ptr, CACHE_LINE_SIZE);
+            to_flush_cnt = 0;
+          } else
+            ++to_flush_cnt;
+        }
+      } else {
+        records[i + 1].ptr = records[i].ptr;
+        records[i + 1].key = key;
+        records[i + 1].ptr = ptr;
+
+        if (flush)
+          pmemobj_persist(pop, &records[i + 1], sizeof(nvmentry));
+        inserted = 1;
+        break;
+      }
+    }
+    if (inserted == 0) {
+      records[0].ptr = (char *)hdr.leftmost_ptr;
+      records[0].key = key;
+      records[0].ptr = ptr;
+
+      if (flush)
+        pmemobj_persist(pop, &records[0], sizeof(nvmentry));
+    }
+  }
+
+  if (update_last_index) {
+    hdr.last_index = *num_entries;
+  }
+  ++(*num_entries);
+}
 
 // Insert a new key - FAST and FAIR
 nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, bool flush,

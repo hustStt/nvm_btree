@@ -125,7 +125,7 @@ class entry{
     }
 
     friend class bpnode;
-    frined class nvmpage;
+    friend class nvmpage;
     friend class btree;
     friend class subtree;
 };
@@ -239,53 +239,7 @@ class bpnode{
     bool remove(btree* bt, entry_key_t key, bool only_rebalance = false, bool with_lock = true, subtree* sub_root = NULL);
     bool merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling);
 
-    inline void 
-      insert_key(entry_key_t key, char* ptr, int *num_entries) {
-        // update switch_counter
-        if(!IS_FORWARD(hdr.switch_counter))
-          ++hdr.switch_counter;
-
-        // FAST
-        if(*num_entries == 0) {  // this bpnode is empty
-          entry* new_entry = (entry*) &records[0];
-          entry* array_end = (entry*) &records[1];
-          new_entry->key = (entry_key_t) key;
-          new_entry->ptr = (char*) ptr;
-
-          array_end->ptr = (char*)NULL;
-        }
-        else {
-          int i = *num_entries - 1, inserted = 0, to_flush_cnt = 0;
-          records[*num_entries+1].ptr = records[*num_entries].ptr; 
-          // clflush((char*)&(records[*num_entries+1].ptr), sizeof(char*));
-
-          //二分查找存不存在该key存在直接update  不存在进行后续insert操作
-          // FAST
-          for(i = *num_entries - 1; i >= 0; i--) {
-            if(key < records[i].key ) {
-              records[i+1].ptr = records[i].ptr;
-              records[i+1].key = records[i].key;
-            }
-            else{
-              records[i+1].ptr = records[i].ptr;//保证ptr不一样的时候 是插入完成
-              records[i+1].key = key;
-              records[i+1].ptr = ptr;
-              // clflush((char *)(&records[i+1]), sizeof(entry));
-              inserted = 1;
-              break;
-            }
-          }
-          if(inserted==0){
-            records[0].ptr =(char*) hdr.leftmost_ptr;
-            records[0].key = key;
-            records[0].ptr = ptr;
-          }
-        }
-
-        hdr.last_index = *num_entries;
-        ++(*num_entries);
-        hdr.status = 0;
-      }
+    void insert_key(entry_key_t key, char* ptr, int *num_entries);
 
     // Insert a new key - FAST and FAIR
     bpnode *store(btree* bt, char* left, entry_key_t key, char* right,

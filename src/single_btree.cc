@@ -1,4 +1,5 @@
 #include "single_btree.h"
+#include "single_pmdk.h"
 
 /*
  *  class btree
@@ -776,7 +777,6 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     }
 
     left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
-    left_sibling->hdr.nvmpage_off = hdr.nvmpage_off;
 
     // subtree root
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
@@ -826,7 +826,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
             &num_entries); 
 
         bpnode * pre = nullptr;// todo
-        hdr.leftmost_ptr = (bpnode*)sub_root->DFS(left_sibling->records[m].ptr, pre); 
+        hdr.leftmost_ptr = (bpnode*)sub_root->DFS((nvmpage *)left_sibling->records[m].ptr, pre); 
         for(int i=left_num_entries - 1; i>m; i--){
           insert_key
             (left_sibling->records[i].key, sub_root->DFS((nvmpage *)left_sibling->records[i].ptr, pre), &num_entries); 
@@ -867,8 +867,6 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
               &new_sibling_cnt); 
         } 
 
-        pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
-
         left_sibling->hdr.sibling_ptr = (nvmpage *)new_sibling;
         pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                         sizeof(nvmpage *));
@@ -892,8 +890,6 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
           new_sibling->insert_key(records[i].key, records[i].ptr,
               &new_sibling_cnt); 
         } 
-
-        pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
       }
 
       // update new dram ptr
@@ -922,7 +918,6 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
       pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
                       sizeof(nvmpage *));
     }
-    left_sibling->hdr.nvmpage_off = hdr.nvmpage_off;
 
     // subtree root
       //delete sub_root
@@ -931,6 +926,53 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
   }
 
   return true;
+}
+
+inline void bpnode::insert_key(entry_key_t key, char* ptr, int *num_entries) {
+  // update switch_counter
+  if(!IS_FORWARD(hdr.switch_counter))
+    ++hdr.switch_counter;
+
+  // FAST
+  if(*num_entries == 0) {  // this bpnode is empty
+    entry* new_entry = (entry*) &records[0];
+    entry* array_end = (entry*) &records[1];
+    new_entry->key = (entry_key_t) key;
+    new_entry->ptr = (char*) ptr;
+
+    array_end->ptr = (char*)NULL;
+  }
+  else {
+    int i = *num_entries - 1, inserted = 0, to_flush_cnt = 0;
+    records[*num_entries+1].ptr = records[*num_entries].ptr; 
+    // clflush((char*)&(records[*num_entries+1].ptr), sizeof(char*));
+
+    //二分查找存不存在该key存在直接update  不存在进行后续insert操作
+    // FAST
+    for(i = *num_entries - 1; i >= 0; i--) {
+      if(key < records[i].key ) {
+        records[i+1].ptr = records[i].ptr;
+        records[i+1].key = records[i].key;
+      }
+      else{
+        records[i+1].ptr = records[i].ptr;//保证ptr不一样的时候 是插入完成
+        records[i+1].key = key;
+        records[i+1].ptr = ptr;
+        // clflush((char *)(&records[i+1]), sizeof(entry));
+        inserted = 1;
+        break;
+      }
+    }
+    if(inserted==0){
+      records[0].ptr =(char*) hdr.leftmost_ptr;
+      records[0].key = key;
+      records[0].ptr = ptr;
+    }
+  }
+
+  hdr.last_index = *num_entries;
+  ++(*num_entries);
+  hdr.status = 0;
 }
 
 bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
