@@ -789,7 +789,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
   return true;
 }
 
-bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling) {
+bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling)
 {
   register int num_entries = count();
   register int left_num_entries = left_sibling->count();
