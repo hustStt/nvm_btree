@@ -925,11 +925,9 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
     left_sibling->hdr.nvmpage_off = hdr.nvmpage_off;
 
     // subtree root
-    if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
       //delete sub_root
-      left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
-      pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
-    }
+    left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+    pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
   }
 
   return true;

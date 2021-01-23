@@ -96,6 +96,7 @@ class header{
     uint64_t nvmpage_off;       // 8 bytes
 
     friend class bpnode;
+    friend class nvmpage;
     friend class btree;
     friend class subtree;
 
@@ -124,6 +125,7 @@ class entry{
     }
 
     friend class bpnode;
+    frined class nvmpage;
     friend class btree;
     friend class subtree;
 };

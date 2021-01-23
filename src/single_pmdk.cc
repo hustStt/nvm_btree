@@ -363,11 +363,9 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     //printf("left_sibling del off %p %lx\n", left_sibling, left_sibling->hdr.sibling_ptr.oid.off);
 
     // subtree root
-    if (sub_root != NULL && hdr.level == nvm_root->hdr.level) {
       //delete sub_root
-      left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
-      pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
-    }
+    left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+    pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
   }
 
   return true;

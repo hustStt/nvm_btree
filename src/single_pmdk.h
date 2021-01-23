@@ -62,6 +62,7 @@ private:
   int16_t last_index;     // 2 bytes
 
   friend class nvmpage;
+  friend class bpnode;
   friend class subtree;
   friend class btree;
 
@@ -89,6 +90,7 @@ public:
   }
 
   friend class nvmpage;
+  friend class bpnode;
   friend class btree;
   friend class subtree;
 };
