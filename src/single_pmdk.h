@@ -484,15 +484,13 @@ class RebalanceTask {
     bpnode * cur_d; 
     nvmpage * cur_n;
     entry_key_t deleted_key_from_parent;
-    bool is_leftmost_node;
 
-    RebalanceTask(subtree * left, subtree * right, bpnode * cur_d, nvmpage * cur_n, entry_key_t deleted_key_from_parent, bool is_leftmost_node) {
+    RebalanceTask(subtree * left, subtree * right, bpnode * cur_d, nvmpage * cur_n, entry_key_t deleted_key_from_parent) {
       this->left = left;
       this->right = right;
       this->cur_d = cur_d; 
       this->cur_n = cur_n;
       this->deleted_key_from_parent = deleted_key_from_parent;
-      this->is_leftmost_node = is_leftmost_node;
     }
 };
 

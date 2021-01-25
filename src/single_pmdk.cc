@@ -58,15 +58,15 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
       if (left_subtree_sibling->isNVMBtree()) {
         left_sibling = left_subtree_sibling->get_nvmroot_ptr();
       } else {
-        // left_dram_sibling = left_subtree_sibling->dram_ptr;
-        // if (is_leftmost_node) {
-        //   // merge
-        //   left_dram_sibling->remove(bt, left_dram_sibling->records[0].key, true, with_lock, left_subtree_sibling);
-        //   return true;
-        // }
+        left_dram_sibling = left_subtree_sibling->dram_ptr;
+        if (is_leftmost_node) {
+          // merge
+          left_dram_sibling->remove(bt, left_dram_sibling->records[0].key, true, with_lock, left_subtree_sibling);
+          return true;
+        }
         // // 不同介质间的合并操作
         // merge(bt, left_dram_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
-        RebalanceTask * rt = new RebalanceTask(left_subtree_sibling, sub_root, nullptr, this, deleted_key_from_parent, is_leftmost_node);
+        RebalanceTask * rt = new RebalanceTask(left_subtree_sibling, sub_root, nullptr, this, deleted_key_from_parent);
         sub_root->rt = rt;
         return true;
       }
@@ -982,27 +982,16 @@ void subtree::subtree_search_range(entry_key_t min, entry_key_t max, void **valu
 bool subtree::rebalance(btree * bt) {
   subtree * left_subtree_sibling = rt->left;
   subtree * sub_root = rt->right;
-  bool is_leftmost_node = rt->is_leftmost_node;
   entry_key_t deleted_key_from_parent = rt->deleted_key_from_parent;
 
-  if (rt->cur_d) {
+  if (rt->cur_n) {
     bpnode * left_dram_sibling = left_subtree_sibling->dram_ptr;
-    if (is_leftmost_node) {
-      // merge
-      left_dram_sibling->remove(bt, left_dram_sibling->records[0].key, true, true, left_subtree_sibling);
-      return true;
-    }
     // 不同介质间的合并操作
-    rt->cur_d->merge(bt, left_dram_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
-  } else if (rt->cur_n) {
+    rt->cur_n->merge(bt, left_dram_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
+  } else if (rt->cur_d) {
     nvmpage* left_nvm_sibling = left_subtree_sibling->get_nvmroot_ptr();
-    if (is_leftmost_node) {
-      // merge
-      left_nvm_sibling->remove(bt, left_nvm_sibling->records[0].key, true, true, left_subtree_sibling);
-      return true;
-    }
     // 不同介质间的合并操作
-    rt->cur_n->merge(bt, left_nvm_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
+    rt->cur_d->merge(bt, left_nvm_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
   } else {
     printf("error rebalance\n");
   }
