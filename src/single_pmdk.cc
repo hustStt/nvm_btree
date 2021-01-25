@@ -46,7 +46,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   nvmpage* left_sibling;
   bpnode* left_dram_sibling;
   //left_sibling.oid.pool_uuid_lo = bt->root.oid.pool_uuid_lo;
-  subtree * left_subtree_sibling;
+  subtree * left_subtree_sibling = sub_root;
   nvmpage * nvm_root = sub_root->get_nvmroot_ptr();
 
   if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
@@ -61,11 +61,12 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
         left_dram_sibling = left_subtree_sibling->dram_ptr;
         if (is_leftmost_node) {
           // merge
-          left_dram_sibling->remove(bt, left_dram_sibling->records[0].key, true, with_lock, sub_root);
+          left_dram_sibling->remove(bt, left_dram_sibling->records[0].key, true, with_lock, left_subtree_sibling);
           return true;
         }
         // 不同介质间的合并操作
         merge(bt, left_dram_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
+        return true;
       }
   } else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
       sub_root->btree_delete_internal(key, (char *)pmemobj_oid(this).off, hdr.level + 1,
@@ -76,7 +77,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
 
   if (is_leftmost_node) {
     // 此处left_sibling 是当前节点的右兄弟节点
-    left_sibling->remove(bt, left_sibling->records[0].key, true, with_lock, sub_root);
+    left_sibling->remove(bt, left_sibling->records[0].key, true, with_lock, left_subtree_sibling);
     return true;
   }
 
@@ -96,7 +97,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     if (num_entries < left_num_entries) { // left -> right
       if (hdr.leftmost_ptr == nullptr) {
         for (int i = left_num_entries - 1; i >= m; i--) {
-          insert_key(bt->pop, left_sibling->records[i].key,
+           insert_key(bt->pop, left_sibling->records[i].key,
                       left_sibling->records[i].ptr, &num_entries);
         }
 
@@ -105,7 +106,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
                         sizeof(char *));
 
         left_sibling->hdr.last_index = m - 1;
-        pmemobj_persist(bt->pop, &(left_sibling->hdr.last_index),
+        pmemobj_persist(bt->pop, &(left_sibling->hdr.last_index), 
                         sizeof(int16_t));
 
         parent_key = records[0].key;
@@ -249,27 +250,21 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     ++total_num_entries;
 
   entry_key_t parent_key;
+  if (hdr.leftmost_ptr == nullptr) {
+    printf("error\n");
+    return false;
+  }
 
   if (total_num_entries > nvm_cardinality - 1) { // Redistribution
     register int m = (int)ceil(total_num_entries / 2);
 
     if (num_entries < left_num_entries) { // left -> right
-      if (hdr.leftmost_ptr == nullptr) {
-        for (int i = left_num_entries - 1; i >= m; i--) {
-          insert_key(bt->pop, left_sibling->records[i].key,
-                      left_sibling->records[i].ptr, &num_entries);
-        }
-
-        left_sibling->records[m].ptr = nullptr;
-        left_sibling->hdr.last_index = m - 1;
-
-        parent_key = records[0].key;
-      } else {
+      {
         insert_key(bt->pop, deleted_key_from_parent, (char *)hdr.leftmost_ptr,
                     &num_entries);
 
         nvmpage * pre = nullptr;// todo
-        hdr.leftmost_ptr = (nvmpage *)sub_root->DFS(left_sibling->records[m].ptr, nullptr);
+        hdr.leftmost_ptr = (nvmpage *)sub_root->DFS(left_sibling->records[m].ptr, pre);
         pmemobj_persist(bt->pop, &(hdr.leftmost_ptr), sizeof(nvmpage *));
 
         for (int i = left_num_entries - 1; i > m; i--) {
@@ -298,24 +293,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       int num_dist_entries = num_entries - m;
       int new_sibling_cnt = 0;
 
-      if (hdr.leftmost_ptr == nullptr) {
-        for (int i = 0; i < num_dist_entries; i++) {
-          left_sibling->insert_key(records[i].key, records[i].ptr,
-                            &left_num_entries);
-        }
-
-        for (int i = num_dist_entries; records[i].ptr != NULL; i++) {
-          D_RW(new_sibling)
-              ->insert_key(bt->pop, records[i].key, records[i].ptr,
-                            &new_sibling_cnt, false);
-        }
-
-        pmemobj_persist(bt->pop, D_RW(new_sibling), sizeof(nvmpage));
-
-        left_sibling->hdr.sibling_ptr = (bpnode *)new_sibling.oid.off;
-
-        parent_key = D_RO(new_sibling)->records[0].key;
-      } else {
+      {
         bpnode * pre = nullptr;// todo
         left_sibling->insert_key(deleted_key_from_parent,
                           sub_root->DFS(hdr.leftmost_ptr, pre), &left_num_entries);
@@ -348,8 +326,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     pmemobj_persist(bt->pop, &(hdr.is_deleted), sizeof(uint8_t));
 
     bpnode * pre = nullptr;
-    if (hdr.leftmost_ptr)
-      left_sibling->insert_key(deleted_key_from_parent,
+    left_sibling->insert_key(deleted_key_from_parent,
                         sub_root->DFS(hdr.leftmost_ptr, pre), &left_num_entries);
 
     for (int i = 0; records[i].ptr != NULL; ++i) {
@@ -357,9 +334,9 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
                         &left_num_entries);
     }
 
-    if (hdr.leftmost_ptr == nullptr) {
-      left_sibling->hdr.sibling_ptr = (bpnode *)hdr.sibling_ptr;
-    }
+    // if (hdr.leftmost_ptr == nullptr) {
+    //   left_sibling->hdr.sibling_ptr = (bpnode *)hdr.sibling_ptr;
+    // }
     //printf("left_sibling del off %p %lx\n", left_sibling, left_sibling->hdr.sibling_ptr.oid.off);
 
     // subtree root
@@ -753,6 +730,7 @@ void subtree::nvm_to_dram() {
   }
   flag = true;
   dram_ptr = (bpnode *)DFS(nvm_ptr, nullptr);
+  nvm_ptr = nullptr;
   log_alloc = getNewLogAllocator();
 }
 
@@ -800,6 +778,7 @@ void subtree::dram_to_nvm() {
   }
 
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, nullptr);
+  dram_ptr = nullptr;
   flag = false;
   // delete log
   delete log_alloc;

@@ -477,6 +477,14 @@ public:
   }
 };
 
+class RebalanceTask {
+  public:
+    subtree * left;
+    subtree * right;
+    bpnode * cur_d; 
+    nvmpage * cur_n;
+};
+
 class subtree {
   private:
     bpnode* dram_ptr;
@@ -485,6 +493,7 @@ class subtree {
     uint64_t heat;
     PMEMobjpool *pop;
     LogAllocator* log_alloc;
+    RebalanceTask *rt;
     bool flag;
     // true:dram   false:nvm
   public:
@@ -496,6 +505,7 @@ class subtree {
       this->pop = pop;
       this->sibling_ptr = next;
       this->log_alloc = getNewLogAllocator();
+      this->rt = nullptr;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -508,6 +518,7 @@ class subtree {
       this->pop = pop;
       this->sibling_ptr = next;
       this->log_alloc = nullptr;
+      this->rt = nullptr;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -567,6 +578,8 @@ class subtree {
     bool isNVMBtree() {
       return !flag;
     }
+
+    bool rebalance(RebalanceTask *rt);
 
     friend class bpnode;
     friend class nvmpage;

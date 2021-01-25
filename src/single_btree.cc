@@ -607,7 +607,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
   bool is_leftmost_node = false;
   bpnode *left_sibling;
   nvmpage *left_nvm_sibling;
-  subtree *left_subtree_sibling;
+  subtree *left_subtree_sibling = sub_root;
 
   if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
     bt->btree_delete_internal(key, (char *)sub_root, hdr.level + 1,
@@ -619,11 +619,12 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       left_nvm_sibling = left_subtree_sibling->get_nvmroot_ptr();
       if (is_leftmost_node) {
         // merge
-        left_nvm_sibling->remove(bt, left_nvm_sibling->records[0].key, true, with_lock, sub_root);
+        left_nvm_sibling->remove(bt, left_nvm_sibling->records[0].key, true, with_lock, left_subtree_sibling);
         return true;
       }
       // 不同介质间的合并操作
       merge(bt, left_nvm_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
+      return true;
     }
   } else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
     sub_root->btree_delete_internal(key, (char *)this, hdr.level + 1,
@@ -636,7 +637,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
   if(is_leftmost_node) {
     // only rebalance
     left_sibling->remove(bt, left_sibling->records[0].key, true,
-        with_lock, sub_root);
+        with_lock, left_subtree_sibling);
     return true;
   }
 
@@ -663,6 +664,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_sibling->records[m].ptr = nullptr;
 
         left_sibling->hdr.last_index = m - 1;
+        left_sibling->hdr.status = 0;
 
         parent_key = records[0].key; 
       }
@@ -682,6 +684,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_sibling->records[m].ptr = nullptr;
 
         left_sibling->hdr.last_index = m - 1;
+        left_sibling->hdr.status = 0;
       }
 
       if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
@@ -798,6 +801,11 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
   int total_num_entries = num_entries + left_num_entries;
   if(hdr.leftmost_ptr)
     ++total_num_entries;
+  
+  if (hdr.leftmost_ptr == nullptr) {
+    printf("error\n");
+    return false;
+  }
 
   entry_key_t parent_key;
 
@@ -805,23 +813,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
     register int m = (int) ceil(total_num_entries / 2);
 
     if(num_entries < left_num_entries) { // left -> right
-      if(hdr.leftmost_ptr == nullptr){
-        for(int i=left_num_entries - 1; i>=m; i--){
-          insert_key
-            (left_sibling->records[i].key, left_sibling->records[i].ptr, &num_entries); 
-        } 
-
-        left_sibling->records[m].ptr = nullptr;
-        pmemobj_persist(bt->pop, &(left_sibling->records[m].ptr),
-                        sizeof(char *));
-
-        left_sibling->hdr.last_index = m - 1;
-        pmemobj_persist(bt->pop, &(left_sibling->hdr.last_index),
-                        sizeof(int16_t));
-
-        parent_key = records[0].key; 
-      }
-      else{
+      {
         insert_key(deleted_key_from_parent, (char*)hdr.leftmost_ptr,
             &num_entries); 
 
@@ -856,24 +848,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
       int num_dist_entries = num_entries - m;
       int new_sibling_cnt = 0;
 
-      if(hdr.leftmost_ptr == nullptr){
-        for(int i=0; i<num_dist_entries; i++){
-          left_sibling->insert_key(bt->pop, records[i].key, records[i].ptr,
-              &left_num_entries); 
-        } 
-
-        for(int i=num_dist_entries; records[i].ptr != NULL; i++){
-          new_sibling->insert_key(records[i].key, records[i].ptr,
-              &new_sibling_cnt); 
-        } 
-
-        left_sibling->hdr.sibling_ptr = (nvmpage *)new_sibling;
-        pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
-                        sizeof(nvmpage *));
-
-        parent_key = new_sibling->records[0].key; 
-      }
-      else{
+      {
         nvmpage * pre;//todo
         left_sibling->insert_key(bt->pop, deleted_key_from_parent,
             sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
@@ -905,18 +880,11 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
     hdr.status = 1;
 
     nvmpage * pre;//todo
-    if(hdr.leftmost_ptr)
-      left_sibling->insert_key(bt->pop, deleted_key_from_parent, 
+    left_sibling->insert_key(bt->pop, deleted_key_from_parent, 
           sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
 
     for(int i = 0; records[i].ptr != NULL; ++i) { 
       left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, pre), &left_num_entries);
-    }
-
-    if (hdr.leftmost_ptr == nullptr) {
-      left_sibling->hdr.sibling_ptr = (nvmpage *)hdr.sibling_ptr;
-      pmemobj_persist(bt->pop, &(left_sibling->hdr.sibling_ptr),
-                      sizeof(nvmpage *));
     }
 
     // subtree root
