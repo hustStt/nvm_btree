@@ -483,6 +483,17 @@ class RebalanceTask {
     subtree * right;
     bpnode * cur_d; 
     nvmpage * cur_n;
+    entry_key_t deleted_key_from_parent;
+    bool is_leftmost_node;
+
+    RebalanceTask(subtree * left, subtree * right, bpnode * cur_d, nvmpage * cur_n, entry_key_t deleted_key_from_parent, bool is_leftmost_node) {
+      this->left = left;
+      this->right = right;
+      this->cur_d = cur_d; 
+      this->cur_n = cur_n;
+      this->deleted_key_from_parent = deleted_key_from_parent;
+      this->is_leftmost_node = is_leftmost_node;
+    }
 };
 
 class subtree {
@@ -579,7 +590,19 @@ class subtree {
       return !flag;
     }
 
-    bool rebalance(RebalanceTask *rt);
+    bool rebalance(btree * bt);
+
+    bool needRebalance() {
+      if (rt != nullptr) {
+        return true;
+      }
+      return false;
+    }
+
+    bool deleteRt() {
+      delete rt;
+      rt = nullptr;
+    }
 
     friend class bpnode;
     friend class nvmpage;

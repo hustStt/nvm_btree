@@ -339,6 +339,10 @@ void btree::btreeDelete(entry_key_t key) {
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(key);
         sub_root->subtree_delete(this, key);
+        if (sub_root->needRebalance()) {
+          sub_root->rebalance(this);
+          sub_root->deleteRt();
+        }
     } else {
         btree_delete(key);
     }
@@ -616,14 +620,16 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     if (!left_subtree_sibling->isNVMBtree()) {
       left_sibling = left_subtree_sibling->dram_ptr;
     } else {
-      left_nvm_sibling = left_subtree_sibling->get_nvmroot_ptr();
-      if (is_leftmost_node) {
-        // merge
-        left_nvm_sibling->remove(bt, left_nvm_sibling->records[0].key, true, with_lock, left_subtree_sibling);
-        return true;
-      }
-      // 不同介质间的合并操作
-      merge(bt, left_nvm_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
+      // left_nvm_sibling = left_subtree_sibling->get_nvmroot_ptr();
+      // if (is_leftmost_node) {
+      //   // merge
+      //   left_nvm_sibling->remove(bt, left_nvm_sibling->records[0].key, true, with_lock, left_subtree_sibling);
+      //   return true;
+      // }
+      // // 不同介质间的合并操作
+      // merge(bt, left_nvm_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
+      RebalanceTask * rt = new RebalanceTask(left_subtree_sibling, sub_root, this, nullptr, deleted_key_from_parent, is_leftmost_node);
+      sub_root->rt = rt;
       return true;
     }
   } else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
