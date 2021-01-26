@@ -270,13 +270,13 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
         insert_key(bt->pop, deleted_key_from_parent, (char *)hdr.leftmost_ptr,
                     &num_entries);
 
-        nvmpage * pre = nullptr;// todo
-        hdr.leftmost_ptr = (nvmpage *)sub_root->DFS(left_sibling->records[m].ptr, pre);
+        nvmpage * pre = (nvmpage *)left_subtree_sibling->getLastDDataNode();// todo
+        hdr.leftmost_ptr = (nvmpage *)sub_root->DFS(left_sibling->records[m].ptr, &pre);
         pmemobj_persist(bt->pop, &(hdr.leftmost_ptr), sizeof(nvmpage *));
 
-        for (int i = left_num_entries - 1; i > m; i--) {
+        for (int i = m + 1; i < left_num_entries; i++) {
           insert_key(bt->pop, left_sibling->records[i].key,
-                      sub_root->DFS(left_sibling->records[i].ptr, pre), &num_entries);
+                      sub_root->DFS(left_sibling->records[i].ptr, &pre), &num_entries);
         }
 
         parent_key = left_sibling->records[m].key;
@@ -301,7 +301,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       int new_sibling_cnt = 0;
 
       {
-        bpnode * pre = nullptr;// todo
+        bpnode * pre = (bpnode *)sub_root->getLastNDataNode();// todo
         left_sibling->insert_key(deleted_key_from_parent,
                           sub_root->DFS(hdr.leftmost_ptr, pre), &left_num_entries);
 
@@ -332,7 +332,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     hdr.is_deleted = 1;
     pmemobj_persist(bt->pop, &(hdr.is_deleted), sizeof(uint8_t));
 
-    bpnode * pre = nullptr;
+    bpnode * pre = (bpnode *)sub_root->getLastNDataNode();
     left_sibling->insert_key(deleted_key_from_parent,
                         sub_root->DFS(hdr.leftmost_ptr, pre), &left_num_entries);
 
@@ -731,17 +731,17 @@ char* subtree::subtree_search(entry_key_t key) {
   }
 }
 
-void subtree::nvm_to_dram() {
+void subtree::nvm_to_dram(bpnode **pre) {
   if (flag) {
     return ;
   }
   flag = true;
-  dram_ptr = (bpnode *)DFS(nvm_ptr, nullptr);
+  dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
   nvm_ptr = nullptr;
   log_alloc = getNewLogAllocator();
 }
 
-char* subtree::DFS(nvmpage* root, bpnode *pre) {
+char* subtree::DFS(nvmpage* root, bpnode **pre) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -756,6 +756,7 @@ char* subtree::DFS(nvmpage* root, bpnode *pre) {
     node->hdr.level = nvm_node_ptr->hdr.level;
     node->hdr.switch_counter = nvm_node_ptr->hdr.switch_counter;
     node->hdr.nvmpage_off = (uint64_t)root;
+    node->hdr.leftmost_ptr = (bpnode *)nvm_node_ptr->hdr.leftmost_ptr;
     
     node->hdr.leftmost_ptr = (bpnode *)DFS(nvm_node_ptr->hdr.leftmost_ptr, pre);
     while(nvm_node_ptr->records[count].ptr != NULL) {
@@ -770,21 +771,21 @@ char* subtree::DFS(nvmpage* root, bpnode *pre) {
     node->records[count].ptr = nullptr;
 
     if (node->hdr.leftmost_ptr == nullptr) {
-      if (pre != nullptr) {
-        pre->hdr.sibling_ptr = node;
+      if (*pre != nullptr) {
+        (*pre)->hdr.sibling_ptr = node;
       }
-      pre = node;
+      *pre = node;
     }
 
     return (char *)node;
 }
 
-void subtree::dram_to_nvm() {
+void subtree::dram_to_nvm(nvmpage **pre) {
   if (!flag) {
     return ;
   }
 
-  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, nullptr);
+  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre);
   dram_ptr = nullptr;
   flag = false;
   // delete log
@@ -792,7 +793,7 @@ void subtree::dram_to_nvm() {
   log_alloc = nullptr;
 }
 
-char* subtree::DFS(char* root, nvmpage *pre) {
+char* subtree::DFS(char* root, nvmpage **pre) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -826,6 +827,7 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     nvm_node_ptr->hdr.last_index = node->hdr.last_index;
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
+    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)node->hdr.leftmost_ptr;
     //sibling 
     
     nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre);
@@ -842,10 +844,11 @@ char* subtree::DFS(char* root, nvmpage *pre) {
     pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
 
     if (node->hdr.leftmost_ptr == nullptr) {
-      if (pre != nullptr) {
-        pre->hdr.sibling_ptr = (nvmpage *)ret;
+      if (*pre != nullptr) {
+        *pre->hdr.sibling_ptr = (nvmpage *)ret;
+        //pmemobj_persist(pop, &((*pre)->hdr.sibling_ptr), sizeof(nvmpage *));
       }
-      pre = nvm_node_ptr;
+      *pre = nvm_node_ptr;
     }
 
     delete node;
@@ -1001,4 +1004,20 @@ bool subtree::rebalance(btree * bt) {
     printf("error rebalance\n");
   }
   return true;
+}
+
+bpnode *subtree::getLastDDataNode() {
+  bpnode * ret = dram_ptr;
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = (bpnode *)ret->records[ret->hdr.last_index];
+  }
+  return ret;
+}
+
+nvmpage *subtree::getLastNDataNode() {
+  nvmpage * ret = get_nvmroot_ptr();
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = to_nvmpage(ret->records[ret->hdr.last_index]);
+  }
+  return ret;
 }

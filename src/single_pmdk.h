@@ -53,13 +53,13 @@ using namespace std;
 
 class nvmheader {
 private:
-  nvmpage *sibling_ptr; // 16 bytes
-  char * none;
+  nvmpage *sibling_ptr; // 8 bytes
   nvmpage *leftmost_ptr;     // 8 bytes
   uint32_t level;         // 4 bytes
   uint8_t switch_counter; // 1 bytes
   uint8_t is_deleted;     // 1 bytes
   int16_t last_index;     // 2 bytes
+  char * none;          //8 bytes
 
   friend class nvmpage;
   friend class bpnode;
@@ -546,12 +546,12 @@ class subtree {
         bool *is_leftmost_node, nvmpage **left_sibling, btree* bt);
 
     // nvm --> dram
-    char* DFS(nvmpage* root, bpnode *pre);
-    void nvm_to_dram();
+    char* DFS(nvmpage* root, bpnode **pre);
+    void nvm_to_dram(bpnode **pre);
 
     // dram --> nvm
-    char* DFS(char* root, nvmpage *pre);
-    void dram_to_nvm();
+    char* DFS(char* root, nvmpage **pre);
+    void dram_to_nvm(nvmpage **pre);
 
     // sync dram --> nvm
     void sync_subtree();
@@ -601,6 +601,9 @@ class subtree {
       delete rt;
       rt = nullptr;
     }
+
+    bpnode *getLastDDataNode();
+    nvmpage *getLastNDataNode();
 
     friend class bpnode;
     friend class nvmpage;

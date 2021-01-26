@@ -555,16 +555,17 @@ void btree::deform() {
     start_time = get_now_micros();
     printf("subtree root start \n");
     bpnode* q = p;
+    nvmpage * pre;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
-        tmp->dram_to_nvm();
-        tmp->nvm_to_dram();
+        tmp->dram_to_nvm(&pre);
+        //tmp->nvm_to_dram();
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
-            tmp->dram_to_nvm();
-            tmp->nvm_to_dram();
+            tmp->dram_to_nvm(&pre);
+            //tmp->nvm_to_dram();
         }
         q = q->hdr.sibling_ptr;
     }
@@ -828,9 +829,9 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
         insert_key(deleted_key_from_parent, (char*)hdr.leftmost_ptr,
             &num_entries); 
 
-        bpnode * pre = nullptr;// todo
+        bpnode * pre = (bpnode *)left_subtree_sibling->getLastNDataNode();// todo
         hdr.leftmost_ptr = (bpnode*)sub_root->DFS((nvmpage *)left_sibling->records[m].ptr, pre); 
-        for(int i=left_num_entries - 1; i>m; i--){
+        for(int i=m + 1; i < left_num_entries; i++){
           insert_key
             (left_sibling->records[i].key, sub_root->DFS((nvmpage *)left_sibling->records[i].ptr, pre), &num_entries); 
         }
@@ -860,7 +861,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
       int new_sibling_cnt = 0;
 
       {
-        nvmpage * pre;//todo
+        nvmpage * pre = (nvmpage *)sub_root->getLastDDataNode();//todo
         left_sibling->insert_key(bt->pop, deleted_key_from_parent,
             sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
 
@@ -890,7 +891,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
   else {
     hdr.status = 1;
 
-    nvmpage * pre;//todo
+    nvmpage * pre = (nvmpage *)sub_root->getLastDDataNode();//todo
     left_sibling->insert_key(bt->pop, deleted_key_from_parent, 
           sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
 
