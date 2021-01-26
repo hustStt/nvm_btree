@@ -270,7 +270,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
         insert_key(bt->pop, deleted_key_from_parent, (char *)hdr.leftmost_ptr,
                     &num_entries);
 
-        nvmpage * pre = nullptr;// todo
+        nvmpage * pre = (nvmpage *)left_subtree_sibling->getDramDataNode(left_sibling->records[m-1].ptr);// todo
         hdr.leftmost_ptr = (nvmpage *)sub_root->DFS(left_sibling->records[m].ptr, &pre);
         pmemobj_persist(bt->pop, &(hdr.leftmost_ptr), sizeof(nvmpage *));
 
@@ -1016,6 +1016,22 @@ bpnode *subtree::getLastDDataNode() {
 
 nvmpage *subtree::getLastNDataNode() {
   nvmpage * ret = get_nvmroot_ptr();
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = to_nvmpage(ret->records[ret->hdr.last_index].ptr);
+  }
+  return ret;
+}
+
+bpnode *subtree::getDramDataNode(char *ptr) {
+  bpnode * ret = (bpnode *)ptr;
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = (bpnode *)ret->records[ret->hdr.last_index].ptr;
+  }
+  return ret;
+}
+
+nvmpage *subtree::getNvmDataNode(char *ptr) {
+  nvmpage * ret = to_nvmpage(ptr);
   while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
     ret = to_nvmpage(ret->records[ret->hdr.last_index].ptr);
   }

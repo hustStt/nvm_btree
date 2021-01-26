@@ -604,6 +604,8 @@ class subtree {
 
     bpnode *getLastDDataNode();
     nvmpage *getLastNDataNode();
+    bpnode *getDramDataNode(char *ptr);
+    nvmpage *getNvmDataNode(char *ptr);
 
     friend class bpnode;
     friend class nvmpage;
@@ -640,3 +642,5 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree 
     // node->constructor(pop, subtree_root, next);
     // return node;
 }
+
+static 

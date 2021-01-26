@@ -829,7 +829,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
         insert_key(deleted_key_from_parent, (char*)hdr.leftmost_ptr,
             &num_entries); 
 
-        bpnode * pre = nullptr;// todo
+        bpnode * pre = (bpnode *)left_subtree_sibling->getNvmDataNode(left_sibling->records[m-1].ptr);// todo
         hdr.leftmost_ptr = (bpnode*)sub_root->DFS((nvmpage *)left_sibling->records[m].ptr, &pre); 
         for(int i=m + 1; i < left_num_entries; i++){
           insert_key
