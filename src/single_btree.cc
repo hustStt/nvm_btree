@@ -820,6 +820,11 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
 
     if(num_entries < left_num_entries) { // left -> right
       {
+        if (left_sibling->records[m].ptr == nullptr) {
+          bt->btree_insert_internal
+            ((char *)left_sibling, deleted_key_from_parent, (char *)sub_root, hdr.level + 1);
+          return true;
+        }
         insert_key(deleted_key_from_parent, (char*)hdr.leftmost_ptr,
             &num_entries); 
 

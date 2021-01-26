@@ -88,7 +88,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
 
   // Merge or Redistribution
   int total_num_entries = num_entries + left_num_entries;
-  if (hdr.leftmost_ptr)
+  if (hdr.leftmost_ptr != nullptr)
     ++total_num_entries;
 
   entry_key_t parent_key;
@@ -248,7 +248,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
 
   // Merge or Redistribution
   int total_num_entries = num_entries + left_num_entries;
-  if (hdr.leftmost_ptr)
+  if (hdr.leftmost_ptr != nullptr)
     ++total_num_entries;
 
   entry_key_t parent_key;
@@ -262,6 +262,11 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
 
     if (num_entries < left_num_entries) { // left -> right
       {
+        if (left_sibling->records[m].ptr == nullptr) {
+          bt->btree_insert_internal
+            ((char *)left_sibling, deleted_key_from_parent, (char *)sub_root, hdr.level + 1);
+          return true;
+        }
         insert_key(bt->pop, deleted_key_from_parent, (char *)hdr.leftmost_ptr,
                     &num_entries);
 
