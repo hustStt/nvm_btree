@@ -555,7 +555,7 @@ void btree::deform() {
     start_time = get_now_micros();
     printf("subtree root start \n");
     bpnode* q = p;
-    nvmpage * pre;
+    nvmpage * pre = nullptr;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
@@ -829,7 +829,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
         insert_key(deleted_key_from_parent, (char*)hdr.leftmost_ptr,
             &num_entries); 
 
-        bpnode * pre = (bpnode *)left_subtree_sibling->getLastNDataNode();// todo
+        bpnode * pre = nullptr;// todo
         hdr.leftmost_ptr = (bpnode*)sub_root->DFS((nvmpage *)left_sibling->records[m].ptr, &pre); 
         for(int i=m + 1; i < left_num_entries; i++){
           insert_key
@@ -861,12 +861,12 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
       int new_sibling_cnt = 0;
 
       {
-        nvmpage * pre = (nvmpage *)sub_root->getLastDDataNode();//todo
+        nvmpage * pre = left_subtree_sibling->getLastNDataNode();//todo
         left_sibling->insert_key(bt->pop, deleted_key_from_parent,
-            sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
+            sub_root->DFS((char*)hdr.leftmost_ptr, &pre), &left_num_entries);
 
         for(int i=0; i<num_dist_entries - 1; i++){
-          left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, pre),
+          left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, &pre),
               &left_num_entries); 
         } 
 
@@ -891,12 +891,12 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
   else {
     hdr.status = 1;
 
-    nvmpage * pre = (nvmpage *)sub_root->getLastDDataNode();//todo
+    nvmpage * pre = left_subtree_sibling->getLastNDataNode();//todo
     left_sibling->insert_key(bt->pop, deleted_key_from_parent, 
-          sub_root->DFS((char*)hdr.leftmost_ptr, pre), &left_num_entries);
+          sub_root->DFS((char*)hdr.leftmost_ptr, &pre), &left_num_entries);
 
     for(int i = 0; records[i].ptr != NULL; ++i) { 
-      left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, pre), &left_num_entries);
+      left_sibling->insert_key(bt->pop, records[i].key, sub_root->DFS(records[i].ptr, &pre), &left_num_entries);
     }
 
     // subtree root
