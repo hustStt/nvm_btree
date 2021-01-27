@@ -5,7 +5,7 @@
  *  class btree
  */
 
-void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size) {
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size, uint64_t base) {
     int i, off = 0;
     uint8_t previous_switch_counter;
     bpnode *current = this;
@@ -111,12 +111,16 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
             }
         } while(previous_switch_counter != current->hdr.switch_counter);
 
-        current = current->hdr.sibling_ptr;
+        if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
+          current = current->hdr.sibling_ptr;
+        } else {
+          current = (bpnode *)((uint64_t)current->hdr.sibling_ptr + base);
+        }
     }
     size = off;
 }
 
-void bpnode::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base) {
     int i, off = 0;
     uint8_t previous_switch_counter;
     bpnode *current = this;
@@ -222,7 +226,11 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, void **values
             }
         } while(previous_switch_counter != current->hdr.switch_counter);
 
-        current = current->hdr.sibling_ptr;
+        if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
+          current = current->hdr.sibling_ptr;
+        } else {
+          current = (bpnode *)((uint64_t)current->hdr.sibling_ptr + base);
+        }
     }
     size = off;
 }

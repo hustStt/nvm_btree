@@ -528,7 +528,7 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
   }
 }
 
-void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
+void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base) {
   int i, off = 0;
   uint8_t previous_switch_counter;
   nvmpage *current = this;
@@ -632,7 +632,11 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
     } while (previous_switch_counter != current->hdr.switch_counter);
 
     // todo
-    current = current->hdr.sibling_ptr;
+    if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
+        current = current->hdr.sibling_ptr;
+      } else {
+        current = (nvmpage *)((uint64_t)current->hdr.sibling_ptr + base);
+      }
   }
 }
 
@@ -976,14 +980,14 @@ void subtree::subtree_search_range(entry_key_t min, entry_key_t max, void **valu
       p = (bpnode *)p->linear_search(min);
     }
 
-    p->linear_search_range(min, max, values, size);
+    p->linear_search_range(min, max, values, size, (uint64_t)pop);
   } else {
     nvmpage* p = get_nvmroot_ptr();
     while (p->hdr.leftmost_ptr != NULL) {
       p = to_nvmpage(p->linear_search(min));
     }
 
-    p->linear_search_range(min, max, values, size);
+    p->linear_search_range(min, max, values, size, (uint64_t)pop);
   }
 }
 

@@ -170,8 +170,8 @@ class bpnode{
       return hdr.level;
     }
 
-    void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size);
-    void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size);
+    void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size, uint64_t base = 0);
+    void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base = 0);
 
 
     inline int count() {
@@ -247,7 +247,7 @@ class bpnode{
 
     // Search keys with linear search
     void linear_search_range
-      (entry_key_t min, entry_key_t max, unsigned long *buf) {
+      (entry_key_t min, entry_key_t max, unsigned long *buf, uint64_t base) {
         int i, off = 0;
         uint8_t previous_switch_counter;
         bpnode *current = this;
@@ -323,7 +323,11 @@ class bpnode{
             }
           } while(previous_switch_counter != current->hdr.switch_counter);
 
-          current = current->hdr.sibling_ptr;
+          if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
+            current = current->hdr.sibling_ptr;
+          } else {
+            current = (bpnode *)((uint64_t)current->hdr.sibling_ptr + base);
+          }
         }
       }
 
