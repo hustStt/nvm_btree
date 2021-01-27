@@ -26,16 +26,6 @@ void NVMBtree::Insert(const unsigned long key, const string &value) {
 
 void NVMBtree::Insert(const unsigned long key, char *pvalue) {
     if(bt) {
-        /*
-        char* logvalue = log_alloc->AllocateAligned(18);
-        char* tmp = logvalue;
-        memset(logvalue, 0, 2);
-        logvalue += 2;
-        memcpy(logvalue, &key, 8);
-        logvalue += 8;
-        memcpy(logvalue, &pvalue, 8);
-        clflush(tmp, 18);
-        */
         bt->btreeInsert(key, pvalue);
         /*
         char *value = bt->btree_search(key);
@@ -53,14 +43,6 @@ void NVMBtree::Insert(const unsigned long key, char *pvalue) {
 
 void NVMBtree::Delete(const unsigned long key) {
     if(bt) {
-        /*
-        char *logvalue = log_alloc->AllocateAligned(2 + 8);
-        char* tmp = logvalue;
-        memset(logvalue, 1, 2);
-        logvalue += 2;
-        memcpy(logvalue, &key, 8);
-        clflush(tmp, 10);
-        */
         bt->btreeDelete(key);
     }
 }

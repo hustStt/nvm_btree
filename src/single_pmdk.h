@@ -36,7 +36,7 @@
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
-#define IS_VALID_PTR(p) ((p & 0x700000000000) == 0x700000000000) 
+#define IS_VALID_PTR(p) (((uint64_t)p & 0x700000000000) == 0x700000000000) 
 
 class nvmpage;
 class subtree;

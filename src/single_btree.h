@@ -247,7 +247,7 @@ class bpnode{
 
     // Search keys with linear search
     void linear_search_range
-      (entry_key_t min, entry_key_t max, unsigned long *buf, uint64_t base) {
+      (entry_key_t min, entry_key_t max, unsigned long *buf, uint64_t base = 0) {
         int i, off = 0;
         uint8_t previous_switch_counter;
         bpnode *current = this;
