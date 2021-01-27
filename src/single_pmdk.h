@@ -53,8 +53,8 @@ using namespace std;
 
 class nvmheader {
 private:
-  nvmpage *sibling_ptr; // 8 bytes
   nvmpage *leftmost_ptr;     // 8 bytes
+  nvmpage *sibling_ptr; // 8 bytes
   uint32_t level;         // 4 bytes
   uint8_t switch_counter; // 1 bytes
   uint8_t is_deleted;     // 1 bytes
@@ -642,5 +642,3 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree 
     // node->constructor(pop, subtree_root, next);
     // return node;
 }
-
-static 
