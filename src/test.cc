@@ -49,23 +49,24 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
-    char* persistent_path = "/pmem1/mytest";
+    string persistent_path("/pmem1/mytest");
+    // char* persistent_path = "/pmem1/mytest";
 
-    //TOID(subtree) nvmbt = TOID_NULL(nvmbtree);
-    PMEMobjpool *pop;
+    // //TOID(subtree) nvmbt = TOID_NULL(nvmbtree);
+    // PMEMobjpool *pop;
 
-    if (file_exists(persistent_path) != 0) {
-        pop = pmemobj_create(persistent_path, "btree", 30000000000,
-                            0666); // make 1GB memory pool
-        //nvmbt = POBJ_ROOT(pop, nvmbtree);
-        //D_RW(nvmbt)->constructor(pop);
-    } else {
-        pop = pmemobj_open(persistent_path, "btree");
-        //nvmbt = POBJ_ROOT(pop, nvmbtree);
-        //D_RW(nvmbt)->setPMEMobjpool(pop);
-    }
+    // if (file_exists(persistent_path) != 0) {
+    //     pop = pmemobj_create(persistent_path, "btree", 30000000000,
+    //                         0666); // make 1GB memory pool
+    //     //nvmbt = POBJ_ROOT(pop, nvmbtree);
+    //     //D_RW(nvmbt)->constructor(pop);
+    // } else {
+    //     pop = pmemobj_open(persistent_path, "btree");
+    //     //nvmbt = POBJ_ROOT(pop, nvmbtree);
+    //     //D_RW(nvmbt)->setPMEMobjpool(pop);
+    // }
 
-    NVMBtree *bt = new NVMBtree(pop);
+    NVMBtree *bt = new NVMBtree(persistent_path);
 
     // bt->PrintInfo();
     if(test_type == 0) {
@@ -76,7 +77,6 @@ int main(int argc, char *argv[]) {
 
     delete bt;
     AllocatorExit();
-    pmemobj_close(pop);
     return 0;
 }
 

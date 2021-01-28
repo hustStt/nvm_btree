@@ -1,8 +1,8 @@
 #include "nvm_btree.h"
 
-NVMBtree::NVMBtree(PMEMobjpool *pool) {
-    pop = pool;
-    bt = new btree(pool); 
+NVMBtree::NVMBtree(string &path) {
+    mybt = MyBtree::getInitial(path.c_str());
+    bt = mybt->getBt();
     if(!bt) {
         assert(0);
     }
@@ -12,7 +12,7 @@ NVMBtree::NVMBtree(PMEMobjpool *pool) {
 
 NVMBtree::~NVMBtree() {
     if(bt) {
-        delete bt;
+        mybt->exitBtree();
     }
 }
     

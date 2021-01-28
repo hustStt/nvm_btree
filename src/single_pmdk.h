@@ -44,7 +44,7 @@ class btree;
 class bpnode;
 
 POBJ_LAYOUT_BEGIN(btree);
-//POBJ_LAYOUT_ROOT(btree, subtree);
+POBJ_LAYOUT_ROOT(btree, MyBtree);
 POBJ_LAYOUT_TOID(btree, nvmpage);
 POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
@@ -498,6 +498,46 @@ class RebalanceTask {
       this->cur_n = cur_n;
       this->deleted_key_from_parent = deleted_key_from_parent;
     }
+};
+
+class MyBtree{
+  private:
+    PMEMobjpool *pop;
+    subtree * head;  // off
+    int time_;       // sec
+    int subtree_num; // dram subtree num
+    btree * bt; 
+    bool switch_;
+    static MyBtree * mybt;
+  public:
+    static MyBtree *getInitial(string persistent_path) {
+      if (mybt == nullptr) {
+        TOID(MyBtree) nvmbt = TOID_NULL(MyBtree);
+        PMEMobjpool *pop;
+        if (file_exists(persistent_path.c_str()) != 0) {
+            pop = pmemobj_create(persistent_path.c_str(), "btree", 30000000000,
+                                0666); // make 30GB memory pool
+            nvmbt = POBJ_ROOT(pop, MyBtree);
+            D_RW(nvmbt)->constructor(pop);
+        } else {
+            pop = pmemobj_open(persistent_path.c_str(), "btree");
+            nvmbt = POBJ_ROOT(pop, MyBtree);
+            D_RW(nvmbt)->Recover(pop);
+        }
+        mybt = D_RW(nvmbt);
+      }
+      return mybt;
+    }
+
+    btree * getBt() {
+      return bt;
+    }
+
+    void constructor(PMEMobjpool * pool);
+    void Recover(PMEMobjpool *);
+    void Redistribute();
+    void later();
+    void exitBtree();
 };
 
 class subtree {

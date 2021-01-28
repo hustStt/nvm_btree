@@ -5,6 +5,8 @@
  * class nvmbtree
  */
 
+MyBtree * MyBtree::mybt = nullptr;
+
 bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
             bool with_lock, subtree* sub_root) {
   if (!only_rebalance) {
@@ -1040,4 +1042,50 @@ nvmpage *subtree::getNvmDataNode(char *ptr) {
     ret = to_nvmpage(ret->records[ret->hdr.last_index].ptr);
   }
   return ret;
+}
+
+void MyBtree::constructor(PMEMobjpool * pool) {
+  pop = pool;
+  head = nullptr;
+  time_ = 60; // 1min
+  subtree_num = 100;  
+  bt = new btree(pool);
+  switch_ = true;
+
+  pmemobj_persist(pop, this, sizeof(MyBtree));
+}
+
+void MyBtree::Recover(PMEMobjpool *pool) {
+  pop = pool;
+  if (head == nullptr) { // 没有进行转换 读log恢复
+    bt = new btree(pop);
+    // 进行相关操作
+  } else {
+    // 1.遍历subtree 恢复nvm子树
+    // 2.恢复索引
+    // 3.重新分布子树
+  }
+}
+
+void MyBtree::Redistribute() {
+  if (head == nullptr) {
+    printf("redistribute error\n");
+    return ;
+  }
+  
+}
+
+void MyBtree::later() {
+  std::thread([this]() {
+      while(switch_) {
+          std::this_thread::sleep_for(std::chrono::seconds(time_));
+          Redistribute();
+      }
+  }).detach();
+}
+
+void MyBtree::exitBtree() {
+  switch_ = false;
+  pmemobj_close(pop);
+  delete bt;
 }
