@@ -38,10 +38,13 @@
 
 #define IS_VALID_PTR(p) (((uint64_t)p & 0x700000000000) == 0x700000000000) 
 
+static inline int file_exists(char const *file) { return access(file, F_OK); }
+
 class nvmpage;
 class subtree;
 class btree;
 class bpnode;
+class MyBtree;
 
 POBJ_LAYOUT_BEGIN(btree);
 POBJ_LAYOUT_ROOT(btree, MyBtree);

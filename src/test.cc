@@ -30,8 +30,6 @@ void motivationtest(NVMBtree *bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
-static inline int file_exists(char const *file) { return access(file, F_OK); }
-
 
 int main(int argc, char *argv[]) {
     if(parse_input(argc, argv) != 0) {
