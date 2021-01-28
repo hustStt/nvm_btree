@@ -1072,7 +1072,7 @@ void MyBtree::Redistribute() {
     printf("redistribute error\n");
     return ;
   }
-  
+  printf("redistribute\n");
 }
 
 void MyBtree::later() {
@@ -1087,5 +1087,5 @@ void MyBtree::later() {
 void MyBtree::exitBtree() {
   switch_ = false;
   pmemobj_close(pop);
-  delete bt;
+  // delete bt;
 }

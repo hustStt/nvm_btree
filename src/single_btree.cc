@@ -569,6 +569,7 @@ void btree::deform() {
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
         tmp->dram_to_nvm(&pre);
         //tmp->nvm_to_dram();
+        MyBtree::getInitial()->setHead(tmp);
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
@@ -577,6 +578,7 @@ void btree::deform() {
         }
         q = q->hdr.sibling_ptr;
     }
+    MyBtree::getInitial()->later();
     flag = true;
     end_time = get_now_micros();
     printf("subtree root end  time: %f s\n", (end_time - start_time) * 1e-6);

@@ -513,7 +513,7 @@ class MyBtree{
     bool switch_;
     static MyBtree * mybt;
   public:
-    static MyBtree *getInitial(string persistent_path) {
+    static MyBtree *getInitial(string persistent_path = "") {
       if (mybt == nullptr) {
         TOID(MyBtree) nvmbt = TOID_NULL(MyBtree);
         PMEMobjpool *pop;
@@ -534,6 +534,11 @@ class MyBtree{
 
     btree * getBt() {
       return bt;
+    }
+
+    void setHead(subtree * head) {
+      this->head = (subtree *)((uint64_t)head - (uint64_t)pop);
+      pmemobj_persist(pop, &(this->head), sizeof(subtree *));
     }
 
     void constructor(PMEMobjpool * pool);
