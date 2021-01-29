@@ -27,6 +27,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <vector>
+#include <queue>
 
 #include "nvm_common.h"
 
@@ -541,6 +542,10 @@ class MyBtree{
       pmemobj_persist(pop, &(this->head), sizeof(subtree *));
     }
 
+    inline subtree *to_nvmptr(subtree *off) {
+      return (subtree *)((uint64_t)off + (uint64_t)pop);
+    }
+
     void constructor(PMEMobjpool * pool);
     void Recover(PMEMobjpool *);
     void Redistribute();
@@ -558,6 +563,7 @@ class subtree {
     LogAllocator* log_alloc;
     RebalanceTask *rt;
     bool flag;
+    bool change;
     // true:dram   false:nvm
   public:
     void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
@@ -604,8 +610,9 @@ class subtree {
     void nvm_to_dram(bpnode **pre);
 
     // dram --> nvm
-    char* DFS(char* root, nvmpage **pre);
+    char* DFS(char* root, nvmpage **pre, bool ifdel = true);
     void dram_to_nvm(nvmpage **pre);
+    void sync();
 
     // sync dram --> nvm
     void sync_subtree();
@@ -653,9 +660,17 @@ class subtree {
       return false;
     }
 
-    bool deleteRt() {
+    void deleteRt() {
       delete rt;
       rt = nullptr;
+    }
+
+    bool getState() {
+      return change;
+    }
+
+    void flushState() {
+      change = false;
     }
 
     bpnode *getLastDDataNode();
@@ -665,6 +680,7 @@ class subtree {
 
     friend class bpnode;
     friend class nvmpage;
+    friend class MyBtree;
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * pre = nullptr) {

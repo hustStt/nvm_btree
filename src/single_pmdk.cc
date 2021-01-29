@@ -818,7 +818,18 @@ void subtree::dram_to_nvm(nvmpage **pre) {
   log_alloc = nullptr;
 }
 
-char* subtree::DFS(char* root, nvmpage **pre) {
+void subtree::sync() {
+  if (!flag) {
+    return ;
+  }
+
+  nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre, false);
+  // delete log
+  delete log_alloc;
+  log_alloc = getNewLogAllocator();
+}
+
+char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -838,6 +849,7 @@ char* subtree::DFS(char* root, nvmpage **pre) {
     }
 
     if (node->hdr.nvmpage_off != -1) { // 复用nvmpage
+      // sibling
       nvm_node_ptr = to_nvmpage((char *)node->hdr.nvmpage_off);
       ret = (char *)node->hdr.nvmpage_off;
     } else { // 新节点 重新申请nvmpage
@@ -855,11 +867,11 @@ char* subtree::DFS(char* root, nvmpage **pre) {
     nvm_node_ptr->hdr.sibling_ptr = (nvmpage *)node->hdr.sibling_ptr;
     //sibling 
     
-    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre);
+    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
     while(node->records[count].ptr != NULL) {
         nvm_node_ptr->records[count].key = node->records[count].key;
         if (node->hdr.leftmost_ptr != nullptr) {
-            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr, pre);
+            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr, pre, ifdel);
         } else {
             nvm_node_ptr->records[count].ptr = node->records[count].ptr;
         }
@@ -876,7 +888,7 @@ char* subtree::DFS(char* root, nvmpage **pre) {
       *pre = nvm_node_ptr;
     }
 
-    delete node;
+    if (ifdel) delete node;
     return ret;
 }
 
@@ -1092,6 +1104,24 @@ void MyBtree::Redistribute() {
     return ;
   }
   printf("redistribute\n");
+
+  // subtree node 优先队列 前subtree_num个 作为dram节点 其他的作为nvm节点
+  std::priority_queue<subtree *, vector<subtree *>, greater<subtree *>> q;
+  subtree *ptr = to_nvmptr(head);
+  while (ptr != nullptr) {
+    if (q.size() < subtree_num) {
+      q.push(ptr);
+    } else if (q.top()->getHeat() < ptr->getHeat()){
+      q.pop();
+      q.push(ptr);
+    }
+    ptr = to_nvmptr(ptr->sibling_ptr);
+  }
+
+  while(!q.empty()) {
+    q.top()->change = true;
+    q.pop();
+  }
 }
 
 void MyBtree::later() {

@@ -271,7 +271,17 @@ char *btree::findSubtreeRoot(entry_key_t key) {
     }
 
     char *ret = p->linear_search(key);
-    ((subtree *)ret)->increaseHeat();
+    subtree *tmp = (subtree *)ret;
+    tmp->increaseHeat();
+    if (tmp->getState()) {
+      bpnode *pre = nullptr;
+      tmp->nvm_to_dram(&pre);
+    } else {
+      nvmpage *pre = nullptr;
+      tmp->dram_to_nvm(&pre);
+    }
+    tmp->flushState();
+    // if (log full) sync();
     return ret;
 }
 
@@ -568,13 +578,13 @@ void btree::deform() {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
         tmp->dram_to_nvm(&pre);
-        //tmp->nvm_to_dram();
-        MyBtree::getInitial()->setHead(tmp);
+        tmp->nvm_to_dram();
+        MyBtree::getInitial()->setHead((subtree *)((uint64_t)tmp - (uint64_t)pop));
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
             tmp->dram_to_nvm(&pre);
-            //tmp->nvm_to_dram();
+            tmp->nvm_to_dram();
         }
         q = q->hdr.sibling_ptr;
     }
