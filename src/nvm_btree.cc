@@ -13,7 +13,6 @@ NVMBtree::NVMBtree(string &path) {
 NVMBtree::~NVMBtree() {
     if(bt) {
         mybt->exitBtree();
-        delete bt;
     }
 }
     

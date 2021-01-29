@@ -88,6 +88,9 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
   register int num_entries = count();
   register int left_num_entries = left_sibling->count();
 
+  uint64_t l = left_subtree_sibling->getHeat();
+  uint64_t r = sub_root->getHeat();
+
   // Merge or Redistribution
   int total_num_entries = num_entries + left_num_entries;
   if (hdr.leftmost_ptr != nullptr)
@@ -140,6 +143,9 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
       if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
           bt->btree_insert_internal
             ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
+          // heat  (left_num_entries - m) / left_num_entries 
+          sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
+          left_subtree_sibling->setHeat(m / left_num_entries * l);
       }
       else if (sub_root != NULL && hdr.level < nvm_root->hdr.level) { // subtree node
           sub_root->btree_insert_internal
@@ -202,6 +208,9 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
       if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
           sub_root->nvm_ptr = (nvmpage *)new_sibling.oid.off;
           pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
+          // heat
+          sub_root->setHeat(m / num_entries * r);
+          left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
 
           bt->btree_insert_internal
             ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -237,6 +246,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) {
       //delete sub_root
       left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+      left_subtree_sibling->setHeat(l + r);
       pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
     }
   }
@@ -247,6 +257,8 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
 bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling) {
   register int num_entries = count();
   register int left_num_entries = left_sibling->count();
+  uint64_t l = left_subtree_sibling->getHeat();
+  uint64_t r = sub_root->getHeat();
 
   // Merge or Redistribution
   int total_num_entries = num_entries + left_num_entries;
@@ -287,6 +299,9 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
 
         left_sibling->hdr.last_index = m - 1;
       }
+      //heat
+      sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
+      left_subtree_sibling->setHeat(m / left_num_entries * l);
 
       bt->btree_insert_internal
         ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -327,6 +342,9 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       sub_root->nvm_ptr = (nvmpage *)new_sibling.oid.off;
       pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
+      sub_root->setHeat(m / num_entries * r);
+      left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
+
       bt->btree_insert_internal
         ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
     }
@@ -351,6 +369,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     // subtree root
       //delete sub_root
     left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+    left_subtree_sibling->setHeat(l + r);
     pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
   }
 
@@ -1085,7 +1104,7 @@ void MyBtree::later() {
 }
 
 void MyBtree::exitBtree() {
+  delete bt;
   switch_ = false;
   pmemobj_close(pop);
-  // delete bt;
 }

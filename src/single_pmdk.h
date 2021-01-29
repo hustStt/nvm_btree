@@ -628,10 +628,12 @@ class subtree {
 
     void setHeat(uint64_t heat) {
       this->heat = heat;
+      //persist
     }
 
     void increaseHeat() {
       ++heat;
+      //persist
     }
 
     subtree * getSiblingPtr() {
