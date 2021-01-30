@@ -529,7 +529,7 @@ void btree::PrintInfo() {
 }
 
 void btree::CalcuRootLevel() {
-    tar_level = 4;
+    tar_level = 5;
 }
 
 void btree::deform() {
@@ -574,17 +574,21 @@ void btree::deform() {
     printf("subtree root start \n");
     bpnode* q = p;
     nvmpage * pre = nullptr;
+    subtree * subtree_pre;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
-        tmp->dram_to_nvm(&pre);
-        tmp->nvm_to_dram();
-        MyBtree::getInitial()->setHead((subtree *)((uint64_t)tmp - (uint64_t)pop));
+        tmp->sync_subtree(&pre);
+        subtree_pre = tmp;
+        //tmp->nvm_to_dram();
+        MyBtree::getInitial()->setHead((subtree *)pmemobj_oid(tmp).off);
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
-            tmp->dram_to_nvm(&pre);
-            tmp->nvm_to_dram();
+            tmp->sync_subtree(&pre);
+            subtree_pre->sibling_ptr = (subtree *)pmemobj_oid(tmp).off;;
+            subtree_pre = tmp;
+            //tmp->nvm_to_dram();
         }
         q = q->hdr.sibling_ptr;
     }

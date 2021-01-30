@@ -818,7 +818,7 @@ void subtree::dram_to_nvm(nvmpage **pre) {
   log_alloc = nullptr;
 }
 
-void subtree::sync() {
+void subtree::sync_subtree(nvmpage **pre) {
   if (!flag) {
     return ;
   }

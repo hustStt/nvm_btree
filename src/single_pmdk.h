@@ -612,10 +612,9 @@ class subtree {
     // dram --> nvm
     char* DFS(char* root, nvmpage **pre, bool ifdel = true);
     void dram_to_nvm(nvmpage **pre);
-    void sync();
 
     // sync dram --> nvm
-    void sync_subtree();
+    void sync_subtree(nvmpage **pre);
 
     inline nvmpage *to_nvmpage(nvmpage *off) {
       return (nvmpage *)((uint64_t)off + (uint64_t)pop);
@@ -681,6 +680,7 @@ class subtree {
     friend class bpnode;
     friend class nvmpage;
     friend class MyBtree;
+    friend class btree;
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * pre = nullptr) {
