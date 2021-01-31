@@ -839,8 +839,9 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     char * ret;
 
     if (node->hdr.status == 2) {
-      // 无修改
-      return (char *)node->hdr.nvmpage_off;
+      // 无修改 有bug 如果某个中间节点无修改 那么下面的节点都不会被遍历
+      // 被修改的情况 1. insert key 2 修改hdr
+      // return (char *)node->hdr.nvmpage_off;
     } else if (node->hdr.status == 1) {
       // 已删除
       printf("error : this node is deleted.\n");
@@ -861,6 +862,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     
     int count = 0;
     //nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
+    node->hdr.status = 2;
     nvm_node_ptr->hdr.last_index = node->hdr.last_index;
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
@@ -1079,7 +1081,7 @@ void MyBtree::constructor(PMEMobjpool * pool) {
   pop = pool;
   head = nullptr;
   time_ = 60; // 1min
-  subtree_num = 100;  
+  subtree_num = 20;  
   bt = new btree(pool);
   switch_ = true;
 
@@ -1103,32 +1105,37 @@ void MyBtree::Redistribute() {
     printf("redistribute error\n");
     return ;
   }
-  printf("redistribute\n");
 
   // subtree node 优先队列 前subtree_num个 作为dram节点 其他的作为nvm节点
   std::priority_queue<subtree *, vector<subtree *>, greater<subtree *>> q;
   subtree *ptr = to_nvmptr(head);
+  int i = 0, j = 0;
   while (ptr != nullptr) {
+    i++;
     if (q.size() < subtree_num) {
       q.push(ptr);
-    } else if (q.top()->getHeat() < ptr->getHeat()){
+    } else if (!q.empty() && q.top()->getHeat() < ptr->getHeat()){
       q.pop();
       q.push(ptr);
     }
+    ptr->change = false;
     ptr = to_nvmptr(ptr->sibling_ptr);
   }
 
   while(!q.empty()) {
+    j++;
     q.top()->change = true;
+    q.top()->PrintInfo();
     q.pop();
   }
+  printf("\nredistribute end all: %d dram: %d \n\n", i, j);
 }
 
 void MyBtree::later() {
   std::thread([this]() {
       while(switch_) {
-          std::this_thread::sleep_for(std::chrono::seconds(time_));
           Redistribute();
+          std::this_thread::sleep_for(std::chrono::seconds(time_));
       }
   }).detach();
 }

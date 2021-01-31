@@ -43,6 +43,7 @@ public:
             }
             for (int j = 0; j < 8;j ++) {
                 if (((1 << j) & pmemaddr_[i]) == 0) {
+                    pmemaddr_[i] ｜= (1 << j);
                     return begin_addr + (8 * i + j) * LogSize;
                 }
             }

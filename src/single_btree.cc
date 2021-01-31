@@ -273,14 +273,15 @@ char *btree::findSubtreeRoot(entry_key_t key) {
     char *ret = p->linear_search(key);
     subtree *tmp = (subtree *)ret;
     tmp->increaseHeat();
-    if (tmp->getState()) {
-      bpnode *pre = nullptr;
-      tmp->nvm_to_dram(&pre);
-    } else {
-      nvmpage *pre = nullptr;
-      tmp->dram_to_nvm(&pre);
+    if (tmp->change != tmp->flag) {
+      if (tmp->getState()) {
+        bpnode *pre = nullptr;
+        tmp->nvm_to_dram(&pre);
+      } else {
+        nvmpage *pre = nullptr;
+        tmp->dram_to_nvm(&pre);
+      }
     }
-    tmp->flushState();
     // if (log full) sync();
     return ret;
 }
@@ -559,26 +560,29 @@ void btree::deform() {
     printf("bptree height:%d, roots_level:%d, calculevel:%d\n", height,
                p->hdr.level, tar_level);
     bpnode* tmp = p;
-    int tmpcnt = 1;
+    int tmpcnt = 0;
     int valuecnt = 0;
-    while (tmp->hdr.sibling_ptr != nullptr) {
+    while (tmp != nullptr) {
       ++tmpcnt;
       valuecnt += tmp->hdr.last_index + 1;
       tmp = tmp->hdr.sibling_ptr;
     }
     printf("****subtree level %d, node num %d, entry num %d****\n",
-               tmp->hdr.level, tmpcnt, valuecnt);
+               p->hdr.level, tmpcnt, valuecnt);
   }
     uint64_t start_time, end_time;
     start_time = get_now_micros();
     printf("subtree root start \n");
     bpnode* q = p;
     nvmpage * pre = nullptr;
-    subtree * subtree_pre;
+    subtree * subtree_pre = nullptr;
     while(q) {
         q->hdr.leftmost_ptr = (bpnode *)newSubtreeRoot(pop, q->hdr.leftmost_ptr);
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
         tmp->sync_subtree(&pre);
+        if (subtree_pre != nullptr) {
+          subtree_pre->sibling_ptr = (subtree *)pmemobj_oid(tmp).off;;
+        }
         subtree_pre = tmp;
         //tmp->nvm_to_dram();
         MyBtree::getInitial()->setHead((subtree *)pmemobj_oid(tmp).off);

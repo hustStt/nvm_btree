@@ -538,11 +538,12 @@ class MyBtree{
     }
 
     void setHead(subtree * head) {
-      this->head = (subtree *)((uint64_t)head - (uint64_t)pop);
+      this->head = head;
       pmemobj_persist(pop, &(this->head), sizeof(subtree *));
     }
 
     inline subtree *to_nvmptr(subtree *off) {
+      if (off == nullptr) return nullptr;
       return (subtree *)((uint64_t)off + (uint64_t)pop);
     }
 
@@ -575,6 +576,7 @@ class subtree {
       this->sibling_ptr = next;
       this->log_alloc = getNewLogAllocator();
       this->rt = nullptr;
+      this->change = flag;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -588,6 +590,7 @@ class subtree {
       this->sibling_ptr = next;
       this->log_alloc = nullptr;
       this->rt = nullptr;
+      this->change = flag;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -670,6 +673,11 @@ class subtree {
 
     void flushState() {
       change = false;
+    }
+
+    void PrintInfo() {
+      printf("subtree: %p\n", this);
+      log_alloc->PrintStorage();
     }
 
     bpnode *getLastDDataNode();
