@@ -825,7 +825,7 @@ void subtree::sync_subtree(nvmpage **pre) {
 
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre, false);
   // delete log
-  delete log_alloc;
+  if (log_alloc) delete log_alloc;
   log_alloc = getNewLogAllocator();
 }
 

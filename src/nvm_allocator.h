@@ -10,7 +10,7 @@
 
 
 const uint64_t NVMSectorSize = 256;
-const uint64_t MemReserved = (10 << 20);  // 保留 10M 空间
+const uint64_t MemReserved = (5 << 20);  // 保留 5M 空间
 const uint64_t LogSize = 100 * (1 << 20);
 
 class NVMAllocator {
@@ -29,6 +29,7 @@ public:
         log_num_ = size / LogSize;
         begin_addr = pmemaddr_ + log_num_ / 8;
         capacity_ = size;
+        pmem_memset_persist(pmemaddr_, 0, log_num_ / 8);
     }
 
 
@@ -43,7 +44,7 @@ public:
             }
             for (int j = 0; j < 8;j ++) {
                 if (((1 << j) & pmemaddr_[i]) == 0) {
-                    pmemaddr_[i] ｜= (1 << j);
+                    pmemaddr_[i] |= (1 << j);
                     return begin_addr + (8 * i + j) * LogSize;
                 }
             }

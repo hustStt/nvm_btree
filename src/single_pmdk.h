@@ -676,8 +676,10 @@ class subtree {
     }
 
     void PrintInfo() {
-      printf("subtree: %p\n", this);
-      log_alloc->PrintStorage();
+      printf("subtree: %p is dram %c\n", this, flag);
+      if(log_alloc) { 
+        log_alloc->PrintStorage();
+      }
     }
 
     bpnode *getLastDDataNode();

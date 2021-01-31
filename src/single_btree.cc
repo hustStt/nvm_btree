@@ -282,7 +282,11 @@ char *btree::findSubtreeRoot(entry_key_t key) {
         tmp->dram_to_nvm(&pre);
       }
     }
-    // if (log full) sync();
+    if(tmp->log_alloc != nullptr && tmp->log_alloc->StorageIsFull()) {
+      printf("log will be full, sync!\n");
+      nvmpage *pre = nullptr;
+      tmp->sync_subtree(&pre);
+    }
     return ret;
 }
 
