@@ -29,7 +29,7 @@ public:
         log_num_ = size / LogSize;
         begin_addr = pmemaddr_ + log_num_ / 8;
         capacity_ = size;
-        pmem_memset_persist(pmemaddr_, 0, log_num_ / 8);
+        ResetZero();
     }
 
 
@@ -87,6 +87,7 @@ public:
         pmemaddr_ = nvm_alloc->getNewLog();
         capacity_ = LogSize;
         cur_index_ = pmemaddr_;
+        memused = 0;
     }
 
     ~LogAllocator() {

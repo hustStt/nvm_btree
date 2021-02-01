@@ -565,6 +565,7 @@ class subtree {
     RebalanceTask *rt;
     bool flag;
     bool change;
+    bool lock;
     // true:dram   false:nvm
   public:
     void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
@@ -577,6 +578,7 @@ class subtree {
       this->log_alloc = getNewLogAllocator();
       this->rt = nullptr;
       this->change = flag;
+      this->lock = false;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -591,6 +593,7 @@ class subtree {
       this->log_alloc = nullptr;
       this->rt = nullptr;
       this->change = flag;
+      this->lock = false;
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -676,7 +679,7 @@ class subtree {
     }
 
     void PrintInfo() {
-      printf("subtree: %p is dram %c\n", this, flag);
+      printf("subtree: %p is dram: %d  heat: %lu\n", this, flag, heat);
       if(log_alloc) { 
         log_alloc->PrintStorage();
       }
@@ -724,3 +727,9 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree 
     // node->constructor(pop, subtree_root, next);
     // return node;
 }
+
+struct cmp {
+    bool operator()(subtree* a, subtre* b) {
+        return a->getHeat() > b->getHeat();
+    }
+};

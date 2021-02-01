@@ -838,10 +838,10 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     TOID(nvmpage) nvm_node;
     char * ret;
 
-    if (node->hdr.status == 2) {
+    if (node->hdr.status == 2 && node->hdr.leftmost_ptr == nullptr) {
       // 无修改 有bug 如果某个中间节点无修改 那么下面的节点都不会被遍历
       // 被修改的情况 1. insert key 2 修改hdr
-      // return (char *)node->hdr.nvmpage_off;
+      return (char *)node->hdr.nvmpage_off;
     } else if (node->hdr.status == 1) {
       // 已删除
       printf("error : this node is deleted.\n");
@@ -1107,7 +1107,7 @@ void MyBtree::Redistribute() {
   }
 
   // subtree node 优先队列 前subtree_num个 作为dram节点 其他的作为nvm节点
-  std::priority_queue<subtree *, vector<subtree *>, greater<subtree *>> q;
+  std::priority_queue<subtree *, vector<subtree *>, cmp> q;
   subtree *ptr = to_nvmptr(head);
   int i = 0, j = 0;
   while (ptr != nullptr) {
@@ -1118,6 +1118,7 @@ void MyBtree::Redistribute() {
       q.pop();
       q.push(ptr);
     }
+    ptr->lock = true;
     ptr->change = false;
     ptr = to_nvmptr(ptr->sibling_ptr);
   }
@@ -1127,6 +1128,12 @@ void MyBtree::Redistribute() {
     q.top()->change = true;
     q.top()->PrintInfo();
     q.pop();
+  }
+  ptr = to_nvmptr(head);
+  
+  while(ptr != nullptr) {
+    ptr->lock = false;
+    ptr = to_nvmptr(ptr->sibling_ptr);
   }
   printf("\nredistribute end all: %d dram: %d \n\n", i, j);
 }

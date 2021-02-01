@@ -273,7 +273,7 @@ char *btree::findSubtreeRoot(entry_key_t key) {
     char *ret = p->linear_search(key);
     subtree *tmp = (subtree *)ret;
     tmp->increaseHeat();
-    if (tmp->change != tmp->flag) {
+    if (tmp->change != tmp->flag && tmp->lock == false) {
       if (tmp->getState()) {
         bpnode *pre = nullptr;
         tmp->nvm_to_dram(&pre);
