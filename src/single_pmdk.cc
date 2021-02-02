@@ -761,7 +761,11 @@ void subtree::nvm_to_dram(bpnode **pre) {
     return ;
   }
   flag = true;
+  uint64_t start_time, end_time;
+  start_time = get_now_micros();
   dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
+  end_time = get_now_micros();
+  printf("subtree to nvm  time: %f s\n", (end_time - start_time) * 1e-6);
   nvm_ptr = nullptr;
   log_alloc = getNewLogAllocator();
 }
@@ -810,7 +814,11 @@ void subtree::dram_to_nvm(nvmpage **pre) {
     return ;
   }
 
+  uint64_t start_time, end_time;
+  start_time = get_now_micros();
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre);
+  end_time = get_now_micros();
+  printf("subtree to nvm  time: %f s\n", (end_time - start_time) * 1e-6);
   dram_ptr = nullptr;
   flag = false;
   // delete log
@@ -822,8 +830,11 @@ void subtree::sync_subtree(nvmpage **pre) {
   if (!flag) {
     return ;
   }
-
+  uint64_t start_time, end_time;
+  start_time = get_now_micros();
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre, false);
+  end_time = get_now_micros();
+  printf("subtree sync  time: %f s\n", (end_time - start_time) * 1e-6);
   // delete log
   if (log_alloc) delete log_alloc;
   log_alloc = getNewLogAllocator();
@@ -863,6 +874,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     int count = 0;
     //nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
     node->hdr.status = 2;
+    node->hdr.nvmpage_off = pmemobj_oid(nvm_node_ptr).off;
     nvm_node_ptr->hdr.last_index = node->hdr.last_index;
     nvm_node_ptr->hdr.level = node->hdr.level;
     nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
@@ -1130,7 +1142,7 @@ void MyBtree::Redistribute() {
     q.pop();
   }
   ptr = to_nvmptr(head);
-  
+
   while(ptr != nullptr) {
     ptr->lock = false;
     ptr = to_nvmptr(ptr->sibling_ptr);

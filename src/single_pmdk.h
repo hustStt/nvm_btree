@@ -623,10 +623,12 @@ class subtree {
     void sync_subtree(nvmpage **pre);
 
     inline nvmpage *to_nvmpage(nvmpage *off) {
+      if (off == nullptr)  return nullptr;
       return (nvmpage *)((uint64_t)off + (uint64_t)pop);
     }
 
     inline nvmpage *to_nvmpage(char *off) {
+      if (off == nullptr)  return nullptr;
       return (nvmpage *)((uint64_t)off + (uint64_t)pop);
     }
 
@@ -729,7 +731,7 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree 
 }
 
 struct cmp {
-    bool operator()(subtree* a, subtre* b) {
+    bool operator()(subtree* a, subtree* b) {
         return a->getHeat() > b->getHeat();
     }
 };
