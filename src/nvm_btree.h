@@ -53,7 +53,7 @@ public:
     }
 */
     void test() {
-        bt->to_nvm_test();
+        mybt->closeChange();
     }
 
 private:

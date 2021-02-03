@@ -552,6 +552,9 @@ class MyBtree{
     void Redistribute();
     void later();
     void exitBtree();
+    void closeChange() {
+      switch_ = false;
+    }
 };
 
 class subtree {

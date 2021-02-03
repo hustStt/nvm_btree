@@ -765,7 +765,7 @@ void subtree::nvm_to_dram(bpnode **pre) {
   start_time = get_now_micros();
   dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
   end_time = get_now_micros();
-  printf("subtree to nvm  time: %f s\n", (end_time - start_time) * 1e-6);
+  printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
   nvm_ptr = nullptr;
   log_alloc = getNewLogAllocator();
 }
