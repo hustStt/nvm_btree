@@ -349,7 +349,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_put(rand_seed * (tid + 1) * 2);
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
@@ -367,7 +367,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
                 stats.end();
                 stats.add_put();
 
-                if ((i % 1000) == 0) {
+                if ((i % 50000) == 0) {
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
@@ -474,12 +474,23 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
         uint64_t from = (ops / thread_num) * tid;
         uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
 
-        auto f = async(launch::async, [&bt, &rand_seed](int tid, uint64_t from, uint64_t to) {
+        auto f = async(launch::async, [&](int tid, uint64_t from, uint64_t to) {
             rocksdb::Random64 rnd_delete(rand_seed * (tid + 1));
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_delete.Next();
-                bt->Delete(key);;
+                stats.start();
+
+                bt->Delete(key);
+
+                stats.end();
+                stats.add_put();
+
+                if ((i % 50000) == 0) {
+                    cout<<"Del_test:"<<i;
+                    stats.print_latency();
+                    stats.clear_period();
+                }
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
