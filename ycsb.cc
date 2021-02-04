@@ -3,7 +3,6 @@
 #include <string>
 #include <cstring>
 #include <future>
-#include "include/nvm_alloc.h"
 #include "include/common_time.h"
 #include "src/nvm_btree.h"
 #include "include/ycsb/ycsb-c.h"
@@ -41,12 +40,12 @@ public:
     FastFairDb(): tree_(nullptr) {}
     FastFairDb(btree *tree): tree_(tree) {}
     virtual ~FastFairDb() {
-      tree_->exitBtree();
+      mybt->exitBtree();
     }
     void Init()
     {
-      tree_ = MyBtree::getInitial(PATH).getBt();
-      //tree_ = new btree();
+      mybt = MyBtree::getInitial(PATH);
+      tree_ = mybt->getBt();
     }
 
     void Info()
@@ -78,6 +77,7 @@ public:
     }
 private:
     btree *tree_;
+    MyBtre *mybt;
 };
 
 void UsageMessage(const char *command);
