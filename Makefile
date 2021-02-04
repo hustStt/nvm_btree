@@ -17,7 +17,7 @@ all: ycsb
 	# ln -s src/mult_test test
 	# ln -s src/pmdk_test test
 clean:
-    rm -rf /mnt/pmem0/ycsb
+	rm -rf /mnt/pmem0/ycsb
 	rm -rf ycsb
 	make clean -C src
 

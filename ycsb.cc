@@ -66,7 +66,7 @@ public:
         return 1;
     }
     int Update(uint64_t key, uint64_t value) {
-        tree_->btreeDelete(key);
+        //tree_->btreeDelete(key);
         tree_->btreeInsert(key, (char *)value);
         return 1;
     }
@@ -167,7 +167,7 @@ int main(int argc, const char *argv[])
       cout << total_ops / duration / 1000 << endl << endl;
     }
     db->Info();
-    for(size_t i = 0; i < ArrayLen(workloads); i ++) {
+    for(size_t i = 1; i < ArrayLen(workloads); i ++) {
       // cout << "Loads[" << i << "]: " << workloads[i] << endl;
       string workload = workdloads_dir + "/" + workloads[i];
       LoadWorkLoad(props, workload);
