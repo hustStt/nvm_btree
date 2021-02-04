@@ -682,8 +682,6 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
 
   register int num_entries = count();
   register int left_num_entries = left_sibling->count();
-  uint64_t l = left_subtree_sibling->getHeat();
-  uint64_t r = sub_root->getHeat();
 
   // Merge or Redistribution
   int total_num_entries = num_entries + left_num_entries;
@@ -731,6 +729,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
         bt->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
+        uint64_t l = left_subtree_sibling->getHeat();
+        uint64_t r = sub_root->getHeat();
         sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
         left_subtree_sibling->setHeat(m / left_num_entries * l);
       }
@@ -797,6 +797,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
         // heat
+        uint64_t l = left_subtree_sibling->getHeat();
+        uint64_t r = sub_root->getHeat();
         sub_root->setHeat(m / num_entries * r);
         left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
 
@@ -832,6 +834,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
       //delete sub_root
       left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+      uint64_t l = left_subtree_sibling->getHeat();
+      uint64_t r = sub_root->getHeat();
       left_subtree_sibling->setHeat(l + r);
       pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
     }

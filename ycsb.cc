@@ -4,7 +4,8 @@
 #include <cstring>
 #include <future>
 #include "include/common_time.h"
-#include "src/nvm_btree.h"
+#include "src/single_pmdk.h"
+#include "src/single_btree.h"
 #include "include/ycsb/ycsb-c.h"
 #include "random.h"
 
@@ -16,21 +17,20 @@ using namespace std;
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 
 const char *workloads[] = {
-  // "workloada.spec",
-  // "workloadb.spec",
-  // "workloadc.spec",
-  // "workloadd.spec",
-  // "workloade.spec",
-  // "workloadf.spec",
-  "workloada_insert_0.spec",
+  // "workloada_insert_0.spec",
   // "workloada_insert_10.spec",
   // "workloada_insert_20.spec",
   // "workloada_insert_50.spec",
   // "workloada_insert_80.spec",
-  "workloada_insert_100.spec",
+  // "workloada_insert_100.spec",
   // "workload_read.spec",
-  // "workload_insert.spec",
-
+   "workload_insert.spec",
+   "workloada.spec",
+   "workloadb.spec",
+   "workloadc.spec",
+   "workloadd.spec",
+   "workloade.spec",
+   "workloadf.spec",
 };
 
 #define ArrayLen(arry) (sizeof(arry) / sizeof(arry[0]))
@@ -77,7 +77,7 @@ public:
     }
 private:
     btree *tree_;
-    MyBtre *mybt;
+    MyBtree *mybt;
 };
 
 void UsageMessage(const char *command);
@@ -99,7 +99,7 @@ int YCSB_Run(ycsbc::KvDB *db, ycsbc::CoreWorkload *wl, const int num_ops,
     } else {
       oks += client.DoTransaction();
     }
-    if(i%10000 == 0) {
+    if(i%50000 == 0) {
       // std::cerr << "Trans: " << i << "\r";
       if(is_loading) {
         auto duration = timer.End<std::chrono::nanoseconds>();
