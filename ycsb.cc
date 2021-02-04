@@ -5,13 +5,16 @@
 #include <future>
 #include "include/nvm_alloc.h"
 #include "include/common_time.h"
-#include "src/single_btree.h"
-#include "src/single_pmdk.h"
+#include "src/nvm_btree.h"
 #include "include/ycsb/ycsb-c.h"
 #include "random.h"
 
 using namespace std;
 
+#define LOGPATH "/mnt/pmem0/log_persistent"
+#define PATH "/mnt/pmem0/ycsb"
+
+const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 
 const char *workloads[] = {
   // "workloada.spec",
@@ -37,10 +40,12 @@ class FastFairDb : public ycsbc::KvDB {
 public:
     FastFairDb(): tree_(nullptr) {}
     FastFairDb(btree *tree): tree_(tree) {}
-    virtual ~FastFairDb() {}
+    virtual ~FastFairDb() {
+      tree_->exitBtree();
+    }
     void Init()
     {
-      //tree_ = MyBtree::getInitial(path.c_str()).getBt();
+      tree_ = MyBtree::getInitial(PATH).getBt();
       //tree_ = new btree();
     }
 
@@ -53,22 +58,22 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
-        tree_->btree_insert(key, (char *)value);
+        tree_->btreeInsert(key, (char *)value);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
     {
-        value = (uint64_t)tree_->btree_search(key);
+        value = (uint64_t)tree_->btreeSearch(key);
         return 1;
     }
     int Update(uint64_t key, uint64_t value) {
-        tree_->btree_delete(key);
-        tree_->btree_insert(key, (char *)value);
+        tree_->btreeDelete(key);
+        tree_->btreeInsert(key, (char *)value);
         return 1;
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
     {
-        tree_->btree_search_range(start_key, UINT64_MAX, results, len);
+        //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
         return 1;
     }
 private:
@@ -115,7 +120,6 @@ int YCSB_Run(ycsbc::KvDB *db, ycsbc::CoreWorkload *wl, const int num_ops,
 
 int main(int argc, const char *argv[])
 {
-    //NVM::env_init();
     ycsbc::KvDB *db = nullptr;
     utils::Properties props;
     ycsbc::CoreWorkload wl;
@@ -133,6 +137,11 @@ int main(int argc, const char *argv[])
       db = new FastFairDb();
     }
     db->Init();
+
+    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE) < 0) {
+        print_log(LV_ERR, "Initial allocator failed");
+        return 0;
+    }
 
     {
       string workload = workdloads_dir + "/" + workloads[0];
@@ -188,7 +197,7 @@ int main(int argc, const char *argv[])
       db->Info();
     }
     delete db;
-    // NVM::env_exit();
+    AllocatorExit();
     return 0;
 }
 
