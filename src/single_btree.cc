@@ -1057,6 +1057,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     records[m].ptr = NULL;
 
     hdr.last_index = m - 1;
+    hdr.status = 0;
 
     num_entries = hdr.last_index + 1;
 

@@ -766,7 +766,7 @@ void subtree::nvm_to_dram(bpnode **pre) {
   dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
   end_time = get_now_micros();
   printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
-  nvm_ptr = nullptr;
+  // nvm_ptr = nullptr;
   log_alloc = getNewLogAllocator();
 }
 
@@ -848,11 +848,18 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     nvmpage* nvm_node_ptr;
     TOID(nvmpage) nvm_node;
     char * ret;
+    bool isflush = true;
 
-    if (node->hdr.status == 2 && node->hdr.leftmost_ptr == nullptr) {
-      // 无修改 有bug 如果某个中间节点无修改 那么下面的节点都不会被遍历
-      // 被修改的情况 1. insert key 2 修改hdr
-      return (char *)node->hdr.nvmpage_off;
+    if (node->hdr.status == 2 && node->hdr.nvmpage_off != -1) {
+      if (node->hdr.leftmost_ptr == nullptr) {
+        // 叶子节点 无修改直接返回
+        if (node->hdr.level != 0) {
+          printf("level error %d\n",node->hdr.level);
+        }
+        return (char *)node->hdr.nvmpage_off;
+      } else {
+        isflush = false;
+      }
     } else if (node->hdr.status == 1) {
       // 已删除
       printf("error : this node is deleted.\n");
@@ -868,31 +875,41 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
       POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
       D_RW(nvm_node)->constructor();
       nvm_node_ptr = D_RW(nvm_node);
+      node->hdr.status = 2;
+      node->hdr.nvmpage_off = nvm_node.oid.off;
       ret = (char *)nvm_node.oid.off;
     }
     
     int count = 0;
-    //nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
-    node->hdr.status = 2;
-    node->hdr.nvmpage_off = pmemobj_oid(nvm_node_ptr).off;
-    nvm_node_ptr->hdr.last_index = node->hdr.last_index;
-    nvm_node_ptr->hdr.level = node->hdr.level;
-    nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
-    nvm_node_ptr->hdr.sibling_ptr = (nvmpage *)node->hdr.sibling_ptr;
-    //sibling 
-    
-    nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
-    while(node->records[count].ptr != NULL) {
-        nvm_node_ptr->records[count].key = node->records[count].key;
-        if (node->hdr.leftmost_ptr != nullptr) {
-            nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr, pre, ifdel);
-        } else {
-            nvm_node_ptr->records[count].ptr = node->records[count].ptr;
-        }
-        ++count;
+    if (isflush) {
+      //nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
+      nvm_node_ptr->hdr.last_index = node->hdr.last_index;
+      nvm_node_ptr->hdr.level = node->hdr.level;
+      nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
+      nvm_node_ptr->hdr.sibling_ptr = (nvmpage *)node->hdr.sibling_ptr;
+      //sibling 
+      
+      nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
+      while(node->records[count].ptr != NULL) {
+          nvm_node_ptr->records[count].key = node->records[count].key;
+          if (node->hdr.leftmost_ptr != nullptr) {
+              nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr, pre, ifdel);
+          } else {
+              nvm_node_ptr->records[count].ptr = node->records[count].ptr;
+          }
+          ++count;
+      }
+      nvm_node_ptr->records[count].ptr = nullptr;
+      pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
+    } else {
+      DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
+      while(node->records[count].ptr != NULL) {
+          if (node->hdr.leftmost_ptr != nullptr) {
+              DFS(node->records[count].ptr, pre, ifdel);
+          } 
+          ++count;
+      }
     }
-    nvm_node_ptr->records[count].ptr = nullptr;
-    pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
 
     if (node->hdr.leftmost_ptr == nullptr) {
       if (*pre != nullptr) {
