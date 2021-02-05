@@ -67,7 +67,7 @@ public:
     }
     int Update(uint64_t key, uint64_t value) {
         //tree_->btreeDelete(key);
-        tree_->btreeInsert(key, (char *)value);
+        tree_->btreeUpdate(key, (char *)value);
         return 1;
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
