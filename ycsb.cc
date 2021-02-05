@@ -99,11 +99,11 @@ int YCSB_Run(ycsbc::KvDB *db, ycsbc::CoreWorkload *wl, const int num_ops,
     } else {
       oks += client.DoTransaction();
     }
-    if(i%50000 == 0) {
+    if(i%100000 == 0) {
       // std::cerr << "Trans: " << i << "\r";
       if(is_loading) {
         auto duration = timer.End<std::chrono::nanoseconds>();
-        std::cout << "op " << i << " :average load latency: " << 1.0 * duration / 10000 << " ns." <<std::endl;
+        std::cout << "op " << i << " :average load latency: " << 1.0 * duration / 100000 << " ns." <<std::endl;
       }
       // std::cout << "average load latency: " << duration << std::endl;
       timer.Start();

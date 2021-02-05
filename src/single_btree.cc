@@ -982,7 +982,14 @@ inline void bpnode::insert_key(entry_key_t key, char* ptr, int *num_entries) {
     records[*num_entries+1].ptr = records[*num_entries].ptr; 
     // clflush((char*)&(records[*num_entries+1].ptr), sizeof(char*));
 
-    //二分查找存不存在该key存在直接update  不存在进行后续insert操作
+    //查找存不存在该key存在直接update  不存在进行后续insert操作
+    for(i = *num_entries - 1; i >= 0; i--) {
+      if(key == records[i].key ) {
+        records[i].ptr = ptr;
+        hdr.status = 0;
+        return;
+      }
+    }
     // FAST
     for(i = *num_entries - 1; i >= 0; i--) {
       if(key < records[i].key ) {

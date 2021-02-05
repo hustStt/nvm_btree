@@ -404,6 +404,15 @@ inline void nvmpage::insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
         pmemobj_persist(pop, &records[*num_entries + 1].ptr, sizeof(char *));
     }
 
+    // update
+    for(i = *num_entries - 1; i >= 0; i--) {
+      if(key == records[i].key ) {
+        records[i].ptr = ptr;
+        if (flush)
+          pmemobj_persist(pop, &records[i], sizeof(nvmentry));
+        return;
+      }
+    }
     // FAST
     for (i = *num_entries - 1; i >= 0; i--) {
       if (key < records[i].key) {
