@@ -72,7 +72,7 @@ public:
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
     {
-        //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
+        tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
         return 1;
     }
 private:
