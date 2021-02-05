@@ -376,6 +376,29 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
   return true;
 }
 
+inline bool nvmpage::update_key(PMEMobjpool *pop, entry_key_t key, char* ptr) {
+  register int num_entries = count();
+
+  if (num_entries == 0) {
+    return false;
+  }
+  int left = 0;
+  int right = num_entries - 1;
+  while(left <= right) { // 注意
+      int mid = (right + left) / 2;
+      if(records[mid].key == key) {
+        records[mid].ptr = ptr;
+        pmemobj_persist(pop, &records[mid], sizeof(nvmentry));
+        return true; 
+      } else if (records[mid].key < key) {
+          left = mid + 1; // 注意
+      } else if (records[mid].key > key) {
+          right = mid - 1; // 注意
+      }
+  }
+  return false;
+}
+
 inline void nvmpage::insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
                       int *num_entries, bool flush,
                       bool update_last_index) {
@@ -404,15 +427,6 @@ inline void nvmpage::insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
         pmemobj_persist(pop, &records[*num_entries + 1].ptr, sizeof(char *));
     }
 
-    // update
-    for(i = *num_entries - 1; i >= 0; i--) {
-      if(key == records[i].key ) {
-        records[i].ptr = ptr;
-        if (flush)
-          pmemobj_persist(pop, &records[i], sizeof(nvmentry));
-        return;
-      }
-    }
     // FAST
     for (i = *num_entries - 1; i >= 0; i--) {
       if (key < records[i].key) {
@@ -693,6 +707,32 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
 
     if (!p->store(root, NULL, key, right, true, this)) { // store
       subtree_insert(root, key, right);
+    }
+  }
+}
+
+void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
+  if (flag) {
+    // write log
+    log_alloc->updateKv(key, right);
+    bpnode *p = dram_ptr;
+
+    while(p->hdr.leftmost_ptr != NULL) {
+      p = (bpnode*)p->linear_search(key);
+    }
+
+    if(!p->update_key(key, right)) { // store 
+      // printf("no such key\n");
+    }
+  } else {
+    nvmpage* p = get_nvmroot_ptr();
+
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(key));
+    }
+
+    if (!p->update_key(key, right)) { // store
+      // printf("no such key\n");
     }
   }
 }

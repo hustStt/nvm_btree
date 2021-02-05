@@ -129,7 +129,7 @@ public:
     }
 
     void writeKv(int64_t key, char *value);
-
+    void updateKv(int64_t key, char *value);
     void deleteKey(int64_t key);
 
     void ResetZero() {

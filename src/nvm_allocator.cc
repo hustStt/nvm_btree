@@ -47,10 +47,21 @@ void AllocatorExit() {
 }
 
 void LogAllocator::writeKv(int64_t key, char *value) {
-    char* logvalue = this->AllocateAligned(18);
+    char* logvalue = this->AllocateAligned(17);
     char* tmp = logvalue;
-    memset(logvalue, 0, 2);
-    logvalue += 2;
+    logvalue[0] = 1;
+    logvalue += 1;
+    memcpy(logvalue, &key, 8);
+    logvalue += 8;
+    memcpy(logvalue, &value, 8);
+    nvm_persist(tmp, 18);
+}
+
+void LogAllocator::updateKv(int64_t key, char *value) {
+    char* logvalue = this->AllocateAligned(17);
+    char* tmp = logvalue;
+    logvalue[0] = 2;
+    logvalue += 1;
     memcpy(logvalue, &key, 8);
     logvalue += 8;
     memcpy(logvalue, &value, 8);
@@ -58,10 +69,10 @@ void LogAllocator::writeKv(int64_t key, char *value) {
 }
 
 void LogAllocator::deleteKey(int64_t key) {
-    char *logvalue = this->AllocateAligned(2 + 8);
+    char *logvalue = this->AllocateAligned(9);
     char* tmp = logvalue;
-    memset(logvalue, 1, 2);
-    logvalue += 2;
+    logvalue[0] = 0;
+    logvalue += 1;
     memcpy(logvalue, &key, 8);
     nvm_persist(tmp, 10);
 }

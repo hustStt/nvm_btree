@@ -220,6 +220,7 @@ public:
   void insert_key(PMEMobjpool *pop, entry_key_t key, char *ptr,
                       int *num_entries, bool flush = true,
                       bool update_last_index = true);
+  bool update_key(PMEMobjpool *pop, entry_key_t key, char *ptr);
 
 
   // Search keys with linear search
@@ -602,6 +603,7 @@ class subtree {
     }
 
     void subtree_insert(btree* root, entry_key_t key, char* right);
+    void subtree_update(btree* root, entry_key_t key, char* right);
     void subtree_delete(btree* root, entry_key_t);
     char *subtree_search(entry_key_t);
     void subtree_search_range(entry_key_t, entry_key_t, unsigned long *); 

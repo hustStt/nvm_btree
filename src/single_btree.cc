@@ -342,6 +342,28 @@ void btree::btree_insert(entry_key_t key, char* right){ //need to be string
   }
 }
 
+void btree::btreeUpdate(entry_key_t key, char* right) {
+    if (flag) {
+        subtree* sub_root = (subtree*)findSubtreeRoot(key);
+        sub_root->subtree_update(this, key, right);
+    } else {
+        btree_update(key, right);
+    }
+}
+
+// update the key in the leaf node
+void btree::btree_update(entry_key_t key, char* right){ //need to be string
+  bpnode* p = (bpnode*)root;
+
+  while(p->hdr.leftmost_ptr != NULL) {
+    p = (bpnode*)p->linear_search(key);
+  }
+
+  if(!p->update_key(key, right)) { // store 
+    // printf("update key failed no such key\n");
+  }
+}
+
 // store the key into the node at the given level 
 void btree::btree_insert_internal
 (char *left, entry_key_t key, char *right, uint32_t level) {
@@ -963,6 +985,29 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
   return true;
 }
 
+inline bool bpnode::update_key(entry_key_t key, char* ptr) {
+  register int num_entries = count();
+
+  if (num_entries == 0) {
+    return false;
+  }
+  int left = 0;
+  int right = num_entries - 1;
+  while(left <= right) { // 注意
+      int mid = (right + left) / 2;
+      if(records[mid].key == key) {
+        records[mid].ptr = ptr;
+        hdr.status = 0;
+        return true; 
+      } else if (records[mid].key < key) {
+          left = mid + 1; // 注意
+      } else if (records[mid].key > key) {
+          right = mid - 1; // 注意
+      }
+  }
+  return false;
+}
+
 inline void bpnode::insert_key(entry_key_t key, char* ptr, int *num_entries) {
   // update switch_counter
   if(!IS_FORWARD(hdr.switch_counter))
@@ -982,14 +1027,6 @@ inline void bpnode::insert_key(entry_key_t key, char* ptr, int *num_entries) {
     records[*num_entries+1].ptr = records[*num_entries].ptr; 
     // clflush((char*)&(records[*num_entries+1].ptr), sizeof(char*));
 
-    //查找存不存在该key存在直接update  不存在进行后续insert操作
-    for(i = *num_entries - 1; i >= 0; i--) {
-      if(key == records[i].key ) {
-        records[i].ptr = ptr;
-        hdr.status = 0;
-        return;
-      }
-    }
     // FAST
     for(i = *num_entries - 1; i >= 0; i--) {
       if(key < records[i].key ) {

@@ -61,7 +61,9 @@ class btree{
     btree(bpnode *root);
     void setNewRoot(char *);
     void btreeInsert(entry_key_t, char*);
+    void btreeUpdate(entry_key_t, char*);
     void btree_insert(entry_key_t, char*);
+    void btree_update(entry_key_t, char*);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btreeDelete(entry_key_t);
     void btree_delete(entry_key_t);
@@ -240,6 +242,7 @@ class bpnode{
     bool merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_from_parent, subtree* sub_root, subtree* left_subtree_sibling);
 
     void insert_key(entry_key_t key, char* ptr, int *num_entries);
+    bool update_key(entry_key_t key, char* ptr);
 
     // Insert a new key - FAST and FAIR
     bpnode *store(btree* bt, char* left, entry_key_t key, char* right,
