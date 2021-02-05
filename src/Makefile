@@ -34,6 +34,7 @@ default:  all
 all: clean single_test
 
 clean: 
+	rm -f /mnt/pmem0/mytest
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
 	rm -f single_test mult_test pmdk_test

@@ -5,7 +5,7 @@
  *  class btree
  */
 
-void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size, uint64_t base) {
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size, uint64_t base) {
     int i, off = 0;
     uint8_t previous_switch_counter;
     bpnode *current = this;
@@ -26,7 +26,8 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                             if(tmp_key == current->records[0].key) {
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
-                                    values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
                                     off++;
                                     if(off >= size) {
                                         return ;
@@ -48,7 +49,8 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                 if(tmp_key == current->records[i].key) {
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
-                                        values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        result.push_back({tmp_key, (uint64_t)tmp_ptr});
                                         off++;
                                         if(off >= size) {
                                             return ;
@@ -72,7 +74,8 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                 if(tmp_key == current->records[i].key) {
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
-                                        values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        result.push_back({tmp_key, (uint64_t)tmp_ptr});
                                         off++;
                                         if(off >= size) {
                                             return ;
@@ -94,7 +97,8 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                             if(tmp_key == current->records[0].key) {
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
-                                    values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
                                     off++;
                                     if(off >= size) {
                                         return ;
@@ -473,7 +477,16 @@ void btree::btree_search_range
   }
 }
 
-void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size) {
+void btree::btreeSearchRange(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size) {
+    if (flag) {
+        subtree* sub_root = (subtree*)findSubtreeRoot(min);
+        sub_root->subtree_search_range(min, max, results, size);
+    } else {
+        btree_search_range(min, max, results, size);
+    }
+}
+
+void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size) {
     bpnode *p = (bpnode *)root;
 
     while(p) {
@@ -483,7 +496,7 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std
         }
         else {
         // Found a leaf
-            p->linear_search_range(min, max, values, size);
+            p->linear_search_range(min, max, results, size);
 
         break;
         }

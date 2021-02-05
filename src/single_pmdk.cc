@@ -572,6 +572,122 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
   }
 }
 
+void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size, uint64_t base) {
+  int i, off = 0;
+  uint8_t previous_switch_counter;
+  nvmpage *current = this;
+
+  while (current) {
+    int old_off = off;
+    do {
+      previous_switch_counter = current->hdr.switch_counter;
+      off = old_off;
+
+      entry_key_t tmp_key;
+      char *tmp_ptr;
+
+      if (IS_FORWARD(previous_switch_counter)) {
+        if ((tmp_key = current->records[0].key) > min) {
+          if (tmp_key < max) {
+            if ((tmp_ptr = current->records[0].ptr) != NULL) {
+              if (tmp_key == current->records[0].key) {
+                if (tmp_ptr) {
+                  //buf[off++] = (unsigned long)tmp_ptr;
+                  // values[off] = tmp_ptr;
+                  result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                  off++;
+                  if(off >= size) {
+                    return ;
+                  }
+                }
+              }
+            }
+          } else {
+            size = off;
+            return;
+          }
+        }
+
+        for (i = 1; current->records[i].ptr != NULL; ++i) {
+          if ((tmp_key = current->records[i].key) > min) {
+            if (tmp_key < max) {
+              if ((tmp_ptr = current->records[i].ptr) !=
+                  current->records[i - 1].ptr) {
+                if (tmp_key == current->records[i].key) {
+                  if (tmp_ptr) {
+                    //buf[off++] = (unsigned long)tmp_ptr;
+                    // values[off] = tmp_ptr;
+                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                    off++;
+                    if(off >= size) {
+                      return ;
+                    }
+                  }
+                }
+              }
+            } else {
+              size = off;
+              return;
+            }
+          }
+        }
+      } else {
+        for (i = current->count() - 1; i > 0; --i) {
+          if ((tmp_key = current->records[i].key) > min) {
+            if (tmp_key < max) {
+              if ((tmp_ptr = current->records[i].ptr) !=
+                  current->records[i - 1].ptr) {
+                if (tmp_key == current->records[i].key) {
+                  if (tmp_ptr) {
+                    //buf[off++] = (unsigned long)tmp_ptr;
+                    // values[off] = tmp_ptr;
+                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                    off++;
+                    if(off >= size) {
+                        return ;
+                    }
+                  }
+                }
+              }
+            } else {
+              size = off;
+              return;
+            }
+          }
+        }
+
+        if ((tmp_key = current->records[0].key) > min) {
+          if (tmp_key < max) {
+            if ((tmp_ptr = current->records[0].ptr) != NULL) {
+              if (tmp_key == current->records[0].key) {
+                if (tmp_ptr) {
+                  //buf[off++] = (unsigned long)tmp_ptr;
+                  // values[off] = tmp_ptr;
+                  result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                  off++;
+                  if(off >= size) {
+                      return ;
+                  }
+                }
+              }
+            }
+          } else {
+            size = off;
+            return;
+          }
+        }
+      }
+    } while (previous_switch_counter != current->hdr.switch_counter);
+
+    // todo
+    if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
+        current = current->hdr.sibling_ptr;
+      } else {
+        current = (nvmpage *)((uint64_t)current->hdr.sibling_ptr + base);
+      }
+  }
+}
+
 void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base) {
   int i, off = 0;
   uint8_t previous_switch_counter;
@@ -731,7 +847,7 @@ void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
       p = to_nvmpage(p->linear_search(key));
     }
 
-    if (!p->update_key(key, right)) { // store
+    if (!p->update_key(pop, key, right)) { // store
       // printf("no such key\n");
     }
   }
@@ -1085,6 +1201,24 @@ void subtree::btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, 
     }
 }
 
+
+void subtree::subtree_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size) {
+  if (flag) {
+    bpnode* p = dram_ptr;
+    while(p->hdr.leftmost_ptr != NULL) {
+      p = (bpnode *)p->linear_search(min);
+    }
+
+    p->linear_search_range(min, max, results, size, (uint64_t)pop);
+  } else {
+    nvmpage* p = get_nvmroot_ptr();
+    while (p->hdr.leftmost_ptr != NULL) {
+      p = to_nvmpage(p->linear_search(min));
+    }
+
+    p->linear_search_range(min, max, results, size, (uint64_t)pop);
+  }
+}
 
 void subtree::subtree_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
   if (flag) {

@@ -71,7 +71,8 @@ class btree{
     char *btreeSearch(entry_key_t);
     char *btree_search(entry_key_t);
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
-    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
+    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size); 
+    void btreeSearchRange(entry_key_t, entry_key_t, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size); 
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
     void btreeSearchRange(entry_key_t , entry_key_t , void **values, int &size);
     void printAll();
@@ -172,7 +173,8 @@ class bpnode{
       return hdr.level;
     }
 
-    void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size, uint64_t base = 0);
+    //void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size, uint64_t base = 0);
+    void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size, uint64_t base = 0);
     void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base = 0);
 
 
