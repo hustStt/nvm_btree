@@ -225,7 +225,7 @@ public:
 
   // Search keys with linear search
   void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base = 0);
-  void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size, uint64_t base)
+  void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size, uint64_t base);
 
   void linear_search_range(entry_key_t min, entry_key_t max,
                             unsigned long *buf, uint64_t base = 0) {

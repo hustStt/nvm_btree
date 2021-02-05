@@ -27,7 +27,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
                                     // values.push_back(string(tmp_ptr, NVM_ValueSize));
-                                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                                    results.push_back({tmp_key, (uint64_t)tmp_ptr});
                                     off++;
                                     if(off >= size) {
                                         return ;
@@ -50,7 +50,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
                                         // values.push_back(string(tmp_ptr, NVM_ValueSize));
-                                        result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                                        results.push_back({tmp_key, (uint64_t)tmp_ptr});
                                         off++;
                                         if(off >= size) {
                                             return ;
@@ -75,7 +75,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                     if(tmp_ptr) {
                                         // buf[off++] = (unsigned long)tmp_ptr;
                                         // values.push_back(string(tmp_ptr, NVM_ValueSize));
-                                        result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                                        results.push_back({tmp_key, (uint64_t)tmp_ptr});
                                         off++;
                                         if(off >= size) {
                                             return ;
@@ -98,7 +98,7 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
                                 if(tmp_ptr) {
                                     // buf[off++] = (unsigned long)tmp_ptr;
                                     // values.push_back(string(tmp_ptr, NVM_ValueSize));
-                                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                                    results.push_back({tmp_key, (uint64_t)tmp_ptr});
                                     off++;
                                     if(off >= size) {
                                         return ;

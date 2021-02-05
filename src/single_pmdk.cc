@@ -594,7 +594,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, std::vector<
                 if (tmp_ptr) {
                   //buf[off++] = (unsigned long)tmp_ptr;
                   // values[off] = tmp_ptr;
-                  result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                  results.push_back({tmp_key, (uint64_t)tmp_ptr});
                   off++;
                   if(off >= size) {
                     return ;
@@ -617,7 +617,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, std::vector<
                   if (tmp_ptr) {
                     //buf[off++] = (unsigned long)tmp_ptr;
                     // values[off] = tmp_ptr;
-                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                    results.push_back({tmp_key, (uint64_t)tmp_ptr});
                     off++;
                     if(off >= size) {
                       return ;
@@ -641,7 +641,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, std::vector<
                   if (tmp_ptr) {
                     //buf[off++] = (unsigned long)tmp_ptr;
                     // values[off] = tmp_ptr;
-                    result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                    results.push_back({tmp_key, (uint64_t)tmp_ptr});
                     off++;
                     if(off >= size) {
                         return ;
@@ -663,7 +663,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, std::vector<
                 if (tmp_ptr) {
                   //buf[off++] = (unsigned long)tmp_ptr;
                   // values[off] = tmp_ptr;
-                  result.push_back({tmp_key, (uint64_t)tmp_ptr});
+                  results.push_back({tmp_key, (uint64_t)tmp_ptr});
                   off++;
                   if(off >= size) {
                       return ;
