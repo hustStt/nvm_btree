@@ -206,8 +206,7 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
       }
 
       if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
-          sub_root->nvm_ptr = (nvmpage *)new_sibling.oid.off;
-          pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
+          sub_root->setNewNvmRoot((nvmpage *)new_sibling.oid.off);
           // heat
           sub_root->setHeat(m / num_entries * r);
           left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
@@ -245,9 +244,9 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     // subtree root
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) {
       //delete sub_root
-      left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+      left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
+      left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
       left_subtree_sibling->setHeat(l + r);
-      pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
     }
   }
 
@@ -302,6 +301,9 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       //heat
       sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
       left_subtree_sibling->setHeat(m / left_num_entries * l);
+
+      // log标记合并操作
+      left_subtree_sibling->log_alloc->operateTree(parent_key, 4);
 
       bt->btree_insert_internal
         ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -368,9 +370,9 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
 
     // subtree root
       //delete sub_root
-    left_subtree_sibling->sibling_ptr = sub_root->sibling_ptr;
+    left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
+    left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
     left_subtree_sibling->setHeat(l + r);
-    pmemobj_persist(bt->pop, left_subtree_sibling, sizeof(subtree));
   }
 
   return true;
@@ -553,9 +555,9 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
     // Set a new root or insert the split key to the parent
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
       subtree* next = newSubtreeRoot(bt->pop, (nvmpage *)sibling.oid.off, sub_root);
-      sub_root->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+      sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
+      sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
       sub_root->setHeat(sub_root->getHeat() / 2);
-      pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
           hdr.level + 1);
@@ -987,7 +989,7 @@ void subtree::dram_to_nvm(nvmpage **pre) {
   dram_ptr = nullptr;
   flag = false;
   // delete log
-  delete log_alloc;
+  if (log_alloc) delete log_alloc;
   log_alloc = nullptr;
 }
 
@@ -1273,6 +1275,14 @@ nvmpage *subtree::getLastNDataNode() {
   return ret;
 }
 
+void *subtree::getLastLeafNode() {
+  if (flag) {
+    return (void *)getLastDDataNode();
+  } else {
+    return (void *)getLastNDataNode();
+  }
+}
+
 bpnode *subtree::getDramDataNode(char *ptr) {
   bpnode * ret = (bpnode *)ptr;
   while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
@@ -1309,6 +1319,12 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     // 1.遍历subtree 恢复nvm子树
     // 2.恢复索引
     // 3.重新分布子树
+    bt = new btree(pop);
+    subtree *ptr = to_nvmptr(head);
+    while (ptr != nullptr) {
+
+      ptr = to_nvmptr(ptr->sibling_ptr);
+    }
   }
 }
 
@@ -1345,6 +1361,7 @@ void MyBtree::Redistribute() {
 
   while(ptr != nullptr) {
     ptr->lock = false;
+    ptr->heat /= 2;
     ptr = to_nvmptr(ptr->sibling_ptr);
   }
   printf("\nredistribute end all: %d dram: %d \n\n", i, j);
@@ -1360,6 +1377,15 @@ void MyBtree::later() {
 }
 
 void MyBtree::exitBtree() {
+  subtree *ptr = to_nvmptr(head);
+  while (ptr != nullptr) {
+    nvmpage *pre = nullptr;
+    if (ptr->getPrePtr() != nullptr) {
+      pre = (nvmpage *)tmp->getPrePtr()->getLastLeafNode();
+    }
+    ptr->dram_to_nvm(&pre);
+    ptr = to_nvmptr(ptr->sibling_ptr);
+  }
   delete bt;
   switch_ = false;
   pmemobj_close(pop);

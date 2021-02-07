@@ -76,3 +76,16 @@ void LogAllocator::deleteKey(int64_t key) {
     memcpy(logvalue, &key, 8);
     nvm_persist(tmp, 10);
 }
+
+void LogAllocator::operateTree(int64_t key, int type) {
+    char *logvalue = this->AllocateAligned(9);
+    char* tmp = logvalue;
+    // 3分裂
+    // 4合并 dram-->nvm
+    // 5合并 nvm <-- dram
+    // 6合并 dram--dram
+    logvalue[0] = type;
+    logvalue += 1;
+    memcpy(logvalue, &key, 8);
+    nvm_persist(tmp, 10);
+}

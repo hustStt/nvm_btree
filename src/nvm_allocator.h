@@ -131,6 +131,7 @@ public:
     void writeKv(int64_t key, char *value);
     void updateKv(int64_t key, char *value);
     void deleteKey(int64_t key);
+    void operateTree(int64_t key, int type);
 
     void ResetZero() {
         cur_index_ = pmemaddr_;

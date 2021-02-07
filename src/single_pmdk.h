@@ -562,9 +562,11 @@ class MyBtree{
 class subtree {
   private:
     bpnode* dram_ptr;
-    nvmpage* nvm_ptr; // off 
+    nvmpage* nvm_ptr;     // off 
     subtree* sibling_ptr; // off
+    subtree* pre_ptr;     // off
     uint64_t heat;
+    uint64_t kv_nums;
     PMEMobjpool *pop;
     LogAllocator* log_alloc;
     RebalanceTask *rt;
@@ -573,32 +575,55 @@ class subtree {
     bool lock;
     // true:dram   false:nvm
   public:
-    void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
+    void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* pre = nullptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
       this->flag = flag;
       this->dram_ptr = dram_ptr;
       this->nvm_ptr = nullptr;
       this->heat = heat;
+      this->kv_nums = -1;
       this->pop = pop;
-      this->sibling_ptr = next;
       this->log_alloc = getNewLogAllocator();
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
 
+      if (next != nullptr) {
+        this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+      } else {
+        this->sibling_ptr = nullptr;
+      }
+
+      if (pre != nullptr) {
+        this->pre_ptr = (subtree *)pmemobj_oid(pre).off;
+      } else {
+        this->pre_ptr = nullptr;
+      }
       pmemobj_persist(pop, this, sizeof(subtree));
     }
 
-    void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = false) {
+    void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, subtree* pre = nullptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = false) {
       this->flag = flag;
       this->dram_ptr = nullptr;
       this->nvm_ptr = nvm_ptr;
       this->heat = heat;
+      this->kv_nums = -1;
       this->pop = pop;
-      this->sibling_ptr = next;
       this->log_alloc = nullptr;
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
+
+      if (next != nullptr) {
+        this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+      } else {
+        this->sibling_ptr = nullptr;
+      }
+
+      if (pre != nullptr) {
+        this->pre_ptr = (subtree *)pmemobj_oid(pre).off;
+      } else {
+        this->pre_ptr = nullptr;
+      }
 
       pmemobj_persist(pop, this, sizeof(subtree));
     }
@@ -648,7 +673,7 @@ class subtree {
 
     void setHeat(uint64_t heat) {
       this->heat = heat;
-      //persist
+      pmemobj_persist(pop, &this->heat, sizeof(uint64_t));
     }
 
     void increaseHeat() {
@@ -657,7 +682,31 @@ class subtree {
     }
 
     subtree * getSiblingPtr() {
-      return sibling_ptr;
+      return to_nvmpage(sibling_ptr);
+    }
+
+    subtree * getPrePtr() {
+      return to_nvmpage(pre_ptr);
+    }
+
+    void setSiblingPtr(subtree *ptr) {
+      sibling_ptr = ptr;
+      pmemobj_persist(pop, &sibling_ptr, sizeof(subtree *));
+    }
+
+    void setPrePtr(subtree *ptr) {
+      pre_ptr = ptr;
+      pmemobj_persist(pop, &pre_ptr, sizeof(subtree *));
+    }
+
+    void setNewDramRoot(bpnode *ptr) {
+      dram_ptr = ptr;
+      pmemobj_persist(bt->pop, &dram_ptr, sizeof(bpnode *));
+    }
+
+    void setNewNvmRoot(nvmpage *ptr) {
+      nvm_ptr = ptr;
+      pmemobj_persist(bt->pop, &nvm_ptr, sizeof(nvmpage *));
     }
 
     bool isNVMBtree() {
@@ -695,6 +744,7 @@ class subtree {
 
     bpnode *getLastDDataNode();
     nvmpage *getLastNDataNode();
+    void *getLastLeafNode();
     bpnode *getDramDataNode(char *ptr);
     nvmpage *getNvmDataNode(char *ptr);
 
@@ -709,7 +759,7 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree *
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
     if (pre) {
       // 分裂生成
-      D_RW(node)->constructor(pop, subtree_root, pre->getSiblingPtr(), pre->getHeat() / 2);
+      D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() / 2);
     } else {
       // 新生成
       D_RW(node)->constructor(pop, subtree_root);
@@ -725,7 +775,7 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree 
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
     if (pre) {
       // 分裂生成
-      D_RW(node)->constructor(pop, subtree_root, pre->getSiblingPtr(), pre->getHeat() / 2);
+      D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() / 2);
     } else {
       // 新生成
       D_RW(node)->constructor(pop, subtree_root);
