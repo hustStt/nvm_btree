@@ -89,6 +89,9 @@ class btree{
     void to_dram();
     char* DFS(char* root);
     void setFlag(bool flag) {
+      this->flag = flag;
+    }
+    void setFlag2(bool flag) {
       this->flag2 = flag;
     }
 

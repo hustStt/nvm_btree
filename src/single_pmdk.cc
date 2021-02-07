@@ -1344,16 +1344,16 @@ void MyBtree::Recover(PMEMobjpool *pool) {
       return;
     }
     bt = new btree(pop, 5);
-    bt->setFlag(true);
+    bt->setFlag2(true);
     ptr->pop = pool;
     ptr = to_nvmptr(ptr->sibling_ptr);
-    ptr->pop = pool;
     while (ptr != nullptr) {
+      ptr->pop = pool;
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = to_nvmptr(ptr->sibling_ptr);
-      ptr->pop = pool;
     }
     bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
+    bt->setFlag(true);
   }
 }
 
