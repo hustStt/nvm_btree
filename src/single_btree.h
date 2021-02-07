@@ -58,6 +58,7 @@ class btree{
   public:
     PMEMobjpool *pop;
     btree(PMEMobjpool *pool);
+    btree(PMEMobjpool *pool, uint32_t level);
     btree(bpnode *root);
     void setNewRoot(char *);
     void setLeftmostPtr(bpnode *);
@@ -86,6 +87,9 @@ class btree{
     void to_nvm();
     void to_dram();
     char* DFS(char* root);
+    void setFlag(bool flag) {
+      this->flag = flag;
+    }
 
     friend class bpnode;
 };

@@ -248,6 +248,15 @@ btree::btree(PMEMobjpool *pool){
   pop = pool;
 }
 
+btree::btree(PMEMobjpool *pool, uint32_t level){
+  root = (char*)new bpnode(level);
+  print_log(LV_DEBUG, "root is %p, btree is %p", root, this);
+  height = level + 1;
+  flag = false;
+  total_size = 0;
+  pop = pool;
+}
+
 btree::btree(bpnode *root_) {
     if(root_ == nullptr) {
         root = (char*)new bpnode();
