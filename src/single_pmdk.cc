@@ -1381,7 +1381,7 @@ void MyBtree::exitBtree() {
   while (ptr != nullptr) {
     nvmpage *pre = nullptr;
     if (ptr->getPrePtr() != nullptr) {
-      pre = (nvmpage *)tmp->getPrePtr()->getLastLeafNode();
+      pre = (nvmpage *)ptr->getPrePtr()->getLastLeafNode();
     }
     ptr->dram_to_nvm(&pre);
     ptr = to_nvmptr(ptr->sibling_ptr);

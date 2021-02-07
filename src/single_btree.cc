@@ -1162,7 +1162,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       sub_root->setHeat(sub_root->heat / 2);
 
       // log
-      sub_root->log_alloc->operateTree(parent_key, 3);
+      sub_root->log_alloc->operateTree(split_key, 3);
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
           hdr.level + 1);

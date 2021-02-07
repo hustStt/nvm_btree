@@ -682,11 +682,13 @@ class subtree {
     }
 
     subtree * getSiblingPtr() {
-      return to_nvmpage(sibling_ptr);
+      if (sibling_ptr == nullptr) return nullptr;
+      return (subtree *)((uint64_t)sibling_ptr + (uint64_t)pop);
     }
 
     subtree * getPrePtr() {
-      return to_nvmpage(pre_ptr);
+      if (pre_ptr == nullptr) return nullptr;
+      return (subtree *)((uint64_t)pre_ptr + (uint64_t)pop);
     }
 
     void setSiblingPtr(subtree *ptr) {
@@ -701,12 +703,12 @@ class subtree {
 
     void setNewDramRoot(bpnode *ptr) {
       dram_ptr = ptr;
-      pmemobj_persist(bt->pop, &dram_ptr, sizeof(bpnode *));
+      pmemobj_persist(pop, &dram_ptr, sizeof(bpnode *));
     }
 
     void setNewNvmRoot(nvmpage *ptr) {
       nvm_ptr = ptr;
-      pmemobj_persist(bt->pop, &nvm_ptr, sizeof(nvmpage *));
+      pmemobj_persist(pop, &nvm_ptr, sizeof(nvmpage *));
     }
 
     bool isNVMBtree() {
