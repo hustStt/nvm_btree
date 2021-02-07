@@ -885,7 +885,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
       //delete sub_root
       left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
-      left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+      if (left_subtree_sibling->getSiblingPtr()) 
+        left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
 
       uint64_t l = left_subtree_sibling->getHeat();
       uint64_t r = sub_root->getHeat();
@@ -1010,7 +1011,8 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
     // subtree root
     //delete sub_root
     left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
-    left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+    if (left_subtree_sibling->getSiblingPtr()) 
+      left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
     left_subtree_sibling->setHeat(l + r);
   }
 
@@ -1157,7 +1159,8 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
       subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root);
-      sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
+      if (sub_root->getSiblingPtr()) 
+        sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
       sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
       sub_root->setHeat(sub_root->heat / 2);
 
