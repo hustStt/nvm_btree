@@ -1338,14 +1338,22 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     // 1.遍历subtree 恢复nvm子树
     // 2.恢复索引
     // 3.重新分布子树
-    bt = new btree(pop, 5);
     subtree *ptr = to_nvmptr(head);
+    if (ptr == nullptr) {
+      bt = new btree(pop);
+      return;
+    }
+    bt = new btree(pop, 5);
+    bt->setFlag(true);
+    ptr->pop = pool;
+    ptr = to_nvmptr(ptr->sibling_ptr);
+    ptr->pop = pool;
     while (ptr != nullptr) {
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = to_nvmptr(ptr->sibling_ptr);
+      ptr->pop = pool;
     }
     bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
-    bt->setFlag(true);
   }
 }
 

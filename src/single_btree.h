@@ -51,9 +51,10 @@ class btree{
     int height;
     char* root;
     nvmpage* nvm_root;
-    bool flag;
     uint32_t tar_level;
     uint64_t total_size;
+    bool flag;
+    bool flag2;
 
   public:
     PMEMobjpool *pop;
@@ -88,7 +89,7 @@ class btree{
     void to_dram();
     char* DFS(char* root);
     void setFlag(bool flag) {
-      this->flag = flag;
+      this->flag2 = flag;
     }
 
     friend class bpnode;
