@@ -60,6 +60,7 @@ class btree{
     btree(PMEMobjpool *pool);
     btree(bpnode *root);
     void setNewRoot(char *);
+    void setLeftmostPtr(bpnode *);
     void btreeInsert(entry_key_t, char*);
     void btreeUpdate(entry_key_t, char*);
     void btree_insert(entry_key_t, char*);

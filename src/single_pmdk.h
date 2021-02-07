@@ -749,6 +749,7 @@ class subtree {
     void *getLastLeafNode();
     bpnode *getDramDataNode(char *ptr);
     nvmpage *getNvmDataNode(char *ptr);
+    entry_key_t getFirstKey();
 
     friend class bpnode;
     friend class nvmpage;

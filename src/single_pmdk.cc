@@ -1302,6 +1302,22 @@ nvmpage *subtree::getNvmDataNode(char *ptr) {
   return ret;
 }
 
+entry_key_t subtree::getFirstKey() {
+  if (flag) {
+    bpnode * ret = (bpnode *)dram_ptr;
+    while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+      ret = ret->hdr.leftmost_ptr;
+    }
+    return ret->records[0].key;
+  } else {
+    nvmpage * ret = get_nvmroot_ptr();
+    while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+      ret = to_nvmpage(ret->hdr.leftmost_ptr);
+    }
+    return ret->records[0].key;
+  }
+}
+
 void MyBtree::constructor(PMEMobjpool * pool) {
   pop = pool;
   head = nullptr;
@@ -1325,9 +1341,10 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     bt = new btree(pop);
     subtree *ptr = to_nvmptr(head);
     while (ptr != nullptr) {
-
+      bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = to_nvmptr(ptr->sibling_ptr);
     }
+    bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
   }
 }
 
@@ -1380,6 +1397,7 @@ void MyBtree::later() {
 }
 
 void MyBtree::exitBtree() {
+  switch_ = false;
   subtree *ptr = to_nvmptr(head);
   while (ptr != nullptr) {
     nvmpage *pre = nullptr;
@@ -1390,6 +1408,5 @@ void MyBtree::exitBtree() {
     ptr = to_nvmptr(ptr->sibling_ptr);
   }
   delete bt;
-  switch_ = false;
   pmemobj_close(pop);
 }

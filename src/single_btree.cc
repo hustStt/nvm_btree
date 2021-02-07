@@ -266,6 +266,14 @@ void btree::setNewRoot(char *new_root) {
   ++height;
 }
 
+void btree::setLeftmostPtr(bpnode *ptr) {
+  bpnode * ret = (bpnode *)root;
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = ret->hdr.leftmost_ptr;
+  }
+  ret->hdr.leftmost_ptr = ptr;
+}
+
 char *btree::findSubtreeRoot(entry_key_t key) {
     if (!flag)  return nullptr;
 
