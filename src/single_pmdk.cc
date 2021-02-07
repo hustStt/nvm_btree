@@ -1338,6 +1338,9 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     // 1.遍历subtree 恢复nvm子树
     // 2.恢复索引
     // 3.重新分布子树
+    uint64_t start_time, end_time;
+    start_time = get_now_micros();
+
     subtree *ptr = to_nvmptr(head);
     if (ptr == nullptr) {
       bt = new btree(pop);
@@ -1354,6 +1357,11 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     }
     bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
     bt->setFlag(true);
+    bt->CalcuRootLevel();
+    this->later();
+
+    end_time = get_now_micros();
+    printf("recover btree time: %f s\n", (end_time - start_time) * 1e-6);
   }
 }
 
