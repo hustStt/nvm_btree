@@ -102,11 +102,11 @@ class header{
   private:
     bpnode* leftmost_ptr;         // 8 bytes
     bpnode* sibling_ptr;          // 8 bytes
-    uint32_t level;             // 4 bytes
-    uint8_t switch_counter;     // 1 bytes
-    uint8_t status;         // 1 bytes  0   1 delete   2 zang
-    int16_t last_index;         // 2 bytes
-    uint64_t nvmpage_off;       // 8 bytes
+    uint32_t level;               // 4 bytes
+    uint8_t switch_counter;       // 1 bytes
+    uint8_t status;               // 1 bytes  0:脏节点  1:已删除   2:需要遍历的未修改节点  3:未修改
+    int16_t last_index;           // 2 bytes
+    uint64_t nvmpage_off;         // 8 bytes
 
     friend class bpnode;
     friend class nvmpage;

@@ -813,6 +813,7 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
+      if(p->hdr.status == 3) p->hdr.status = 2;
       p = (bpnode*)p->linear_search(key);
     }
 
@@ -839,6 +840,7 @@ void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
+      if(p->hdr.status == 3) p->hdr.status = 2;
       p = (bpnode*)p->linear_search(key);
     }
 
@@ -865,6 +867,7 @@ void subtree::subtree_delete(btree* root, entry_key_t key) {
     bpnode* p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL){
+      if(p->hdr.status == 3) p->hdr.status = 2;
       p = (bpnode*) p->linear_search(key);
     }
 
@@ -950,7 +953,7 @@ char* subtree::DFS(nvmpage* root, bpnode **pre) {
     
     int count = 0;
     
-    node->hdr.status = 2; //已经同步 不是脏节点
+    node->hdr.status = 3; //已经同步 不是脏节点
     node->hdr.last_index = nvm_node_ptr->hdr.last_index;
     node->hdr.level = nvm_node_ptr->hdr.level;
     node->hdr.switch_counter = nvm_node_ptr->hdr.switch_counter;
@@ -1020,22 +1023,22 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     char * ret;
     bool isflush = true;
 
-    if (node->hdr.status == 2 && node->hdr.nvmpage_off != -1) {
-      if (node->hdr.leftmost_ptr == nullptr) {
-        // 叶子节点 无修改直接返回
-        if (node->hdr.level != 0) {
-          printf("level error %d\n",node->hdr.level);
-        }
-        return (char *)node->hdr.nvmpage_off;
-      } else {
-        isflush = false;
-      }
+    if (node->hdr.status == 3 && node->hdr.nvmpage_off != -1) {
+      // 干净节点 直接返回
+      printf("internal node clear node level %d\n",node->hdr.level);
+      // pre
+      return (char *)node->hdr.nvmpage_off;  
+    } else if (node->hdr.status == 2 && node->hdr.nvmpage_off != -1) {
+      // 干净节点 访问过的路径
+      isflush = false;
     } else if (node->hdr.status == 1) {
       // 已删除
       printf("error : this node is deleted.\n");
+      return nullptr;
     } else if (node->hdr.status == 0){
       // 脏节点
     }
+    node->hdr.status = 3;
 
     if (node->hdr.nvmpage_off != -1) { // 复用nvmpage
       // sibling
@@ -1045,19 +1048,16 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
       POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
       D_RW(nvm_node)->constructor();
       nvm_node_ptr = D_RW(nvm_node);
-      node->hdr.status = 2;
       node->hdr.nvmpage_off = nvm_node.oid.off;
       ret = (char *)nvm_node.oid.off;
     }
     
     int count = 0;
     if (isflush) {
-      //nvm_node_ptr->hdr.is_deleted = node->hdr.is_deleted;
       nvm_node_ptr->hdr.last_index = node->hdr.last_index;
       nvm_node_ptr->hdr.level = node->hdr.level;
       nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
       nvm_node_ptr->hdr.sibling_ptr = (nvmpage *)node->hdr.sibling_ptr;
-      //sibling 
       
       nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
       while(node->records[count].ptr != NULL) {
@@ -1358,6 +1358,7 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
     bt->setFlag(true);
     bt->CalcuRootLevel();
+    switch_ = true;
     this->later();
 
     end_time = get_now_micros();
