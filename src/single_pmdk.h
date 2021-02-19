@@ -570,10 +570,10 @@ class subtree {
     PMEMobjpool *pop;
     LogAllocator* log_alloc;
     RebalanceTask *rt;
-    bool flag;
+    bool flag; // true:dram   false:nvm
     bool change;
     bool lock;
-    // true:dram   false:nvm
+    bool isSplit;
   public:
     void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* pre = nullptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
       this->flag = flag;
@@ -586,6 +586,7 @@ class subtree {
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
+      this->isSplit = false;
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
@@ -612,6 +613,7 @@ class subtree {
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
+      this->isSplit = false;
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
