@@ -1018,6 +1018,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
         return nullptr;
     }
     bpnode* node = (bpnode *)root;
+    memcpy(tmp_ptr, node, sizeof(bpnode));
     nvmpage* nvm_node_ptr;
     TOID(nvmpage) nvm_node;
     char * ret;
@@ -1044,43 +1045,29 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
       // sibling
       nvm_node_ptr = to_nvmpage((char *)node->hdr.nvmpage_off);
       ret = (char *)node->hdr.nvmpage_off;
-    } else { // 新节点(未变形) 重新申请nvmpage
+    } else { // 新节点 重新申请nvmpage
       POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
       D_RW(nvm_node)->constructor();
       nvm_node_ptr = D_RW(nvm_node);
       node->hdr.nvmpage_off = nvm_node.oid.off;
       ret = (char *)nvm_node.oid.off;
-      printf("error : this node has no nvmpage off.\n");
-      return nullptr;
     }
     
+    // 形成新的bpnode
     int count = 0;
+    tmp_ptr->hdr.leftmost_ptr = (bpnode *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
+    while(node->records[count].ptr != NULL) {
+        if (node->hdr.leftmost_ptr != nullptr) {
+            tmp_ptr->records[count].ptr = DFS(node->records[count].ptr, pre, ifdel);
+        } 
+        ++count;
+    }
+    tmp_ptr->records[count].ptr = nullptr;
+
+    // 整块刷下去
     if (isflush) {
-      nvm_node_ptr->hdr.last_index = node->hdr.last_index;
-      nvm_node_ptr->hdr.level = node->hdr.level;
-      nvm_node_ptr->hdr.switch_counter = node->hdr.switch_counter;
-      nvm_node_ptr->hdr.sibling_ptr = (nvmpage *)node->hdr.sibling_ptr;
-      
-      nvm_node_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
-      while(node->records[count].ptr != NULL) {
-          nvm_node_ptr->records[count].key = node->records[count].key;
-          if (node->hdr.leftmost_ptr != nullptr) {
-              nvm_node_ptr->records[count].ptr = DFS(node->records[count].ptr, pre, ifdel);
-          } else {
-              nvm_node_ptr->records[count].ptr = node->records[count].ptr;
-          }
-          ++count;
-      }
-      nvm_node_ptr->records[count].ptr = nullptr;
+      memcpy(nvm_node_ptr, tmp_ptr, sizeof(nvmpage));
       pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
-    } else {
-      DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
-      while(node->records[count].ptr != NULL) {
-          if (node->hdr.leftmost_ptr != nullptr) {
-              DFS(node->records[count].ptr, pre, ifdel);
-          } 
-          ++count;
-      }
     }
 
     if (node->hdr.leftmost_ptr == nullptr) {
