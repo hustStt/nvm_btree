@@ -1179,13 +1179,6 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       ret = sibling;
     }
 
-    // create a new nvmpage
-
-    TOID(nvmpage) nvm_node;
-    POBJ_NEW(bt->pop, &nvm_node, nvmpage, NULL, NULL);
-    D_RW(nvm_node)->constructor();
-    sibling->hdr.nvmpage_off = nvm_node.oid.off;
-
     // Set a new root or insert the split key to the parent
     
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root

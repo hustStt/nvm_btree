@@ -1019,7 +1019,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     }
     bpnode* node = (bpnode *)root;
     nvmpage* nvm_node_ptr;
-    //TOID(nvmpage) nvm_node;
+    TOID(nvmpage) nvm_node;
     char * ret;
     bool isflush = true;
 
@@ -1044,12 +1044,12 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
       // sibling
       nvm_node_ptr = to_nvmpage((char *)node->hdr.nvmpage_off);
       ret = (char *)node->hdr.nvmpage_off;
-    } else { // 新节点 重新申请nvmpage
-      // POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
-      // D_RW(nvm_node)->constructor();
-      // nvm_node_ptr = D_RW(nvm_node);
-      // node->hdr.nvmpage_off = nvm_node.oid.off;
-      // ret = (char *)nvm_node.oid.off;
+    } else { // 新节点(未变形) 重新申请nvmpage
+      POBJ_NEW(pop, &nvm_node, nvmpage, NULL, NULL);
+      D_RW(nvm_node)->constructor();
+      nvm_node_ptr = D_RW(nvm_node);
+      node->hdr.nvmpage_off = nvm_node.oid.off;
+      ret = (char *)nvm_node.oid.off;
       printf("error : this node has no nvmpage off.\n");
       return nullptr;
     }
