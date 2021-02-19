@@ -562,7 +562,7 @@ class MyBtree{
 class subtree {
   private:
     bpnode* dram_ptr;
-    bpnode* tmp_ptr;
+    nvmpage* tmp_ptr;
     nvmpage* nvm_ptr;     // off 
     subtree* sibling_ptr; // off
     subtree* pre_ptr;     // off
@@ -588,7 +588,7 @@ class subtree {
       this->change = flag;
       this->lock = false;
       this->isSplit = false;
-      this->tmp_ptr = new bpnode();
+      this->tmp_ptr = new nvmpage();
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
@@ -616,7 +616,7 @@ class subtree {
       this->change = flag;
       this->lock = false;
       this->isSplit = false;
-      this->tmp_ptr = new bpnode();
+      this->tmp_ptr = new nvmpage();
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;

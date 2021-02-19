@@ -1055,7 +1055,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     
     // 形成新的bpnode
     int count = 0;
-    tmp_ptr->hdr.leftmost_ptr = (bpnode *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
+    tmp_ptr->hdr.leftmost_ptr = (nvmpage *)DFS((char *)node->hdr.leftmost_ptr, pre, ifdel);
     while(node->records[count].ptr != NULL) {
         if (node->hdr.leftmost_ptr != nullptr) {
             tmp_ptr->records[count].ptr = DFS(node->records[count].ptr, pre, ifdel);
