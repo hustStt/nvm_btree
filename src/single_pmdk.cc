@@ -1018,6 +1018,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
         return nullptr;
     }
     bpnode* node = (bpnode *)root;
+    nvmpage *tmp_ptr = new nvmpage();
     memcpy(tmp_ptr, node, sizeof(bpnode));
     nvmpage* nvm_node_ptr;
     TOID(nvmpage) nvm_node;
@@ -1026,7 +1027,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
 
     if (node->hdr.status == 3 && node->hdr.nvmpage_off != -1) {
       // 干净节点 直接返回
-      printf("internal node clear node level %d\n",node->hdr.level);
+      //printf("internal node clear node level %d\n",node->hdr.level);
       // pre
       return (char *)node->hdr.nvmpage_off;  
     } else if (node->hdr.status == 2 && node->hdr.nvmpage_off != -1) {
@@ -1079,6 +1080,7 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
     }
 
     if (ifdel) delete node;
+    delete tmp_ptr;
     return ret;
 }
 
