@@ -801,8 +801,11 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         // log
         sub_root->log_alloc->operateTree(parent_key, 6);
         left_subtree_sibling->log_alloc->operateTree(parent_key, 6);
-        sub_root->isSplit = true;
-        left_subtree_sibling->isSplit = true;
+        // sync right left
+        nvmpage *pre = nullptr;
+        sub_root->sync_subtree(&pre);
+        pre = nullptr;
+        left_subtree_sibling->sync_subtree(&pre);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
         sub_root->btree_insert_internal
@@ -874,8 +877,11 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         // log
         sub_root->log_alloc->operateTree(parent_key, 6);
         left_subtree_sibling->log_alloc->operateTree(parent_key, 6);
-        sub_root->isSplit = true;
-        left_subtree_sibling->isSplit = true;
+        // sync left right
+        nvmpage *pre = nullptr;
+        left_subtree_sibling->sync_subtree(&pre);
+        pre = nullptr;
+        sub_root->sync_subtree(&pre);
 
         bt->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -909,12 +915,17 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
       //delete sub_root
       left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
+      left_subtree_sibling->tmp_ptr = (subtree *)pmemobj_oid(sub_root).off;
       if (left_subtree_sibling->getSiblingPtr()) 
         left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
 
       uint64_t l = left_subtree_sibling->getHeat();
       uint64_t r = sub_root->getHeat();
       left_subtree_sibling->setHeat(l + r);
+
+      // sync
+      nvmpage *pre = nullptr;
+      left_subtree_sibling->sync_subtree(&pre);
     }
   }
 
@@ -1139,7 +1150,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
     // migrate half of keys into the sibling
     int sibling_cnt = 0;
-    if(hdr.leftmost_ptr == NULL){ // leaf node
+    if(hdr.leftmost_ptr == NULL && !bt->flag2){ // leaf node
       for(int i=m; i<num_entries; ++i){ 
         sibling->insert_key(records[i].key, records[i].ptr, &sibling_cnt);
       }
@@ -1190,8 +1201,10 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
       // log
       sub_root->log_alloc->operateTree(split_key, 3);
-      sub_root->isSplit = true;
-      next->isSplit = true;
+      nvmpage *pre = nullptr;
+      next->sync_subtree(&pre);
+      pre = nullptr;
+      sub_root->sync_subtree(&pre);
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
           hdr.level + 1);

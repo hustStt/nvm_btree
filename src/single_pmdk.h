@@ -565,6 +565,7 @@ class subtree {
     nvmpage* nvm_ptr;     // off 
     subtree* sibling_ptr; // off
     subtree* pre_ptr;     // off
+    subtree* tmp_ptr;     // off
     uint64_t heat;
     uint64_t kv_nums;
     PMEMobjpool *pop;
@@ -573,7 +574,6 @@ class subtree {
     bool flag; // true:dram   false:nvm
     bool change;
     bool lock;
-    bool isSplit;
   public:
     void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* pre = nullptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
       this->flag = flag;
@@ -586,7 +586,6 @@ class subtree {
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
-      this->isSplit = false;
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
@@ -613,7 +612,6 @@ class subtree {
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
-      this->isSplit = false;
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;

@@ -1348,6 +1348,7 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     }
     bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
     bt->setFlag(true);
+    bt->setFlag2(false);
     bt->CalcuRootLevel();
     switch_ = true;
     this->later();
