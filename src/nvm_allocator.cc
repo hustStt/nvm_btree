@@ -46,46 +46,64 @@ void AllocatorExit() {
     }
 }
 
-void LogAllocator::writeKv(int64_t key, char *value) {
-    char* logvalue = this->AllocateAligned(17);
+void LogAllocator::writeKv(uint64_t off, int64_t key, char *value) {
+    char* logvalue = this->AllocateAligned(26);
     char* tmp = logvalue;
-    logvalue[0] = 1;
-    logvalue += 1;
+    uint16_t type = 1;
+    memcpy(logvalue, &type, 2);
+    logvalue += 2;
+    memcpy(logvalue, &off, 8);
+    logvalue += 8;
     memcpy(logvalue, &key, 8);
     logvalue += 8;
     memcpy(logvalue, &value, 8);
-    nvm_persist(tmp, 18);
+    nvm_persist(tmp, 26);
 }
 
-void LogAllocator::updateKv(int64_t key, char *value) {
-    char* logvalue = this->AllocateAligned(17);
+void LogAllocator::updateKv(uint64_t off, int64_t key, char *value) {
+    char* logvalue = this->AllocateAligned(26);
     char* tmp = logvalue;
-    logvalue[0] = 2;
-    logvalue += 1;
+    uint16_t type = 2;
+    memcpy(logvalue, &type, 2);
+    logvalue += 2;
+    memcpy(logvalue, &off, 8);
+    logvalue += 8;
     memcpy(logvalue, &key, 8);
     logvalue += 8;
     memcpy(logvalue, &value, 8);
+    nvm_persist(tmp, 26);
+}
+
+void LogAllocator::deleteKey(uint64_t off, int64_t key) {
+    char *logvalue = this->AllocateAligned(18);
+    char* tmp = logvalue;
+    uint16_t type = 0;
+    memcpy(logvalue, &type, 2);
+    logvalue += 2;
+    memcpy(logvalue, &off, 8);
+    logvalue += 8;
+    memcpy(logvalue, &key, 8);
     nvm_persist(tmp, 18);
 }
 
-void LogAllocator::deleteKey(int64_t key) {
-    char *logvalue = this->AllocateAligned(9);
+void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, uint16_t type) {
+    char *logvalue = this->AllocateAligned(26);
     char* tmp = logvalue;
-    logvalue[0] = 0;
-    logvalue += 1;
+    // 3分裂  子树内 
+    // 4分裂  子树间   分裂后下刷前出问题恢复
+    // 5合并  子树内 dram --> dram
+    // 6合并  子树内 dram <-- dram
+    // 7合并  子树间 dram --> dram  合并后下刷前出问题恢复
+    // 8合并  子树间 dram <-- dram
+    // 9合并  子树间 dram <-- dram 完全合并
+    // 10合并 子树间 nvm <-- dram 转换成update    dram <-- nvm 转换成insert
+    // 11合并 子树间 dram --> nvm 转换成update    nvm --> dram 转换成insert
+    memcpy(logvalue, &type, 2);
+    logvalue += 2;
+    memcpy(logvalue, &src, 8);
+    logvalue += 8;
+    memcpy(logvalue, &dst, 8);
+    logvalue += 8;
     memcpy(logvalue, &key, 8);
-    nvm_persist(tmp, 10);
-}
-
-void LogAllocator::operateTree(int64_t key, int type) {
-    char *logvalue = this->AllocateAligned(9);
-    char* tmp = logvalue;
-    // 3分裂
-    // 4合并 dram-->nvm
-    // 5合并 nvm <-- dram
-    // 6合并 dram--dram
-    logvalue[0] = type;
-    logvalue += 1;
-    memcpy(logvalue, &key, 8);
-    nvm_persist(tmp, 10);
+    nvm_persist(tmp, 26);
 }

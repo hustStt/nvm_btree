@@ -695,6 +695,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     }
 
     // Remove the key from this node
+    sub_root->log_alloc->deleteKey(hdr.nvmpage_off, key);
     bool ret = remove_key(key);
 
     if(!should_rebalance) {
@@ -799,8 +800,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
         left_subtree_sibling->setHeat(m / left_num_entries * l);
         // log
-        sub_root->log_alloc->operateTree(parent_key, 6);
-        left_subtree_sibling->log_alloc->operateTree(parent_key, 6);
+        sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 7);
+        left_subtree_sibling->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 7);
         // sync right left
         nvmpage *pre = nullptr;
         sub_root->sync_subtree(&pre);
@@ -808,6 +809,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_subtree_sibling->sync_subtree(&pre);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+        sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 5);
         sub_root->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)this, hdr.level + 1, bt);
       } else if(left_sibling == ((bpnode *)bt->root)) {
@@ -875,8 +877,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
 
         // log
-        sub_root->log_alloc->operateTree(parent_key, 6);
-        left_subtree_sibling->log_alloc->operateTree(parent_key, 6);
+        sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 8);
+        left_subtree_sibling->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 8);
         // sync left right
         nvmpage *pre = nullptr;
         left_subtree_sibling->sync_subtree(&pre);
@@ -887,6 +889,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+        sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 6);
         sub_root->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)new_sibling, hdr.level + 1, bt);
       } else if (left_sibling == ((bpnode *)bt->root)) {
@@ -923,6 +926,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       uint64_t r = sub_root->getHeat();
       left_subtree_sibling->setHeat(l + r);
 
+      // log
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, parent_key, 9);
       // sync
       nvmpage *pre = nullptr;
       left_subtree_sibling->sync_subtree(&pre);
@@ -961,12 +966,15 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
             ((char *)left_sibling, deleted_key_from_parent, (char *)sub_root, hdr.level + 1);
           return true;
         }
+        sub_root->log_alloc->writeKv(hdr.nvmpage_off, deleted_key_from_parent, (char*)hdr.leftmost_ptr);
         insert_key(deleted_key_from_parent, (char*)hdr.leftmost_ptr,
             &num_entries); 
 
+        sub_root->log_alloc->writeKv(hdr.nvmpage_off, 0, left_sibling->records[m].ptr);
         bpnode * pre = (bpnode *)left_subtree_sibling->getNvmDataNode(left_sibling->records[m-1].ptr);// todo
         hdr.leftmost_ptr = (bpnode*)sub_root->DFS((nvmpage *)left_sibling->records[m].ptr, &pre); 
         for(int i=m + 1; i < left_num_entries; i++){
+          sub_root->log_alloc->writeKv(hdr.nvmpage_off, left_sibling->records[i].key, left_sibling->records[i].ptr);
           insert_key
             (left_sibling->records[i].key, sub_root->DFS((nvmpage *)left_sibling->records[i].ptr, &pre), &num_entries); 
         }
@@ -1025,7 +1033,7 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
       left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
 
       // log标记合并操作
-      sub_root->log_alloc->operateTree(parent_key, 5);
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, -1, num_dist_entries - 1, 10);
 
       bt->btree_insert_internal
         ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -1065,9 +1073,12 @@ inline bool bpnode::update_key(entry_key_t key, char* ptr) {
   while(left <= right) { // 注意
       int mid = (right + left) / 2;
       if(records[mid].key == key) {
-        records[mid].ptr = ptr;
-        hdr.status = 0;
-        return true; 
+        if ((mid == 0 && records[mid].ptr != nullptr) || (mid > 0 && records[mid-1].ptr != records[mid].ptr)) {
+          records[mid].ptr = ptr;
+          hdr.status = 0;
+          return true; 
+        } 
+        return false;
       } else if (records[mid].key < key) {
           left = mid + 1; // 注意
       } else if (records[mid].key > key) {
@@ -1135,9 +1146,15 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
   // }
 
   register int num_entries = count();
+  // ptr
+  char *target = right;
+  if (!(hdr.leftmost_ptr == NULL && !bt->flag2)) {
+    target = (char *)((bpnode *)right)->hdr.nvmpage_off;
+  }
 
   // FAST
   if(num_entries < cardinality - 1) {
+    sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
     insert_key(key, right, &num_entries);
     return this;
   }
@@ -1190,6 +1207,14 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       ret = sibling;
     }
 
+    // create a new nvmpage
+    if (sub_root != NULL && hdr.level <= sub_root->dram_ptr->hdr.level) {
+      TOID(nvmpage) nvm_node;
+      POBJ_NEW(bt->pop, &nvm_node, nvmpage, NULL, NULL);
+      D_RW(nvm_node)->constructor();
+      sibling->hdr.nvmpage_off = nvm_node.oid.off;
+    }
+
     // Set a new root or insert the split key to the parent
     
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
@@ -1200,7 +1225,12 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       sub_root->setHeat(sub_root->heat / 2);
 
       // log
-      sub_root->log_alloc->operateTree(split_key, 3);
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 4);
+      if (key < split_key) {
+        sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+      } else {
+        next->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
+      }
       nvmpage *pre = nullptr;
       next->sync_subtree(&pre);
       pre = nullptr;
@@ -1210,6 +1240,13 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
           hdr.level + 1);
     }
     else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
+      // log
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 3);
+      if (key < split_key) {
+        sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+      } else {
+        sub_root->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
+      }
       sub_root->btree_insert_internal(NULL, split_key, (char *)sibling, 
           hdr.level + 1, bt);
     } else if (bt->root == (char *)this) { // only one node can update the root ptr

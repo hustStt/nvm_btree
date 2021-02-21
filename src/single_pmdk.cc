@@ -304,7 +304,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       left_subtree_sibling->setHeat(m / left_num_entries * l);
 
       // log标记合并操作
-      left_subtree_sibling->log_alloc->operateTree(parent_key, 4);
+      left_subtree_sibling->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, -1, m, 11);
 
       bt->btree_insert_internal
         ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -321,11 +321,13 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       int new_sibling_cnt = 0;
 
       {
+        left_subtree_sibling->log_alloc->writeKv(left_sibling->hdr.nvmpage_off, deleted_key_from_parent, (char *)hdr.leftmost_ptr);
         bpnode * pre = left_subtree_sibling->getLastDDataNode();// todo
         left_sibling->insert_key(deleted_key_from_parent,
                           sub_root->DFS(hdr.leftmost_ptr, &pre), &left_num_entries);
 
         for (int i = 0; i < num_dist_entries - 1; i++) {
+          left_subtree_sibling->log_alloc->writeKv(left_sibling->hdr.nvmpage_off, records[i].key, records[i].ptr);
           left_sibling->insert_key(records[i].key, sub_root->DFS((nvmpage *)records[i].ptr, &pre),
                             &left_num_entries);
         }
@@ -355,11 +357,13 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     hdr.is_deleted = 1;
     pmemobj_persist(bt->pop, &(hdr.is_deleted), sizeof(uint8_t));
 
+    left_subtree_sibling->log_alloc->writeKv(left_sibling->hdr.nvmpage_off, deleted_key_from_parent, (char *)hdr.leftmost_ptr);
     bpnode * pre = left_subtree_sibling->getLastDDataNode();
     left_sibling->insert_key(deleted_key_from_parent,
                         sub_root->DFS(hdr.leftmost_ptr, &pre), &left_num_entries);
 
     for (int i = 0; records[i].ptr != NULL; ++i) {
+      left_subtree_sibling->log_alloc->writeKv(left_sibling->hdr.nvmpage_off, records[i].key, records[i].ptr);
       left_sibling->insert_key(records[i].key, sub_root->DFS((nvmpage *)records[i].ptr, &pre),
                         &left_num_entries);
     }
@@ -809,7 +813,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
 void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
-    log_alloc->writeKv(key, right);
+    //log_alloc->writeKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -836,13 +840,14 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
 void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
-    log_alloc->updateKv(key, right);
+    //log_alloc->updateKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
       if(p->hdr.status == 3) p->hdr.status = 2;
       p = (bpnode*)p->linear_search(key);
     }
+    log_alloc->updateKv(p->hdr.nvmpage_off, key, right);
 
     if(!p->update_key(key, right)) { // store 
       // printf("no such key\n");
@@ -863,7 +868,7 @@ void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
 void subtree::subtree_delete(btree* root, entry_key_t key) {
   if (flag) {
     // write log
-    log_alloc->deleteKey(key);
+    //log_alloc->deleteKey(key);
     bpnode* p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL){

@@ -128,10 +128,10 @@ public:
         return result;
     }
 
-    void writeKv(int64_t key, char *value);
-    void updateKv(int64_t key, char *value);
-    void deleteKey(int64_t key);
-    void operateTree(int64_t key, int type);
+    void writeKv(uint64_t off, int64_t key, char *value);
+    void updateKv(uint64_t off, int64_t key, char *value);
+    void deleteKey(uint64_t off, int64_t key);
+    void operateTree(uint64_t src, uint64_t dst, int64_t key, uint16_t type);
 
     void ResetZero() {
         cur_index_ = pmemaddr_;
