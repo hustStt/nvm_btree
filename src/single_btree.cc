@@ -1154,7 +1154,9 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
   // FAST
   if(num_entries < cardinality - 1) {
-    sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+    if (sub_root != NULL && hdr.level <= sub_root->dram_ptr->hdr.level) {
+      sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+    }
     insert_key(key, right, &num_entries);
     return this;
   }
