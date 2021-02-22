@@ -27,7 +27,8 @@ public:
             printf("%s: map at %p \n", __FUNCTION__, pmemaddr_);
         }
         log_num_ = size / LogSize;
-        begin_addr = pmemaddr_ + log_num_ / 8;
+        begin_addr = pmemaddr_ + 256;
+        printf("%s: begin_addr at %p \n", __FUNCTION__, begin_addr);
         capacity_ = size;
         ResetZero();
     }
@@ -131,7 +132,7 @@ public:
     void writeKv(uint64_t off, int64_t key, char *value);
     void updateKv(uint64_t off, int64_t key, char *value);
     void deleteKey(uint64_t off, int64_t key);
-    void operateTree(uint64_t src, uint64_t dst, int64_t key, uint16_t type);
+    void operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t type);
 
     void ResetZero() {
         cur_index_ = pmemaddr_;
