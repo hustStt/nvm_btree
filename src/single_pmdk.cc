@@ -813,7 +813,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
 void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
-    log_alloc->writeKv(-1, key, right);
+    // log_alloc->writeKv(-1, key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
