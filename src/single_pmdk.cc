@@ -1318,7 +1318,9 @@ entry_key_t subtree::getFirstKey() {
 
 void subtree::recover() {
   // 遍历日志 根据type不同进行不同的操作
+  printf("old node_alloc:%p log_off:%lu\n", log_alloc, log_off);
   log_alloc = node_alloc->getNVMptr(log_off);
+  printf("node_alloc:%p\n", log_alloc);
   log_alloc->recovery(log_alloc_pool);
   LogNode* tmp;
   for (int i = 0; (tmp = log_alloc->getNextLogNode(i)) != nullptr; i++) {

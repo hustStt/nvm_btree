@@ -24,8 +24,10 @@ class LogAllocator;
 class NVMAllocator {
 public:
     NVMAllocator(const std::string path, size_t size) {
+        bool exist = file_exists_(path.c_str());
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
+        if(exist) size = 0;
         pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
             
         if (pmemaddr_ == NULL) {
@@ -118,6 +120,7 @@ public:
         bool exist = file_exists_(path.c_str());
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
+        if (exist)  size = 0;
         pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
             
         if (pmemaddr_ == NULL) {
@@ -215,6 +218,7 @@ public:
     void *operator new(size_t size);
 
     void recovery(NVMLogPool *log) {
+        printf("log nvm_alloc_pool:%p\n",nvm_alloc);
         nvm_alloc = log;
         pmemaddr_ = nvm_alloc->gerPmemAddr((uint64_t)pmemaddr_ - (uint64_t)begin_addr);
         cur_index_ = nvm_alloc->gerPmemAddr((uint64_t)pmemaddr_ - (uint64_t)begin_addr);
@@ -305,7 +309,9 @@ static uint64_t getNewLogAllocator() {
         return -1;
     }
     LogAllocator* ret = new LogAllocator(log_alloc_pool);
-    return node_alloc->getOff((char *)ret);
+    uint64_t a = node_alloc->getOff((char *)ret);
+    printf("new off %lu %d\n",a, sizeof(LogAllocator));
+    return a;
 }
 
 // static inline void clflush(char *data, int len)
