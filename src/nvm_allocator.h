@@ -14,12 +14,6 @@ const uint64_t NVMSectorSize = 256;
 const uint64_t MemReserved = (5 << 20);  // 保留 5M 空间
 const uint64_t LogSize = 100 * (1 << 20);
 
-static void alloc_memalign(void **ret, size_t alignment, size_t size) {
-    // posix_memalign(ret, alignment, size);
-    char *mem =  node_alloc->Allocate(size);
-    *ret = mem;
-}
-
 static inline void clflush(void *data, int len)
 {
     pmem_persist(data, len);
@@ -218,11 +212,7 @@ public:
         clflush(this, sizeof(LogAllocator));
     }
 
-    void *operator new(size_t size) {
-      void *ret;
-      alloc_memalign(&ret, 64, size);
-      return ret;
-    }
+    void *operator new(size_t size);
 
     void recovery(NVMLogPool *log) {
         nvm_alloc = log;

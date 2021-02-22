@@ -68,3 +68,15 @@ void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t 
     LogNode tmp(1, src, dst, key);
     nvm_memcpy_persist(logvalue, &tmp, 32);
 }
+
+static void alloc_memalign(void **ret, size_t alignment, size_t size) {
+    // posix_memalign(ret, alignment, size);
+    char *mem =  node_alloc->Allocate(size);
+    *ret = mem;
+}
+
+void *LogAllocator::operator new(size_t size) {
+    void *ret;
+    alloc_memalign(&ret, 64, size);
+    return ret;
+}
