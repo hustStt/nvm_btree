@@ -215,7 +215,6 @@ public:
     void *operator new(size_t size);
 
     void recovery(NVMLogPool *log) {
-        printf("log nvm_alloc_pool:%p\n",nvm_alloc);
         nvm_alloc = log;
         pmemaddr_ = nvm_alloc->gerPmemAddr((uint64_t)pmemaddr_ - (uint64_t)begin_addr);
         cur_index_ = nvm_alloc->gerPmemAddr((uint64_t)cur_index_ - (uint64_t)begin_addr);
@@ -310,9 +309,7 @@ static uint64_t getNewLogAllocator() {
         return -1;
     }
     LogAllocator* ret = new LogAllocator(log_alloc_pool);
-    uint64_t a = node_alloc->getOff((char *)ret);
-    printf("new off %lu %p\n",a, ret->getptr());
-    return a;
+    return node_alloc->getOff((char *)ret);
 }
 
 // static inline void clflush(char *data, int len)

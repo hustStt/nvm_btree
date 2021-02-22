@@ -644,8 +644,8 @@ class subtree {
         bool *is_leftmost_node, nvmpage **left_sibling, btree* bt);
 
     // nvm --> dram
-    char* DFS(nvmpage* root, bpnode **pre);
-    void nvm_to_dram(bpnode **pre);
+    char* DFS(nvmpage* root, bpnode **pre, bool isRecover = false);
+    void nvm_to_dram(bpnode **pre, bool isRecover = false);
 
     // dram --> nvm
     char* DFS(char* root, nvmpage **pre, bool ifdel = true);

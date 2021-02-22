@@ -934,14 +934,14 @@ char* subtree::subtree_search(entry_key_t key) {
   }
 }
 
-void subtree::nvm_to_dram(bpnode **pre) {
+void subtree::nvm_to_dram(bpnode **pre, bool isRecover) {
   if (flag) {
     return ;
   }
   flag = true;
   uint64_t start_time, end_time;
   start_time = get_now_micros();
-  dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
+  dram_ptr = (bpnode *)DFS(nvm_ptr, pre, isRecover);
   end_time = get_now_micros();
   printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
   // nvm_ptr = nullptr;
@@ -949,7 +949,7 @@ void subtree::nvm_to_dram(bpnode **pre) {
   log_alloc = node_alloc->getNVMptr(log_off);
 }
 
-char* subtree::DFS(nvmpage* root, bpnode **pre) {
+char* subtree::DFS(nvmpage* root, bpnode **pre, bool isRecover) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -958,6 +958,10 @@ char* subtree::DFS(nvmpage* root, bpnode **pre) {
     bpnode* node = new bpnode();
     
     int count = 0;
+
+    if (isRecover) {
+      nvm_node_ptr->hdr.none = (char *)node;
+    }
     
     node->hdr.status = 3; //已经同步 不是脏节点
     node->hdr.last_index = nvm_node_ptr->hdr.last_index;
@@ -1002,6 +1006,7 @@ void subtree::dram_to_nvm(nvmpage **pre) {
   flag = false;
   // delete log
   if (log_alloc) log_alloc->DeleteLog();
+  log_off = -1;
   log_alloc = nullptr;
 }
 
@@ -1318,14 +1323,39 @@ entry_key_t subtree::getFirstKey() {
 
 void subtree::recover() {
   // 遍历日志 根据type不同进行不同的操作
-  printf("old node_alloc:%p log_off:%lu\n", log_alloc, log_off);
-  log_alloc = node_alloc->getNVMptr(log_off);
-  printf("node_alloc:%p\n", log_alloc);
-  log_alloc->recovery(log_alloc_pool);
-  LogNode* tmp;
-  for (int i = 0; (tmp = log_alloc->getNextLogNode(i)) != nullptr; i++) {
-    printf("[log] type: %lu off: %lu key: %lu value: %lu\n", tmp->type,tmp->off,tmp->key,tmp->value);
+  if (!flag) {
+    return;
   }
+  if (log_off == -1) {
+    printf("error: dram subtree don`t have log\n");
+    return;
+  }
+  // 恢复出原来的日志
+  LogAllocator* old_log_alloc = node_alloc->getNVMptr(log_off);
+  old_log_alloc->recovery(log_alloc_pool);
+  // 将原nvm子树转换成dram子树 暂时不考虑没有nvm备份的情况（可能是分裂产生的子树）
+  // bpnode *pre = nullptr;
+  // if (this->getPrePtr() != nullptr) {
+  //   pre = (bpnode *)this->getPrePtr()->getLastLeafNode();
+  // }
+  // nvm_to_dram(&pre, true);
+
+  LogNode* tmp;
+  for (int i = 0; (tmp = old_log_alloc->getNextLogNode(i)) != nullptr; i++) {
+    nvmpage * p = to_nvmpage((chat *)tmp->off);
+    if (tmp->type == 1) {
+      // insert
+      int num_entries;
+      p->insert_key(pop, tmp->key, (char *)tmp->value, &num_entries,true);
+    } else if (tmp->type == 2){
+      // update
+      p->update_key(pop, tmp->key, (char *)tmp->value);
+    } else if (tmp->type == 0) {
+      // delete
+      p->remove_key(pop, tmp->key);
+    }
+  }
+  old_log_alloc->DeleteLog();
 }
 
 void MyBtree::constructor(PMEMobjpool * pool) {
