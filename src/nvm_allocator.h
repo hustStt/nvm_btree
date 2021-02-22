@@ -294,17 +294,17 @@ public:
 
 extern NVMAllocator *node_alloc;
 extern NVMAllocator *value_alloc;
-extern NVMLogPool *log_alloc;
+extern NVMLogPool *log_alloc_pool;
 
 int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &allocator_path, 
                 uint64_t allocator_size);
 void AllocatorExit();
 
 static uint64_t getNewLogAllocator() {
-    if (log_alloc == nullptr || node_alloc == nullptr) {
+    if (log_alloc_pool == nullptr || node_alloc == nullptr) {
         return -1;
     }
-    LogAllocator* ret = new LogAllocator(log_alloc);
+    LogAllocator* ret = new LogAllocator(log_alloc_pool);
     return node_alloc->getOff((char *)ret);
 }
 

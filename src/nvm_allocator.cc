@@ -3,15 +3,15 @@
 
 NVMAllocator *node_alloc = nullptr;
 NVMAllocator *value_alloc = nullptr;
-NVMLogPool *log_alloc = nullptr;
+NVMLogPool *log_alloc_pool = nullptr;
 
 atomic<uint64_t> perist_data(0);
 
 int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &allocator_path, 
                 uint64_t allocator_size) {
-    log_alloc = new NVMLogPool(logpath, logsize);
-    if(log_alloc == nullptr) {
-        delete log_alloc;
+    log_alloc_pool = new NVMLogPool(logpath, logsize);
+    if(log_alloc_pool == nullptr) {
+        delete log_alloc_pool;
         return -1;
     }
     node_alloc = new NVMAllocator(allocator_path, allocator_size);
@@ -32,8 +32,8 @@ void AllocatorExit() {
         delete value_alloc;
     }
 
-    if(log_alloc) {
-        delete log_alloc;
+    if(log_alloc_pool) {
+        delete log_alloc_pool;
     }
 }
 

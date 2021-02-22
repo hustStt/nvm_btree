@@ -44,6 +44,7 @@ static inline uint64_t char8toint64(const char *key) {
 
 extern NVMAllocator *node_alloc;
 extern NVMAllocator *value_alloc;
+extern NVMLogPool *log_alloc_pool;
 
 static inline void fillchar8wirhint64(char *key, uint64_t value) {
     key[0] = ((char)(value >> 56)) & 0xff;
