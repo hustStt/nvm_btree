@@ -1318,7 +1318,11 @@ entry_key_t subtree::getFirstKey() {
 
 void subtree::recover() {
   // 遍历日志 根据type不同进行不同的操作
-  
+  log_alloc = node_alloc->getNVMptr(log_off);
+  LogNode* tmp;
+  for (int i = 0; (tmp = log_alloc->getNextLogNode(i)) != nullptr; i++) {
+    printf("[log] type: %lu off: %lu key: %lu value: %lu\n");
+  }
 }
 
 void MyBtree::constructor(PMEMobjpool * pool) {
@@ -1352,9 +1356,11 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     bt = new btree(pop, 5);
     bt->setFlag2(true);
     ptr->pop = pool;
+    ptr->recover();
     ptr = to_nvmptr(ptr->sibling_ptr);
     while (ptr != nullptr) {
       ptr->pop = pool;
+      ptr->recover();
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = to_nvmptr(ptr->sibling_ptr);
     }
