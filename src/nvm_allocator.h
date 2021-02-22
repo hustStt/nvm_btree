@@ -7,8 +7,8 @@
 
 #include <errno.h>
 #include <err.h>
-#include "nvm_common.h"
 
+static inline int file_exists_(char const *file) { return access(file, F_OK); }
 
 const uint64_t NVMSectorSize = 256;
 const uint64_t MemReserved = (5 << 20);  // 保留 5M 空间
@@ -22,7 +22,7 @@ static void alloc_memalign(void **ret, size_t alignment, size_t size) {
 
 static inline void clflush(void *data, int len)
 {
-    nvm_persist(data, len);
+    pmem_persist(data, len);
 }
 
 class LogAllocator;
