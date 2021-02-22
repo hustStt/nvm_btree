@@ -129,7 +129,7 @@ public:
         return result;
     }
 
-    void writeKv(uint64_t off, int64_t key, char *value);
+    void writeKv(int64_t key, char *value);
     void updateKv(uint64_t off, int64_t key, char *value);
     void deleteKey(uint64_t off, int64_t key);
     void operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t type);

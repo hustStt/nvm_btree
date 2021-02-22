@@ -813,7 +813,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
 void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
-    log_alloc->writeKv(-1, key, right);
+    log_alloc->writeKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -847,7 +847,7 @@ void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
       if(p->hdr.status == 3) p->hdr.status = 2;
       p = (bpnode*)p->linear_search(key);
     }
-    log_alloc->updateKv(p->hdr.nvmpage_off, key, right);
+    // log_alloc->updateKv(p->hdr.nvmpage_off, key, right);
 
     if(!p->update_key(key, right)) { // store 
       // printf("no such key\n");
