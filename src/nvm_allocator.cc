@@ -7,21 +7,6 @@ NVMAllocator *log_alloc = nullptr;
 
 atomic<uint64_t> perist_data(0);
 
-int AllocatorInit(const std::string &path, uint64_t keysize, const std::string &valuepath, 
-                uint64_t valuesize) {
-    node_alloc = new NVMAllocator(path, keysize);
-    if(node_alloc == nullptr) {
-        return -1;
-    }
-    value_alloc = new NVMAllocator(valuepath, valuesize);
-    if(value_alloc == nullptr) {
-        delete node_alloc;
-        return -1;
-    }
-    // perist_data = 0;
-    return 0;
-}
-
 int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &allocator_path, 
                 uint64_t allocator_size) {
     log_alloc = new NVMAllocator(logpath, logsize);
