@@ -39,8 +39,6 @@
 
 #define IS_VALID_PTR(p) (((uint64_t)p & 0x700000000000) == 0x700000000000) 
 
-static inline int file_exists(char const *file) { return access(file, F_OK); }
-
 class nvmpage;
 class subtree;
 class btree;
@@ -569,7 +567,8 @@ class subtree {
     uint64_t heat;
     uint64_t kv_nums;
     PMEMobjpool *pop;
-    LogAllocator* log_alloc;  // off
+    uint64_t log_off;  // off
+    LogAllocator* log_alloc;
     RebalanceTask *rt;
     bool flag; // true:dram   false:nvm
     bool change;
@@ -582,7 +581,8 @@ class subtree {
       this->heat = heat;
       this->kv_nums = -1;
       this->pop = pop;
-      this->log_alloc = getNewLogAllocator();
+      this->log_off = getNewLogAllocator();
+      this->log_alloc = node_alloc->getNVMptr(log_off);
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
@@ -608,6 +608,7 @@ class subtree {
       this->heat = heat;
       this->kv_nums = -1;
       this->pop = pop;
+      this->log_off = -1;
       this->log_alloc = nullptr;
       this->rt = nullptr;
       this->change = flag;

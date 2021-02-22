@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
     //NVMBtree *bt = new NVMBtree();
 
-    char* persistent_path = (char *)std::string("/mnt/pmem0/mytest").c_str();
+    char* persistent_path = "/mnt/pmem0/mytest";
 
     TOID(nvmbtree) bt = TOID_NULL(nvmbtree);
     PMEMobjpool *pop;

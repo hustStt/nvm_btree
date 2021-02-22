@@ -2,14 +2,13 @@
 #include "nvm_allocator.h"
 
 NVMAllocator *node_alloc = nullptr;
-NVMAllocator *value_alloc = nullptr;
-NVMAllocator *log_alloc = nullptr;
+NVMLogPool *log_alloc = nullptr;
 
 atomic<uint64_t> perist_data(0);
 
 int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &allocator_path, 
                 uint64_t allocator_size) {
-    log_alloc = new NVMAllocator(logpath, logsize);
+    log_alloc = new NVMLogPool(logpath, logsize);
     if(log_alloc == nullptr) {
         delete log_alloc;
         return -1;
