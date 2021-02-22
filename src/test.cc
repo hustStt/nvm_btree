@@ -11,11 +11,9 @@
 #include "single_pmdk.h"
 
 #define NODEPATH   "/mnt/pmem0/persistent"
-#define VALUEPATH "/mnt/pmem0/value_persistent"
 #define LOGPATH "/mnt/pmem0/log_persistent"
 
-const uint64_t NVM_NODE_SIZE = 100 * (1ULL << 30);           // 45GB
-const uint64_t NVM_VALUE_SIZE = 10 * (1ULL << 30);         // 10GB
+const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 
 int using_existing_data = 0;
@@ -36,7 +34,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE) < 0) {
+    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
         print_log(LV_ERR, "Initial allocator failed");
         return 0;
     }

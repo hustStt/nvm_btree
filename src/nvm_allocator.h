@@ -72,6 +72,14 @@ private:
     int is_pmem_;
 };
 
+class LogNode {
+public:
+    uint64_t type;
+    uint64_t off;
+    uint64_t key;
+    uint64_t value;
+    LogNode(uint64_t t, uint64_t o, uint64_t k, uint64_t v):type(t),off(o),key(k),value(v){};
+};
 
 class LogAllocator {
 private:
@@ -129,7 +137,7 @@ public:
         return result;
     }
 
-    void writeKv(int64_t key, char *value);
+    void writeKv(uint64_t off, int64_t key, char *value);
     void updateKv(uint64_t off, int64_t key, char *value);
     void deleteKey(uint64_t off, int64_t key);
     void operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t type);

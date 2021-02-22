@@ -569,7 +569,7 @@ class subtree {
     uint64_t heat;
     uint64_t kv_nums;
     PMEMobjpool *pop;
-    LogAllocator* log_alloc;
+    LogAllocator* log_alloc;  // off
     RebalanceTask *rt;
     bool flag; // true:dram   false:nvm
     bool change;

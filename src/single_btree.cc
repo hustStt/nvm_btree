@@ -1154,9 +1154,9 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
   // FAST
   if(num_entries < cardinality - 1) {
-    // if (sub_root != NULL && hdr.level <= sub_root->dram_ptr->hdr.level) {
-    //   sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
-    // }
+    if (sub_root != NULL && hdr.level <= sub_root->dram_ptr->hdr.level) {
+      sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+    }
     insert_key(key, right, &num_entries);
     return this;
   }
@@ -1227,12 +1227,12 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       sub_root->setHeat(sub_root->heat / 2);
 
       // log
-      // sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 4);
-      // if (key < split_key) {
-      //   sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
-      // } else {
-      //   next->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
-      // }
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 4);
+      if (key < split_key) {
+        sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+      } else {
+        next->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
+      }
       nvmpage *pre = nullptr;
       next->sync_subtree(&pre);
       pre = nullptr;
@@ -1243,12 +1243,12 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     }
     else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
       // log
-      // sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 3);
-      // if (key < split_key) {
-      //   sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
-      // } else {
-      //   sub_root->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
-      // }
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 3);
+      if (key < split_key) {
+        sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
+      } else {
+        sub_root->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
+      }
       sub_root->btree_insert_internal(NULL, split_key, (char *)sibling, 
           hdr.level + 1, bt);
     } else if (bt->root == (char *)this) { // only one node can update the root ptr
