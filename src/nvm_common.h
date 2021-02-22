@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <atomic>
+#include <unistd.h>
 
 #include "nvm_allocator.h"
 #include "statistic.h"
