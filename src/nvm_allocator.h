@@ -24,11 +24,16 @@ class LogAllocator;
 class NVMAllocator {
 public:
     NVMAllocator(const std::string path, size_t size) {
-        bool exist = file_exists_(path.c_str());
+        int exist = file_exists_(path.c_str());
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
-        if(exist) size = 0;
-        pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
+        if(exist) {
+            // 不存在 create一个
+            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
+        } else {
+            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), 0, 0, 0666, &mapped_len_, &is_pmem_));
+        }
+        
             
         if (pmemaddr_ == NULL) {
             printf("%s: map error, filepath %s, error: %s(%d)\n", __FUNCTION__, path.c_str(), strerror(errno), errno);
@@ -117,11 +122,15 @@ private:
 class NVMLogPool {
 public:
     NVMLogPool(const std::string path, size_t size) {
-        bool exist = file_exists_(path.c_str());
+        int exist = file_exists_(path.c_str());
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
-        if (exist)  size = 0;
-        pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
+        if(exist) {
+            // 不存在 create一个
+            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
+        } else {
+            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), 0, 0, 0666, &mapped_len_, &is_pmem_));
+        }
             
         if (pmemaddr_ == NULL) {
             printf("%s: map error, filepath %s, error: %s(%d)\n", __FUNCTION__, path.c_str(), strerror(errno), errno);
@@ -133,7 +142,7 @@ public:
         begin_addr = pmemaddr_ + 256;
         printf("%s: begin_addr at %p \n", __FUNCTION__, begin_addr);
         capacity_ = size;
-        if (!exist) {
+        if (exist != 0) {
             pmem_memset_persist(pmemaddr_, 0, 256);
         }
     }
