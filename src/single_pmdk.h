@@ -518,7 +518,7 @@ class MyBtree{
       if (mybt == nullptr) {
         TOID(MyBtree) nvmbt = TOID_NULL(MyBtree);
         PMEMobjpool *pop;
-        if (file_exists(persistent_path.c_str()) != 0) {
+        if (file_exists_(persistent_path.c_str()) != 0) {
             pop = pmemobj_create(persistent_path.c_str(), "btree", 30000000000,
                                 0666); // make 30GB memory pool
             nvmbt = POBJ_ROOT(pop, MyBtree);

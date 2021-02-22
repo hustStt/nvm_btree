@@ -121,7 +121,7 @@ private:
 class NVMLogPool {
 public:
     NVMLogPool(const std::string path, size_t size) {
-        bool exist = file_exists(path.c_str());
+        bool exist = file_exists_(path.c_str());
         pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));

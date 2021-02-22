@@ -13,7 +13,7 @@
 #define NODEPATH   "/mnt/pmem0/persistent"
 #define VALUEPATH "/mnt/pmem0/value_persistent"
 
-static inline int file_exists(char const *file) { return access(file, F_OK); }
+static inline int file_exists_(char const *file) { return access(file, F_OK); }
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     TOID(nvmbtree) bt = TOID_NULL(nvmbtree);
     PMEMobjpool *pop;
 
-    if (file_exists(persistent_path) != 0) {
+    if (file_exists_(persistent_path) != 0) {
         pop = pmemobj_create(persistent_path, "btree", 8000000000,
                             0666); // make 1GB memory pool
         bt = POBJ_ROOT(pop, nvmbtree);

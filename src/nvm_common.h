@@ -33,7 +33,7 @@ static inline int KeyCompare(const void *key1, const void *key2) {
     return memcmp(key1, key2, NVM_KeySize);
 }
 
-static inline int file_exists(char const *file) { return access(file, F_OK); }
+static inline int file_exists_(char const *file) { return access(file, F_OK); }
 
 static inline uint64_t char8toint64(const char *key) {
     uint64_t value = ((((uint64_t)key[0]) & 0xff) << 56) | ((((uint64_t)key[1]) & 0xff) << 48) |

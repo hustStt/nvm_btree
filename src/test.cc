@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     // //TOID(subtree) nvmbt = TOID_NULL(nvmbtree);
     // PMEMobjpool *pop;
 
-    // if (file_exists(persistent_path) != 0) {
+    // if (file_exists_(persistent_path) != 0) {
     //     pop = pmemobj_create(persistent_path, "btree", 30000000000,
     //                         0666); // make 1GB memory pool
     //     //nvmbt = POBJ_ROOT(pop, nvmbtree);
