@@ -1324,7 +1324,7 @@ void subtree::recover() {
   log_alloc->recovery(log_alloc_pool);
   LogNode* tmp;
   for (int i = 0; (tmp = log_alloc->getNextLogNode(i)) != nullptr; i++) {
-    printf("[log] type: %lu off: %lu key: %lu value: %lu\n");
+    printf("[log] type: %lu off: %lu key: %lu value: %lu\n", tmp->type,tmp->off,tmp->key,tmp->value);
   }
 }
 

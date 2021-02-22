@@ -218,7 +218,7 @@ public:
         printf("log nvm_alloc_pool:%p\n",nvm_alloc);
         nvm_alloc = log;
         pmemaddr_ = nvm_alloc->gerPmemAddr((uint64_t)pmemaddr_ - (uint64_t)begin_addr);
-        cur_index_ = nvm_alloc->gerPmemAddr((uint64_t)pmemaddr_ - (uint64_t)begin_addr);
+        cur_index_ = nvm_alloc->gerPmemAddr((uint64_t)cur_index_ - (uint64_t)begin_addr);
         begin_addr = nvm_alloc->getBeginAddr();
         clflush(this, sizeof(LogAllocator));
     }
