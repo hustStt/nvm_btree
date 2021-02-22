@@ -24,16 +24,9 @@ class LogAllocator;
 class NVMAllocator {
 public:
     NVMAllocator(const std::string path, size_t size) {
-        int exist = file_exists_(path.c_str());
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
-        if(exist) {
-            // 不存在 create一个
-            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
-        } else {
-            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), 0, 0, 0666, &mapped_len_, &is_pmem_));
-        }
-        
+        pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
             
         if (pmemaddr_ == NULL) {
             printf("%s: map error, filepath %s, error: %s(%d)\n", __FUNCTION__, path.c_str(), strerror(errno), errno);
@@ -125,12 +118,7 @@ public:
         int exist = file_exists_(path.c_str());
         //pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0666, &mapped_len_, &is_pmem_));
         //映射NVM空间到文件
-        if(exist) {
-            // 不存在 create一个
-            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
-        } else {
-            pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), 0, 0, 0666, &mapped_len_, &is_pmem_));
-        }
+        pmemaddr_ = static_cast<char *>(pmem_map_file(path.c_str(), size, PMEM_FILE_CREATE, 0666, &mapped_len_, &is_pmem_));
             
         if (pmemaddr_ == NULL) {
             printf("%s: map error, filepath %s, error: %s(%d)\n", __FUNCTION__, path.c_str(), strerror(errno), errno);
@@ -235,6 +223,10 @@ public:
         clflush(this, sizeof(LogAllocator));
     }
 
+    NVMLogPool* getptr() {
+        return nvm_alloc;
+    }
+
     void DeleteLog() {
         nvm_alloc->deleteLog(pmemaddr_);
     }
@@ -319,7 +311,7 @@ static uint64_t getNewLogAllocator() {
     }
     LogAllocator* ret = new LogAllocator(log_alloc_pool);
     uint64_t a = node_alloc->getOff((char *)ret);
-    printf("new off %lu %d\n",a, sizeof(LogAllocator));
+    printf("new off %lu %p\n",a, ret->getptr());
     return a;
 }
 
