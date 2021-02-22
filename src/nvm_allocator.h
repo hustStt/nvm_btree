@@ -7,6 +7,7 @@
 
 #include <errno.h>
 #include <err.h>
+#include "nvm_common.h"
 
 
 const uint64_t NVMSectorSize = 256;

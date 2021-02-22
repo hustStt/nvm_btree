@@ -945,7 +945,8 @@ void subtree::nvm_to_dram(bpnode **pre) {
   end_time = get_now_micros();
   printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
   // nvm_ptr = nullptr;
-  log_alloc = getNewLogAllocator();
+  log_off = getNewLogAllocator();
+  log_alloc = node_alloc->getNVMptr(log_off);
 }
 
 char* subtree::DFS(nvmpage* root, bpnode **pre) {
@@ -1000,7 +1001,7 @@ void subtree::dram_to_nvm(nvmpage **pre) {
   dram_ptr = nullptr;
   flag = false;
   // delete log
-  if (log_alloc) delete log_alloc;
+  if (log_alloc) log_alloc->DeleteLog();
   log_alloc = nullptr;
 }
 
@@ -1014,8 +1015,9 @@ void subtree::sync_subtree(nvmpage **pre) {
   end_time = get_now_micros();
   printf("subtree sync  time: %f s\n", (end_time - start_time) * 1e-6);
   // delete log
-  if (log_alloc) delete log_alloc;
-  log_alloc = getNewLogAllocator();
+  if (log_alloc) log_alloc->DeleteLog();
+  log_off = getNewLogAllocator();
+  log_alloc = node_alloc->getNVMptr(log_off);
 }
 
 char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
