@@ -285,6 +285,7 @@ public:
 
 
 extern NVMAllocator *node_alloc;
+extern NVMAllocator *value_alloc;
 extern NVMLogPool *log_alloc;
 
 int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &allocator_path, 

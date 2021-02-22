@@ -2,6 +2,7 @@
 #include "nvm_allocator.h"
 
 NVMAllocator *node_alloc = nullptr;
+NVMAllocator *value_alloc = nullptr;
 NVMLogPool *log_alloc = nullptr;
 
 atomic<uint64_t> perist_data(0);
