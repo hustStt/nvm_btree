@@ -1370,15 +1370,34 @@ void subtree::recover() {
         int num_entries = p->count();
         if(p->hdr.leftmost_ptr == NULL){ // leaf node
           for(int i=m; i<num_entries; ++i){ 
-            dst->insert_key(pop, p->records[i].key, p->records[i].ptr, &sibling_cnt);
+            dst->insert_key(pop, p->records[i].key, p->records[i].ptr, &sibling_cnt, false);
           }
         }
         else{ // internal node
           for(int i=m+1;i<num_entries;++i){ 
-            dst->insert_key(pop, p->records[i].key, p->records[i].ptr, &sibling_cnt);
+            dst->insert_key(pop, p->records[i].key, p->records[i].ptr, &sibling_cnt, false);
           }
           dst->hdr.leftmost_ptr = (nvmpage*) p->records[m].ptr;
         }
+        dst->hdr.sibling_ptr = p->hdr.sibling_ptr;
+        pmemobj_persist(pop, dst, sizeof(nvmpage));
+
+        p->hdr.sibling_ptr = (nvmpage *)pmemobj_oid(dst).off;
+        pmemobj_persist(pop, &(p->hdr), sizeof(p->hdr));
+
+        // set to NULL
+        if (IS_FORWARD(hdr.switch_counter))
+          hdr.switch_counter += 2;
+        else
+          ++hdr.switch_counter;
+        p->records[m].ptr = NULL;
+        pmemobj_persist(pop, &(p->records[m]), sizeof(nvmentry));
+
+        p->hdr.last_index = m - 1;
+        pmemobj_persist(pop, &(p->hdr.last_index), sizeof(int16_t));
+
+        num_entries = p->hdr.last_index + 1;
+        printf("子树内分裂\n");
         break;
       }
     case 4:
