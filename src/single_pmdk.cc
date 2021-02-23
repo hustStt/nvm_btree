@@ -1346,46 +1346,55 @@ void subtree::recover() {
     switch (tmp->type)
     {
     case 1:
-      // insert todo：存在就不insert
-      int num_entries = p->count();
-      p->insert_key(pop, tmp->key, (char *)tmp->value, &num_entries,true);
-      break;
+      {// insert todo：存在就不insert
+        int num_entries = p->count();
+        p->insert_key(pop, tmp->key, (char *)tmp->value, &num_entries,true);
+        break;
+      }
     case 2:
-      // update
-      p->update_key(pop, tmp->key, (char *)tmp->value);
-      break;
+      {// update
+        p->update_key(pop, tmp->key, (char *)tmp->value);
+        break;
+      }
     case 0:
-      // delete
-      p->remove_key(pop, tmp->key);
-      break;
+      {// delete
+        p->remove_key(pop, tmp->key);
+        break;
+      }
     case 3:
-      // 子树内分裂
-      nvmpage * dst = to_nvmpage((char *)tmp->key);
-      int m = tmp->value;
-      int sibling_cnt = 0;
-      int num_entries = p->count();
-      if(p->hdr.leftmost_ptr == NULL){ // leaf node
-        for(int i=m; i<num_entries; ++i){ 
-          dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+      {
+        // 子树内分裂
+        nvmpage * dst = to_nvmpage((char *)tmp->key);
+        int m = tmp->value;
+        int sibling_cnt = 0;
+        int num_entries = p->count();
+        if(p->hdr.leftmost_ptr == NULL){ // leaf node
+          for(int i=m; i<num_entries; ++i){ 
+            dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+          }
         }
-      }
-      else{ // internal node
-        for(int i=m+1;i<num_entries;++i){ 
-          dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+        else{ // internal node
+          for(int i=m+1;i<num_entries;++i){ 
+            dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+          }
+          dst->hdr.leftmost_ptr = (bpnode*) p->records[m].ptr;
         }
-        dst->hdr.leftmost_ptr = (bpnode*) p->records[m].ptr;
+        break;
       }
-      break;
     case 4:
       printf("子树间分裂\n");
       break;
     case 5:
       // 子树内合并
+      break;
     case 6:
       // 子树内合并
-    default:
-      printf("other type %lu\n",tmp->type);
       break;
+    default:
+      {
+        printf("other type %lu\n",tmp->type);
+        break;
+      }
     }
   }
   this->flag = false;
