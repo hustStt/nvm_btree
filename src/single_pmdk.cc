@@ -1378,6 +1378,7 @@ void subtree::recover() {
           dst->hdr.leftmost_ptr = (nvmpage*) p->records[m].ptr;
         }
         dst->hdr.sibling_ptr = p->hdr.sibling_ptr;
+        dst->hdr.level = p->hdr.level;
         pmemobj_persist(pop, dst, sizeof(nvmpage));
 
         p->hdr.sibling_ptr = (nvmpage *)pmemobj_oid(dst).off;

@@ -13,8 +13,10 @@ using namespace std;
 
 #define LOGPATH "/mnt/pmem0/log_persistent"
 #define PATH "/mnt/pmem0/ycsb"
+#define NODEPATH   "/mnt/pmem0/persistent"
 
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
+const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
 
 const char *workloads[] = {
   // "workloada_insert_0.spec",
@@ -138,7 +140,7 @@ int main(int argc, const char *argv[])
     }
     db->Init();
 
-    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE) < 0) {
+    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
         print_log(LV_ERR, "Initial allocator failed");
         return 0;
     }
