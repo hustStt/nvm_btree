@@ -1386,10 +1386,10 @@ void subtree::recover() {
         pmemobj_persist(pop, &(p->hdr), sizeof(p->hdr));
 
         // set to NULL
-        if (IS_FORWARD(hdr.switch_counter))
-          hdr.switch_counter += 2;
+        if (IS_FORWARD(p->hdr.switch_counter))
+          p->hdr.switch_counter += 2;
         else
-          ++hdr.switch_counter;
+          ++p->hdr.switch_counter;
         p->records[m].ptr = NULL;
         pmemobj_persist(pop, &(p->records[m]), sizeof(nvmentry));
 
