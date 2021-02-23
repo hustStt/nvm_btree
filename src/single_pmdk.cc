@@ -1341,8 +1341,10 @@ void subtree::recover() {
   // nvm_to_dram(&pre, true);
 
   LogNode* tmp;
+  int j = 0;
   for (int i = 0; (tmp = old_log_alloc->getNextLogNode(i)) != nullptr; i++) {
     nvmpage * p = to_nvmpage((char *)tmp->off);
+    j++;
     switch (tmp->type)
     {
     case 1:
@@ -1462,7 +1464,7 @@ void subtree::recover() {
             int num_dist_entries = num_entries - m;
             int new_sibling_cnt = 0;
             bpnode * node_tmp = new bpnode();
-            memset(node_tmp, cur, sizeof(bpnode));
+            memcpy(node_tmp, cur, sizeof(bpnode));
 
             if (cur->hdr.leftmost_ptr == nullptr) {
               for (int i = 0; i < num_dist_entries; i++) {
@@ -1529,6 +1531,7 @@ void subtree::recover() {
       }
     }
   }
+  printf("subtree %p recover log num: %d\n", this, j);
   this->flag = false;
   old_log_alloc->DeleteLog();
   log_off = -1;
