@@ -802,8 +802,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
         left_subtree_sibling->setHeat(m / left_num_entries * l);
         // log
-        //sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 7);
-        //left_subtree_sibling->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 7);
+        sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 6);
+        left_subtree_sibling->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 6);
         // sync right left
         nvmpage *pre = nullptr;
         sub_root->sync_subtree(&pre);
@@ -879,8 +879,8 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
 
         // log
-        //sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 8);
-        //left_subtree_sibling->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 8);
+        sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 7);
+        left_subtree_sibling->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 7);
         // sync left right
         nvmpage *pre = nullptr;
         left_subtree_sibling->sync_subtree(&pre);
@@ -915,7 +915,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     }
 
     left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
-    
+
     if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) {
       sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, deleted_key_from_parent, 5);
     }
@@ -933,7 +933,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       left_subtree_sibling->setHeat(l + r);
 
       // log
-      //sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 9);
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 8);
       // sync
       nvmpage *pre = nullptr;
       left_subtree_sibling->sync_subtree(&pre);

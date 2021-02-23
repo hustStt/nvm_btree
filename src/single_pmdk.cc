@@ -934,14 +934,14 @@ char* subtree::subtree_search(entry_key_t key) {
   }
 }
 
-void subtree::nvm_to_dram(bpnode **pre, bool isRecover) {
+void subtree::nvm_to_dram(bpnode **pre) {
   if (flag) {
     return ;
   }
   flag = true;
   uint64_t start_time, end_time;
   start_time = get_now_micros();
-  dram_ptr = (bpnode *)DFS(nvm_ptr, pre, isRecover);
+  dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
   end_time = get_now_micros();
   printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
   // nvm_ptr = nullptr;
@@ -949,7 +949,7 @@ void subtree::nvm_to_dram(bpnode **pre, bool isRecover) {
   log_alloc = node_alloc->getNVMptr(log_off);
 }
 
-char* subtree::DFS(nvmpage* root, bpnode **pre, bool isRecover) {
+char* subtree::DFS(nvmpage* root, bpnode **pre) {
     if(root == nullptr) {
         return nullptr;
     }
@@ -958,10 +958,6 @@ char* subtree::DFS(nvmpage* root, bpnode **pre, bool isRecover) {
     bpnode* node = new bpnode();
     
     int count = 0;
-
-    if (isRecover) {
-      nvm_node_ptr->hdr.none = (char *)node;
-    }
     
     node->hdr.status = 3; //已经同步 不是脏节点
     node->hdr.last_index = nvm_node_ptr->hdr.last_index;
@@ -1521,8 +1517,6 @@ void subtree::recover() {
           }
         }
       }
-      break;
-    case 6:
       break;
     default:
       {
