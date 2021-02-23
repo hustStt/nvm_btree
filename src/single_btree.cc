@@ -811,7 +811,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_subtree_sibling->sync_subtree(&pre);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
-        //sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 5);
+        sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 5);
         sub_root->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)this, hdr.level + 1, bt);
       } else if(left_sibling == ((bpnode *)bt->root)) {
@@ -891,7 +891,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
-        //sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 6);
+        sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 6);
         sub_root->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)new_sibling, hdr.level + 1, bt);
       } else if (left_sibling == ((bpnode *)bt->root)) {
@@ -1229,7 +1229,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       sub_root->setHeat(sub_root->heat / 2);
 
       // log
-      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 4);
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, m, 4);
       if (key < split_key) {
         sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
       } else {
@@ -1245,7 +1245,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     }
     else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
       // log
-      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, split_key, 3);
+      sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, m, 3);
       if (key < split_key) {
         sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
       } else {

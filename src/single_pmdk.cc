@@ -1342,20 +1342,56 @@ void subtree::recover() {
 
   LogNode* tmp;
   for (int i = 0; (tmp = old_log_alloc->getNextLogNode(i)) != nullptr; i++) {
-    nvmpage * p = to_nvmpage((chat *)tmp->off);
-    if (tmp->type == 1) {
-      // insert
-      int num_entries;
+    nvmpage * p = to_nvmpage((char *)tmp->off);
+    switch (tmp->type)
+    {
+    case 1:
+      // insert todo：存在就不insert
+      int num_entries = p->count();
       p->insert_key(pop, tmp->key, (char *)tmp->value, &num_entries,true);
-    } else if (tmp->type == 2){
+      break;
+    case 2:
       // update
       p->update_key(pop, tmp->key, (char *)tmp->value);
-    } else if (tmp->type == 0) {
+      break;
+    case 0:
       // delete
       p->remove_key(pop, tmp->key);
+      break;
+    case 3:
+      // 子树内分裂
+      nvmpage * dst = to_nvmpage((char *)tmp->key);
+      int m = tmp->value;
+      int sibling_cnt = 0;
+      int num_entries = p->count();
+      if(p->hdr.leftmost_ptr == NULL){ // leaf node
+        for(int i=m; i<num_entries; ++i){ 
+          dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+        }
+      }
+      else{ // internal node
+        for(int i=m+1;i<num_entries;++i){ 
+          dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+        }
+        dst->hdr.leftmost_ptr = (bpnode*) p->records[m].ptr;
+      }
+      break;
+    case 4:
+      printf("子树间分裂\n");
+      break;
+    case 5:
+      // 子树内合并
+    case 6:
+      // 子树内合并
+    default:
+      printf("other type %lu\n",tmp->type);
+      break;
     }
   }
+  this->flag = false;
   old_log_alloc->DeleteLog();
+  log_off = -1;
+  log_alloc = nullptr;
 }
 
 void MyBtree::constructor(PMEMobjpool * pool) {
