@@ -1423,6 +1423,7 @@ void subtree::recover() {
           register int m = (int)ceil(total_num_entries / 2);
 
           if (num_entries < left_num_entries) { // left -> right
+            //printf("子树内合并 dram --> dram\n");
             if (cur->hdr.leftmost_ptr == nullptr) {
               for (int i = left_num_entries - 1; i >= m; i--) {
                 cur->insert_key(pop, p->records[i].key,
@@ -1457,8 +1458,11 @@ void subtree::recover() {
                               sizeof(int16_t));
             }
           } else { // left <- right
+            //printf("子树内合并 dram <-- dram\n");
             int num_dist_entries = num_entries - m;
             int new_sibling_cnt = 0;
+            bpnode * node_tmp = new bpnode();
+            memset(node_tmp, cur, sizeof(bpnode));
 
             if (cur->hdr.leftmost_ptr == nullptr) {
               for (int i = 0; i < num_dist_entries; i++) {
@@ -1466,8 +1470,8 @@ void subtree::recover() {
                                   &left_num_entries);
               }
 
-              for (int i = num_dist_entries; cur->records[i].ptr != NULL; i++) {
-                    cur->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+              for (int i = num_dist_entries; node_tmp->records[i].ptr != NULL; i++) {
+                    cur->insert_key(pop, node_tmp->records[i].key, node_tmp->records[i].ptr,
                                   &new_sibling_cnt, false);
               }
 
@@ -1486,15 +1490,16 @@ void subtree::recover() {
               }
 
               cur->hdr.leftmost_ptr =
-                  (nvmpage *)cur->records[num_dist_entries - 1].ptr;
-              for (int i = num_dist_entries; cur->records[i].ptr != NULL; i++) {
-                    cur->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+                  (nvmpage *)node_tmp->records[num_dist_entries - 1].ptr;
+              for (int i = num_dist_entries; node_tmp->records[i].ptr != NULL; i++) {
+                    cur->insert_key(pop, node_tmp->records[i].key, node_tmp->records[i].ptr,
                                   &new_sibling_cnt, false);
               }
               pmemobj_persist(pop, cur, sizeof(nvmpage));
             }
           }
         } else {
+          //printf("子树内合并 dram <-- dram 全部\n");
           cur->hdr.is_deleted = 1;
           pmemobj_persist(pop, &(cur->hdr.is_deleted), sizeof(uint8_t));
 
