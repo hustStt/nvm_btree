@@ -1397,17 +1397,125 @@ void subtree::recover() {
         pmemobj_persist(pop, &(p->hdr.last_index), sizeof(int16_t));
 
         num_entries = p->hdr.last_index + 1;
-        printf("子树内分裂\n");
         break;
       }
     case 4:
       printf("子树间分裂\n");
+      // 只有在分裂后 同步前程序挂掉才会出现 此时新分裂的节点 有三种情况
+      // 1.已经同步完成  无log/有log log第一条不为分裂操作 nvm子树有内容
+      // 2.同步了一半   有log log第一条为分裂操作 nvm子树有内容
+      // 3.还未进行同步 有log log第一条为分裂操作
+      // a.当前节点未进行同步  1，2，3皆可出现
+      // b.当前节点进行了同步  对应1
       break;
     case 5:
-      // 子树内合并
+      {// 子树内合并 dram -- dram
+        nvmpage * cur = to_nvmpage((char *)tmp->key);
+        register int num_entries = cur->count();
+        register int left_num_entries = p->count();
+        entry_key_t deleted_key_from_parent = tmp->value;
+
+        int total_num_entries = num_entries + left_num_entries;
+        if (cur->hdr.leftmost_ptr != nullptr)
+          ++total_num_entries;
+
+        if (total_num_entries > nvm_cardinality - 1) { //Redistribution
+          register int m = (int)ceil(total_num_entries / 2);
+
+          if (num_entries < left_num_entries) { // left -> right
+            if (cur->hdr.leftmost_ptr == nullptr) {
+              for (int i = left_num_entries - 1; i >= m; i--) {
+                cur->insert_key(pop, p->records[i].key,
+                            p->records[i].ptr, &num_entries);
+              }
+
+              p->records[m].ptr = nullptr;
+              pmemobj_persist(pop, &(p->records[m].ptr),
+                              sizeof(char *));
+
+              p->hdr.last_index = m - 1;
+              pmemobj_persist(pop, &(p->hdr.last_index), 
+                              sizeof(int16_t));
+            } else {
+              cur->insert_key(pop, deleted_key_from_parent, (char *)cur->hdr.leftmost_ptr,
+                          &num_entries);
+
+              for (int i = left_num_entries - 1; i > m; i--) {
+                cur->insert_key(pop, p->records[i].key,
+                            p->records[i].ptr, &num_entries);
+              }
+
+              cur->hdr.leftmost_ptr = (nvmpage *)p->records[m].ptr;
+              pmemobj_persist(pop, &(cur->hdr.leftmost_ptr), sizeof(nvmpage *));
+
+              p->records[m].ptr = nullptr;
+              pmemobj_persist(pop, &(p->records[m].ptr),
+                              sizeof(char *));
+
+              p->hdr.last_index = m - 1;
+              pmemobj_persist(pop, &(p->hdr.last_index),
+                              sizeof(int16_t));
+            }
+          } else { // left <- right
+            int num_dist_entries = num_entries - m;
+            int new_sibling_cnt = 0;
+
+            if (cur->hdr.leftmost_ptr == nullptr) {
+              for (int i = 0; i < num_dist_entries; i++) {
+                p->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+                                  &left_num_entries);
+              }
+
+              for (int i = num_dist_entries; cur->records[i].ptr != NULL; i++) {
+                    cur->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+                                  &new_sibling_cnt, false);
+              }
+
+              pmemobj_persist(pop, cur, sizeof(nvmpage));
+
+              p->hdr.sibling_ptr = (nvmpage *)pmemobj_oid(cur).off;
+              pmemobj_persist(pop, &(p->hdr.sibling_ptr),
+                              sizeof(nvmpage *));
+            } else {
+              p->insert_key(pop, deleted_key_from_parent,
+                                (char *)cur->hdr.leftmost_ptr, &left_num_entries);
+
+              for (int i = 0; i < num_dist_entries - 1; i++) {
+                p->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+                                  &left_num_entries);
+              }
+
+              cur->hdr.leftmost_ptr =
+                  (nvmpage *)cur->records[num_dist_entries - 1].ptr;
+              for (int i = num_dist_entries; cur->records[i].ptr != NULL; i++) {
+                    cur->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+                                  &new_sibling_cnt, false);
+              }
+              pmemobj_persist(pop, cur, sizeof(nvmpage));
+            }
+          }
+        } else {
+          cur->hdr.is_deleted = 1;
+          pmemobj_persist(pop, &(cur->hdr.is_deleted), sizeof(uint8_t));
+
+          if (cur->hdr.leftmost_ptr)
+            p->insert_key(pop, deleted_key_from_parent,
+                              (char *)cur->hdr.leftmost_ptr, &left_num_entries);
+
+          for (int i = 0; cur->records[i].ptr != NULL; ++i) {
+            p->insert_key(pop, cur->records[i].key, cur->records[i].ptr,
+                              &left_num_entries);
+          }
+
+          if (cur->hdr.leftmost_ptr == nullptr) {
+            p->hdr.sibling_ptr = cur->hdr.sibling_ptr;
+            pmemobj_persist(pop, &(p->hdr.sibling_ptr),
+                            sizeof(nvmpage *));
+          }
+        }
+      }
       break;
     case 6:
-      // 子树内合并
       break;
     default:
       {

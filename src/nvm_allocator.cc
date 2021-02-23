@@ -58,15 +58,14 @@ void LogAllocator::deleteKey(uint64_t off, int64_t key) {
 void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t type) {
     // 3分裂  子树内 
     // 4分裂  子树间   分裂后下刷前出问题恢复
-    // 5合并  子树内 dram --> dram
-    // 6合并  子树内 dram <-- dram
-    // 7合并  子树间 dram --> dram  合并后下刷前出问题恢复
-    // 8合并  子树间 dram <-- dram
-    // 9合并  子树间 dram <-- dram 完全合并
-    // 10合并 子树间 nvm <-- dram 转换成update    dram <-- nvm 转换成insert
-    // 11合并 子树间 dram --> nvm 转换成update    nvm --> dram 转换成insert
+    // 5合并  子树内 dram -- dram
+    // 6合并  子树间 dram --> dram  合并后下刷前出问题恢复
+    // 7合并  子树间 dram <-- dram
+    // 8合并  子树间 dram <-- dram 完全合并
+    // 9合并 子树间 nvm <-- dram 转换成update    dram <-- nvm 转换成insert
+    // 10合并 子树间 dram --> nvm 转换成update    nvm --> dram 转换成insert
     char* logvalue = this->AllocateAligned(32);
-    LogNode tmp(1, src, dst, key);
+    LogNode tmp(type, src, dst, key);
     nvm_memcpy_persist(logvalue, &tmp, 32);
 }
 

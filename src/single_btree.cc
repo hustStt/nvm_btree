@@ -811,7 +811,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_subtree_sibling->sync_subtree(&pre);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
-        sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 5);
+        sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, deleted_key_from_parent, 5);
         sub_root->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)this, hdr.level + 1, bt);
       } else if(left_sibling == ((bpnode *)bt->root)) {
@@ -891,7 +891,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
-        sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 6);
+        sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, deleted_key_from_parent, 5);
         sub_root->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)new_sibling, hdr.level + 1, bt);
       } else if (left_sibling == ((bpnode *)bt->root)) {
@@ -915,6 +915,10 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
     }
 
     left_sibling->hdr.sibling_ptr = hdr.sibling_ptr;
+    
+    if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) {
+      sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, deleted_key_from_parent, 5);
+    }
 
     // subtree root
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {

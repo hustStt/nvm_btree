@@ -164,7 +164,7 @@ public:
     }
 
     void deleteLog(char *addr) {
-        pmem_memset_persist(addr, 0, LogSize);
+        // pmem_memset_persist(addr, 0, LogSize);
         uint64_t i = (addr - begin_addr) / LogSize;
         pmemaddr_[i / 8] &= ~(1 << (i % 8)); 
     }
