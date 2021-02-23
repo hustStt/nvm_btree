@@ -1370,14 +1370,14 @@ void subtree::recover() {
         int num_entries = p->count();
         if(p->hdr.leftmost_ptr == NULL){ // leaf node
           for(int i=m; i<num_entries; ++i){ 
-            dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+            dst->insert_key(pop, p->records[i].key, p->records[i].ptr, &sibling_cnt);
           }
         }
         else{ // internal node
           for(int i=m+1;i<num_entries;++i){ 
-            dst->insert_key(p->records[i].key, p->records[i].ptr, &sibling_cnt);
+            dst->insert_key(pop, p->records[i].key, p->records[i].ptr, &sibling_cnt);
           }
-          dst->hdr.leftmost_ptr = (bpnode*) p->records[m].ptr;
+          dst->hdr.leftmost_ptr = (nvmpage*) p->records[m].ptr;
         }
         break;
       }
