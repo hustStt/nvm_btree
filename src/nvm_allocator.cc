@@ -98,10 +98,10 @@ void LogAllocator::deleteKey(int64_t key) {
 }
 
 void LogAllocator::operateTree(int64_t key, int64_t type) {
-    // 3分裂  子树间
-    // 4合并  子树间 dram <-- dram
-    // 5合并  子树间 dram --> dram
-    // 
+    // nvm --> dram   dram下刷，下刷时失败回滚即可
+    // nvm <-- dram   写log 恢复dram的时候修改根节点 3
+    // dram --> nvm   写log 恢复dram的时候将records[m].ptr = nullptr即可 4
+    // dram <-- nvm   dram下刷，下刷时失败回滚即可
     char* logvalue = this->AllocateAligned(24);
     SimpleLogNode tmp(type, key, 0);
     memcpy(logvalue, &tmp, 24);

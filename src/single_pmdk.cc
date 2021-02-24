@@ -1623,7 +1623,7 @@ void subtree::recovery(btree* bt) {
   int j = 0;
   for (int i = 0; (tmp = log_alloc->getNextSimpleLogNode(i)) != nullptr; i++) {
     j++;
-    printf("type recover type:%ld  %d\n",tmp->type, i);
+    //printf("type recover type:%ld  %d\n",tmp->type, i);
     switch (tmp->type)
     {
     case 1:
@@ -1643,7 +1643,7 @@ void subtree::recovery(btree* bt) {
       }
     default:
       {
-        //printf("other type recover type:%ld %d\n",tmp->type, i);
+        printf("other type recover type:%ld %d\n",tmp->type, i);
         break;
       }
     }
@@ -1685,13 +1685,13 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     ptr->pop = pool;
     //ptr->recover();
     ptr->recovery(bt);
-    ptr = to_nvmptr(ptr->sibling_ptr);
+    ptr = ptr->getSiblingPtr();
     while (ptr != nullptr) {
       ptr->pop = pool;
       //ptr->recover();
       ptr->recovery(bt);
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
-      ptr = to_nvmptr(ptr->sibling_ptr);
+      ptr = ptr->getSiblingPtr();
     }
     bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
     bt->setFlag(true);
@@ -1762,7 +1762,7 @@ void MyBtree::exitBtree() {
       pre = (nvmpage *)ptr->getPrePtr()->getLastLeafNode();
     }
     ptr->dram_to_nvm(&pre);
-    ptr = to_nvmptr(ptr->sibling_ptr);
+    ptr = ptr->getSiblingPtr();
   }
   delete bt;
   pmemobj_close(pop);

@@ -363,8 +363,14 @@ void btree::btreeInsert(entry_key_t key, char* right) {
 void btree::btree_insert(entry_key_t key, char* right){ //need to be string
   bpnode* p = (bpnode*)root;
 
-  while(p->hdr.leftmost_ptr != NULL) {
-    p = (bpnode*)p->linear_search(key);
+  if (flag2) {
+    while(p->hdr.leftmost_ptr != NULL && p->hdr.level != 5) {
+      p = (bpnode*)p->linear_search(key);
+    }
+  } else {
+    while(p->hdr.leftmost_ptr != NULL) {
+      p = (bpnode*)p->linear_search(key);
+    }
   }
 
   if(!p->store(this, NULL, key, right)) { // store 
