@@ -1607,7 +1607,8 @@ void subtree::recovery(btree* bt) {
     // 恢复所有子树过程中最多出现一次（因为只会在某个子树同步过程中挂掉）
     printf("this subtree was transing\n");
     if (nvm_ptr == nullptr) {
-      printf("error: this dram subtree was transing, but do not have nvm backup\n");
+      // 当刚分裂的子树 没有sync完成时 会出现该情况 直接返回
+      printf("not have nvm subtree  should delete this subtree\n");
       return;
     }
     leaf_to_dram();
@@ -1641,7 +1642,7 @@ void subtree::recovery(btree* bt) {
       }
     default:
       {
-
+        printf("other type recover type:%ld\n",tmp->type);
         break;
       }
     }

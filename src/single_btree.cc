@@ -796,11 +796,6 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
         bt->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
-        // heat
-        uint64_t l = left_subtree_sibling->getHeat();
-        uint64_t r = sub_root->getHeat();
-        sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
-        left_subtree_sibling->setHeat(m / left_num_entries * l);
         // log
         //sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 6);
         //left_subtree_sibling->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 6);
@@ -809,6 +804,12 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         sub_root->sync_subtree(&pre);
         pre = nullptr;
         left_subtree_sibling->sync_subtree(&pre);
+
+        // heat
+        uint64_t l = left_subtree_sibling->getHeat();
+        uint64_t r = sub_root->getHeat();
+        sub_root->setHeat(r + (left_num_entries - m) / left_num_entries * l);
+        left_subtree_sibling->setHeat(m / left_num_entries * l);
       }
       else if (sub_root != NULL && hdr.level < sub_root->dram_ptr->hdr.level) { // subtree node
         //sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, deleted_key_from_parent, 5);
@@ -872,12 +873,6 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
         sub_root->setNewDramRoot(new_sibling);
 
-        // heat
-        uint64_t l = left_subtree_sibling->getHeat();
-        uint64_t r = sub_root->getHeat();
-        sub_root->setHeat(m / num_entries * r);
-        left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
-
         // log
         //sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 7);
         //left_subtree_sibling->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 7);
@@ -886,6 +881,12 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         left_subtree_sibling->sync_subtree(&pre);
         pre = nullptr;
         sub_root->sync_subtree(&pre);
+
+        // heat
+        uint64_t l = left_subtree_sibling->getHeat();
+        uint64_t r = sub_root->getHeat();
+        sub_root->setHeat(m / num_entries * r);
+        left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
 
         bt->btree_insert_internal
           ((char *)left_sibling, parent_key, (char *)sub_root, hdr.level + 1);
@@ -922,6 +923,9 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
 
     // subtree root
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) {
+      // sync
+      nvmpage *pre = nullptr;
+      left_subtree_sibling->sync_subtree(&pre);
       //delete sub_root
       left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
       left_subtree_sibling->tmp_ptr = (subtree *)pmemobj_oid(sub_root).off;
@@ -934,9 +938,6 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
 
       // log
       //sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 8);
-      // sync
-      nvmpage *pre = nullptr;
-      left_subtree_sibling->sync_subtree(&pre);
     }
   }
 
@@ -1227,24 +1228,24 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
       subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root);
+      // sync
+      nvmpage *pre = nullptr;
+      next->sync_subtree(&pre);
+      pre = nullptr;
+      sub_root->sync_subtree(&pre);
+
       if (sub_root->getSiblingPtr()) 
         sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
       sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
       sub_root->setHeat(sub_root->heat / 2);
 
       // log
-      sub_root->log_alloc->operateTree(m, 3);
-      next->log_alloc->operateTree(m, 3);
       // sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, m, 4);
       // if (key < split_key) {
       //   sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
       // } else {
       //   next->log_alloc->writeKv(sibling->hdr.nvmpage_off, key, target);
       // }
-      nvmpage *pre = nullptr;
-      next->sync_subtree(&pre);
-      pre = nullptr;
-      sub_root->sync_subtree(&pre);
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
           hdr.level + 1);
