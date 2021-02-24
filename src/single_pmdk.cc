@@ -1558,8 +1558,8 @@ void subtree::recovery(btree* bt) {
     return;
   }
   // 恢复出原来的日志
-  LogAllocator* old_log_alloc = node_alloc->getNVMptr(log_off);
-  old_log_alloc->recovery(log_alloc_pool);
+  log_alloc = node_alloc->getNVMptr(log_off);
+  log_alloc->recovery(log_alloc_pool);
 
   bpnode *pre = nullptr;
   if (this->getPrePtr() != nullptr) {
@@ -1571,7 +1571,7 @@ void subtree::recovery(btree* bt) {
 
   SimpleLogNode* tmp;
   int j = 0;
-  for (int i = 0; (tmp = old_log_alloc->getNextSimpleLogNode(i)) != nullptr; i++) {
+  for (int i = 0; (tmp = log_alloc->getNextSimpleLogNode(i)) != nullptr; i++) {
     j++;
     switch (tmp->type)
     {
@@ -1591,7 +1591,10 @@ void subtree::recovery(btree* bt) {
         break;
       }
     default:
-      break;
+      {
+        
+        break;
+      }
     }
   }
   printf("subtree %p recover log num: %d\n", this, j);

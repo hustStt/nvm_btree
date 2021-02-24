@@ -208,6 +208,7 @@ private:
     std::mutex mut;
     char* cur_index_;
     NVMLogPool* nvm_alloc;
+    char* last_index_;
 
 public:
     LogAllocator(NVMLogPool *log) {
@@ -217,6 +218,7 @@ public:
         capacity_ = LogSize;
         cur_index_ = pmemaddr_;
         memused = 0;
+        last_index_ = pmemaddr_;
         clflush(this, sizeof(LogAllocator));
     }
 
@@ -226,6 +228,7 @@ public:
         nvm_alloc = log;
         pmemaddr_ = nvm_alloc->gerPmemAddr((uint64_t)pmemaddr_ - (uint64_t)begin_addr);
         cur_index_ = nvm_alloc->gerPmemAddr((uint64_t)cur_index_ - (uint64_t)begin_addr);
+        last_index_ = nvm_alloc->gerPmemAddr((uint64_t)last_index_ - (uint64_t)begin_addr);
         begin_addr = nvm_alloc->getBeginAddr();
         clflush(this, sizeof(LogAllocator));
     }

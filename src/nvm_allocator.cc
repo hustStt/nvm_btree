@@ -72,7 +72,10 @@ void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t 
 void LogAllocator::writeKv(int64_t key, char *value) {
     char* logvalue = this->AllocateAligned(24);
     SimpleLogNode tmp(1, key, (uint64_t)value);
-    nvm_memcpy_persist(logvalue, &tmp, 24);
+    if ((uint64_t)logvalue + 48 - (uint64_t)last_index_ > 256) {
+        nvm_memcpy_persist(last_index_, &tmp, 256);
+        last_index_ = logvalue + 24;
+    } 
 }
 
 void LogAllocator::updateKv(int64_t key, char *value) {
