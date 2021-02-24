@@ -1153,10 +1153,10 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
 
   register int num_entries = count();
   // ptr
-  char *target = right;
-  if (!(hdr.leftmost_ptr == NULL && !bt->flag2)) {
-    target = (char *)((bpnode *)right)->hdr.nvmpage_off;
-  }
+  // char *target = right;
+  // if (!(hdr.leftmost_ptr == NULL && !bt->flag2)) {
+  //   target = (char *)((bpnode *)right)->hdr.nvmpage_off;
+  // }
 
   // FAST
   if(num_entries < cardinality - 1) {

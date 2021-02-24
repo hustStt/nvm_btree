@@ -1567,6 +1567,7 @@ void subtree::recovery(btree* bt) {
   }
   flag = false;
   dram_recovery(&pre);
+  bt->setFlag2(false);
 
   SimpleLogNode* tmp;
   int j = 0;
@@ -1594,6 +1595,7 @@ void subtree::recovery(btree* bt) {
     }
   }
   printf("subtree %p recover log num: %d\n", this, j);
+  bt->setFlag2(true);
 }
 
 void MyBtree::constructor(PMEMobjpool * pool) {
