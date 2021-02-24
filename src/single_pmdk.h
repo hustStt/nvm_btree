@@ -756,7 +756,7 @@ class subtree {
     nvmpage *getNvmDataNode(char *ptr);
     entry_key_t getFirstKey();
     void recover();
-    void recovery();
+    void recovery(btree* bt);
 
     friend class bpnode;
     friend class nvmpage;

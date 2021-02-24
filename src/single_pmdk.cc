@@ -1549,7 +1549,7 @@ void subtree::recover() {
   log_alloc = nullptr;
 }
 
-void subtree::recovery() {
+void subtree::recovery(btree* bt) {
   if (!flag) {
     return;
   }
@@ -1576,14 +1576,17 @@ void subtree::recovery() {
     {
     case 1:
       {
+        subtree_insert(bt,tmp->key,(char *)tmp->value);
         break;
       }
     case 2:
       {
+        subtree_update(bt,tmp->key,(char *)tmp->value);
         break;
       }
     case 0:
       {
+        subtree_delete(bt,tmp->key);
         break;
       }
     default:
@@ -1625,12 +1628,12 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     bt->setFlag2(true);
     ptr->pop = pool;
     //ptr->recover();
-    ptr->recovery();
+    ptr->recovery(bt);
     ptr = to_nvmptr(ptr->sibling_ptr);
     while (ptr != nullptr) {
       ptr->pop = pool;
       //ptr->recover();
-      ptr->recovery();
+      ptr->recovery(bt);
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = to_nvmptr(ptr->sibling_ptr);
     }
