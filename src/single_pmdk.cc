@@ -810,10 +810,10 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
 }
 
 
-void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
+void subtree::subtree_insert(btree* root, entry_key_t key, char* right, bool wal) {
   if (flag) {
     // write log
-    log_alloc->writeKv(key, right);
+    if(wal) log_alloc->writeKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -837,10 +837,10 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
   }
 }
 
-void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
+void subtree::subtree_update(btree* root, entry_key_t key, char* right, bool wal) {
   if (flag) {
     // write log
-    log_alloc->updateKv(key, right);
+    if(wal) log_alloc->updateKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -865,10 +865,10 @@ void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
   }
 }
 
-void subtree::subtree_delete(btree* root, entry_key_t key) {
+void subtree::subtree_delete(btree* root, entry_key_t key, bool wal) {
   if (flag) {
     // write log
-    log_alloc->deleteKey(key);
+    if(wal) log_alloc->deleteKey(key);
     bpnode* p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL){
@@ -1576,17 +1576,17 @@ void subtree::recovery(btree* bt) {
     {
     case 1:
       {
-        subtree_insert(bt,tmp->key,(char *)tmp->value);
+        subtree_insert(bt,tmp->key,(char *)tmp->value, false);
         break;
       }
     case 2:
       {
-        subtree_update(bt,tmp->key,(char *)tmp->value);
+        subtree_update(bt,tmp->key,(char *)tmp->value, false);
         break;
       }
     case 0:
       {
-        subtree_delete(bt,tmp->key);
+        subtree_delete(bt,tmp->key, false);
         break;
       }
     default:

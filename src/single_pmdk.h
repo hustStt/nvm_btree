@@ -632,9 +632,9 @@ class subtree {
       pmemobj_persist(pop, this, sizeof(subtree));
     }
 
-    void subtree_insert(btree* root, entry_key_t key, char* right);
-    void subtree_update(btree* root, entry_key_t key, char* right);
-    void subtree_delete(btree* root, entry_key_t);
+    void subtree_insert(btree* root, entry_key_t key, char* right, bool wal = true);
+    void subtree_update(btree* root, entry_key_t key, char* right, bool wal = true);
+    void subtree_delete(btree* root, entry_key_t, bool wal = true);
     char *subtree_search(entry_key_t);
     void subtree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void subtree_search_range(entry_key_t, entry_key_t, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size); 
