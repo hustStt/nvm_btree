@@ -1623,6 +1623,7 @@ void subtree::recovery(btree* bt) {
   int j = 0;
   for (int i = 0; (tmp = log_alloc->getNextSimpleLogNode(i)) != nullptr; i++) {
     j++;
+    printf("type recover type:%ld  %d\n",tmp->type, i);
     switch (tmp->type)
     {
     case 1:
@@ -1642,7 +1643,7 @@ void subtree::recovery(btree* bt) {
       }
     default:
       {
-        printf("other type recover type:%ld\n",tmp->type);
+        //printf("other type recover type:%ld %d\n",tmp->type, i);
         break;
       }
     }
