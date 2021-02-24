@@ -69,25 +69,29 @@ void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t 
     nvm_memcpy_persist(logvalue, &tmp, 32);
 }
 
+void LogAllocator::log_persist(char* addr, SimpleLogNode& tmp, uint64_t aligns) {
+    if ((uint64_t)addr + 24 - (uint64_t)last_index_ > aligns) {
+        nvm_memcpy_persist(last_index_, &tmp, aligns);
+        last_index_ = addr;
+    } 
+}
+
 void LogAllocator::writeKv(int64_t key, char *value) {
     char* logvalue = this->AllocateAligned(24);
     SimpleLogNode tmp(1, key, (uint64_t)value);
-    if ((uint64_t)logvalue + 48 - (uint64_t)last_index_ > 256) {
-        nvm_memcpy_persist(last_index_, &tmp, 256);
-        last_index_ = logvalue + 24;
-    } 
+    log_persist(logvalue, tmp);
 }
 
 void LogAllocator::updateKv(int64_t key, char *value) {
     char* logvalue = this->AllocateAligned(24);
     SimpleLogNode tmp(2, key, (uint64_t)value);
-    nvm_memcpy_persist(logvalue, &tmp, 24);
+    log_persist(logvalue, tmp);
 }
 
 void LogAllocator::deleteKey(int64_t key) {
     char* logvalue = this->AllocateAligned(24);
     SimpleLogNode tmp(0, key, 0);
-    nvm_memcpy_persist(logvalue, &tmp, 16);
+    log_persist(logvalue, tmp);
 }
 
 void LogAllocator::operateTree(int64_t key, int64_t type) {
@@ -97,7 +101,7 @@ void LogAllocator::operateTree(int64_t key, int64_t type) {
     // 
     char* logvalue = this->AllocateAligned(24);
     SimpleLogNode tmp(type, key, 0);
-    nvm_memcpy_persist(logvalue, &tmp, 16);
+    log_persist(logvalue, tmp);
 }
 
 static void alloc_memalign(void **ret, size_t alignment, size_t size) {

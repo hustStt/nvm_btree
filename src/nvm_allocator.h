@@ -285,6 +285,8 @@ public:
     void deleteKey(int64_t key);
     void operateTree(int64_t key, int64_t type);
 
+    void log_persist(char* addr, SimpleLogNode& tmp, uint64_t aligns = 64);
+
     LogNode* getNextLogNode(uint64_t n) {
         char* ret = pmemaddr_ + n * 32;
         if (ret >= cur_index_) {
