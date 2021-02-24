@@ -94,6 +94,9 @@ class btree{
     void setFlag2(bool flag) {
       this->flag2 = flag;
     }
+    char* getRoot() {
+      return root;
+    }
 
     friend class bpnode;
 };

@@ -1233,6 +1233,8 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       sub_root->setHeat(sub_root->heat / 2);
 
       // log
+      sub_root->log_alloc->operateTree(m, 3);
+      next->log_alloc->operateTree(m, 3);
       // sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, m, 4);
       // if (key < split_key) {
       //   sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);

@@ -650,6 +650,7 @@ class subtree {
     char* DFS(nvmpage* root, bpnode **pre);
     void nvm_to_dram(bpnode **pre);
     void dram_recovery(bpnode **pre);
+    void leaf_to_dram();
 
     // dram --> nvm
     char* DFS(char* root, nvmpage **pre, bool ifdel = true);
@@ -751,6 +752,8 @@ class subtree {
 
     bpnode *getLastDDataNode();
     nvmpage *getLastNDataNode();
+    bpnode *getFirstDDataNode();
+    nvmpage *getFirstNDataNode();
     void *getLastLeafNode();
     bpnode *getDramDataNode(char *ptr);
     nvmpage *getNvmDataNode(char *ptr);

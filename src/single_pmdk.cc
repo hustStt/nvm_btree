@@ -934,6 +934,28 @@ char* subtree::subtree_search(entry_key_t key) {
   }
 }
 
+void subtree::leaf_to_dram() {
+  nvmpage* cur = getFirstNDataNode();
+  nvmpage* end = nullptr;
+  subtree* next_s = getSiblingPtr();
+  uint64_t start_time, end_time;
+  start_time = get_now_micros();
+  if (next_s != nullptr) {
+    end = getSiblingPtr()->getFirstNDataNode();
+  }
+  btree* tmp_bt = new btree(pop);
+  while (cur != end) {
+    for (int i = 0; cur->records[i].ptr != nullptr; i++) {
+      tmp_bt->btreeInsert(cur->records[i].key, cur->records[i].ptr);
+    }
+    cur = to_nvmpage(cur->hdr.sibling_ptr);
+  }
+  this->dram_ptr = (bpnode *)tmp_bt->getRoot();
+  flag = true;
+  end_time = get_now_micros();
+  printf("subtree nvm leaf to dram  time: %f s\n", (end_time - start_time) * 1e-6);
+}
+
 void subtree::nvm_to_dram(bpnode **pre) {
   if (flag) {
     return ;
@@ -1293,6 +1315,22 @@ nvmpage *subtree::getLastNDataNode() {
   return ret;
 }
 
+bpnode *subtree::getFirstDDataNode() {
+  bpnode * ret = dram_ptr;
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = ret->hdr.leftmost_ptr;
+  }
+  return ret;
+}
+
+nvmpage *subtree::getFirstNDataNode() {
+  nvmpage * ret = get_nvmroot_ptr();
+  while(ret != nullptr && ret->hdr.leftmost_ptr != nullptr) {
+    ret = to_nvmpage(ret->hdr.leftmost_ptr);
+  }
+  return ret;
+}
+
 void *subtree::getLastLeafNode() {
   if (flag) {
     return (void *)getLastDDataNode();
@@ -1553,10 +1591,7 @@ void subtree::recovery(btree* bt) {
   if (!flag) {
     return;
   }
-  if (transing) {
-    printf("error: this subtree was transing\n");
-    return;
-  }
+
   // 恢复出原来的日志
   log_alloc = node_alloc->getNVMptr(log_off);
   log_alloc->recovery(log_alloc_pool);
@@ -1566,7 +1601,21 @@ void subtree::recovery(btree* bt) {
     pre = (bpnode *)this->getPrePtr()->getLastLeafNode();
   }
   flag = false;
-  dram_recovery(&pre);
+
+  if (transing) {
+    // 根据nvm子树leaf节点 恢复出dram子树  
+    // 恢复所有子树过程中最多出现一次（因为只会在某个子树同步过程中挂掉）
+    printf("this subtree was transing\n");
+    if (nvm_ptr == nullptr) {
+      printf("error: this dram subtree was transing, but do not have nvm backup\n");
+      return;
+    }
+    leaf_to_dram();
+    if (pre) pre->hdr.sibling_ptr = getFirstDDataNode();
+  } else {
+    // nvm子树恢复dram子树
+    dram_recovery(&pre);
+  }
   bt->setFlag2(false);
 
   SimpleLogNode* tmp;
@@ -1592,7 +1641,7 @@ void subtree::recovery(btree* bt) {
       }
     default:
       {
-        
+
         break;
       }
     }
