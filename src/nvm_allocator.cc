@@ -69,6 +69,34 @@ void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t 
     nvm_memcpy_persist(logvalue, &tmp, 32);
 }
 
+void LogAllocator::writeKv(int64_t key, char *value) {
+    char* logvalue = this->AllocateAligned(24);
+    SimpleLogNode tmp(1, key, (uint64_t)value);
+    nvm_memcpy_persist(logvalue, &tmp, 24);
+}
+
+void LogAllocator::updateKv(int64_t key, char *value) {
+    char* logvalue = this->AllocateAligned(24);
+    SimpleLogNode tmp(2, key, (uint64_t)value);
+    nvm_memcpy_persist(logvalue, &tmp, 24);
+}
+
+void LogAllocator::deleteKey(int64_t key) {
+    char* logvalue = this->AllocateAligned(24);
+    SimpleLogNode tmp(0, key, 0);
+    nvm_memcpy_persist(logvalue, &tmp, 16);
+}
+
+void LogAllocator::operateTree(int64_t key, int64_t type) {
+    // 3分裂  子树间
+    // 4合并  子树间 dram <-- dram
+    // 5合并  子树间 dram --> dram
+    // 
+    char* logvalue = this->AllocateAligned(24);
+    SimpleLogNode tmp(type, key, 0);
+    nvm_memcpy_persist(logvalue, &tmp, 16);
+}
+
 static void alloc_memalign(void **ret, size_t alignment, size_t size) {
     // posix_memalign(ret, alignment, size);
     char *mem =  node_alloc->Allocate(size);

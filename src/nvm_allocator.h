@@ -191,6 +191,14 @@ public:
     LogNode(uint64_t t, uint64_t o, uint64_t k, uint64_t v):type(t),off(o),key(k),value(v){};
 };
 
+class SimpleLogNode {
+public:
+    uint64_t type;
+    uint64_t key;
+    uint64_t value;
+    SimpleLogNode(uint64_t t, uint64_t k, uint64_t v):type(t),key(k),value(v){};
+};
+
 class LogAllocator {
 private:
     char* pmemaddr_;
@@ -269,12 +277,25 @@ public:
     void deleteKey(uint64_t off, int64_t key);
     void operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t type);
 
+    void writeKv(int64_t key, char *value);
+    void updateKv(int64_t key, char *value);
+    void deleteKey(int64_t key);
+    void operateTree(int64_t key, int64_t type);
+
     LogNode* getNextLogNode(uint64_t n) {
         char* ret = pmemaddr_ + n * 32;
         if (ret >= cur_index_) {
             return nullptr;
         }
         return (LogNode *)ret;
+    }
+
+    SimpleLogNode* getNextSimpleLogNode(uint64_t n) {
+        char* ret = pmemaddr_ + n * 24;
+        if (ret >= cur_index_) {
+            return nullptr;
+        }
+        return (SimpleLogNode *)ret;
     }
 
     void ResetZero() {

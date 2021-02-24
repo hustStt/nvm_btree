@@ -813,7 +813,7 @@ void nvmpage::linear_search_range(entry_key_t min, entry_key_t max, void **value
 void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
-    // log_alloc->writeKv(-1, key, right);
+    log_alloc->writeKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
@@ -840,14 +840,14 @@ void subtree::subtree_insert(btree* root, entry_key_t key, char* right) {
 void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
   if (flag) {
     // write log
-    //log_alloc->updateKv(-1, key, right);
+    log_alloc->updateKv(key, right);
     bpnode *p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL) {
       if(p->hdr.status == 3) p->hdr.status = 2;
       p = (bpnode*)p->linear_search(key);
     }
-    log_alloc->updateKv(p->hdr.nvmpage_off, key, right);
+    //log_alloc->updateKv(p->hdr.nvmpage_off, key, right);
 
     if(!p->update_key(key, right)) { // store 
       // printf("no such key\n");
@@ -868,7 +868,7 @@ void subtree::subtree_update(btree* root, entry_key_t key, char* right) {
 void subtree::subtree_delete(btree* root, entry_key_t key) {
   if (flag) {
     // write log
-    log_alloc->deleteKey(-1, key);
+    log_alloc->deleteKey(key);
     bpnode* p = dram_ptr;
 
     while(p->hdr.leftmost_ptr != NULL){
@@ -949,6 +949,18 @@ void subtree::nvm_to_dram(bpnode **pre) {
   log_alloc = node_alloc->getNVMptr(log_off);
 }
 
+void subtree::dram_recovery(bpnode **pre) {
+  if (flag) {
+    return ;
+  }
+  flag = true;
+  uint64_t start_time, end_time;
+  start_time = get_now_micros();
+  dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
+  end_time = get_now_micros();
+  printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
+}
+
 char* subtree::DFS(nvmpage* root, bpnode **pre) {
     if(root == nullptr) {
         return nullptr;
@@ -995,7 +1007,9 @@ void subtree::dram_to_nvm(nvmpage **pre) {
 
   uint64_t start_time, end_time;
   start_time = get_now_micros();
+  transing = true;
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre);
+  transing = false;
   end_time = get_now_micros();
   printf("subtree to nvm  time: %f s\n", (end_time - start_time) * 1e-6);
   dram_ptr = nullptr;
@@ -1012,7 +1026,9 @@ void subtree::sync_subtree(nvmpage **pre) {
   }
   uint64_t start_time, end_time;
   start_time = get_now_micros();
+  transing = true;
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre, false);
+  transing = false;
   end_time = get_now_micros();
   printf("subtree sync  time: %f s\n", (end_time - start_time) * 1e-6);
   // delete log
@@ -1533,6 +1549,50 @@ void subtree::recover() {
   log_alloc = nullptr;
 }
 
+void subtree::recovery() {
+  if (!flag) {
+    return;
+  }
+  if (transing) {
+    printf("error: this subtree was transing\n");
+    return;
+  }
+  // 恢复出原来的日志
+  LogAllocator* old_log_alloc = node_alloc->getNVMptr(log_off);
+  old_log_alloc->recovery(log_alloc_pool);
+
+  bpnode *pre = nullptr;
+  if (this->getPrePtr() != nullptr) {
+    pre = (bpnode *)this->getPrePtr()->getLastLeafNode();
+  }
+  flag = false;
+  dram_recovery(&pre);
+
+  SimpleLogNode* tmp;
+  int j = 0;
+  for (int i = 0; (tmp = old_log_alloc->getNextSimpleLogNode(i)) != nullptr; i++) {
+    j++;
+    switch (tmp->type)
+    {
+    case 1:
+      {
+        break;
+      }
+    case 2:
+      {
+        break;
+      }
+    case 0:
+      {
+        break;
+      }
+    default:
+      break;
+    }
+  }
+  printf("subtree %p recover log num: %d\n", this, j);
+}
+
 void MyBtree::constructor(PMEMobjpool * pool) {
   pop = pool;
   head = nullptr;
@@ -1564,11 +1624,13 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     bt = new btree(pop, 5);
     bt->setFlag2(true);
     ptr->pop = pool;
-    ptr->recover();
+    //ptr->recover();
+    ptr->recovery();
     ptr = to_nvmptr(ptr->sibling_ptr);
     while (ptr != nullptr) {
       ptr->pop = pool;
-      ptr->recover();
+      //ptr->recover();
+      ptr->recovery();
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = to_nvmptr(ptr->sibling_ptr);
     }

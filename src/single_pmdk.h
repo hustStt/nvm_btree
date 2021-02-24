@@ -573,6 +573,7 @@ class subtree {
     bool flag; // true:dram   false:nvm
     bool change;
     bool lock;
+    bool transing;
   public:
     void constructor(PMEMobjpool *pop, bpnode* dram_ptr, subtree* pre = nullptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = true) {
       this->flag = flag;
@@ -586,6 +587,7 @@ class subtree {
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
+      this->transing = false;
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
@@ -613,6 +615,7 @@ class subtree {
       this->rt = nullptr;
       this->change = flag;
       this->lock = false;
+      this->transing = false;
 
       if (next != nullptr) {
         this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
@@ -646,6 +649,7 @@ class subtree {
     // nvm --> dram
     char* DFS(nvmpage* root, bpnode **pre);
     void nvm_to_dram(bpnode **pre);
+    void dram_recovery(bpnode **pre);
 
     // dram --> nvm
     char* DFS(char* root, nvmpage **pre, bool ifdel = true);
@@ -752,6 +756,7 @@ class subtree {
     nvmpage *getNvmDataNode(char *ptr);
     entry_key_t getFirstKey();
     void recover();
+    void recovery();
 
     friend class bpnode;
     friend class nvmpage;
