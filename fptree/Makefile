@@ -3,7 +3,7 @@ LDFLAGS = -pthread -lpmemobj -lpmem -lrt -lm
 DEFS = -DSINGLE_BTREE -DNO_VALUE
 MULT_DEFS = -DNO_VALUE
 WFLAGS = -Wall -Wno-format -Wno-unused-variable
-CFLAGS = -ggdb
+CFLAGS = -ggdb -msse4.2 -mpclmul -march=native -funroll-loops -Wstrict-overflow -Wstrict-aliasing -Wall -Wextra -pedantic -Wshadow
 
 SING_CXXFLAGS += $(DEFS) $(IFLAGS) $(WFLAGS) $(CFLAGS)
 MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
@@ -11,7 +11,7 @@ MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
 
-SING_LIB_SOURCES = clhash.c fptree.cc utility.cpp fptree_test.cc
+SING_LIB_SOURCES = clhash.c fptree.cc utility.cpp p_allocator.cpp
 
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
@@ -32,7 +32,7 @@ clean:
 	rm -f single_test mult_test pmdk_test
 
 fptree_test:
-	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o test $(LDFLAGS)
+	$(CXX) $(SING_CXXFLAGS) fptree_test.cc $(SING_LIB_SOURCES) -o test $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
