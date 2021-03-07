@@ -8,6 +8,7 @@
 #include "src/single_btree.h"
 #include "include/ycsb/ycsb-c.h"
 #include "random.h"
+#include "fptree/fptree.h"
 
 using namespace std;
 
@@ -82,6 +83,48 @@ private:
     MyBtree *mybt;
 };
 
+class FPTreeDb : public ycsbc::KvDB {
+public:
+    FPTreeDb(): tree_(nullptr) {}
+    FPTreeDb(FPTree *tree): tree_(tree) {}
+    virtual ~FPTreeDb() {
+      
+    }
+    void Init()
+    {
+      tree = new FPTree(32);
+    }
+
+    void Info()
+    {
+    }
+
+    void Close() { 
+
+    }
+    int Put(uint64_t key, uint64_t value) 
+    {
+        tree->insert(key, value);
+        return 1;
+    }
+    int Get(uint64_t key, uint64_t &value)
+    {
+        value = tree->find(key);
+        return 1;
+    }
+    int Update(uint64_t key, uint64_t value) {
+        tree->update(key, value);
+        return 1;
+    }
+    int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
+    {
+        //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
+        return 1;
+    }
+private:
+    FPTree *tree;
+};
+
 void UsageMessage(const char *command);
 bool StrStartWith(const char *str, const char *pre);
 string ParseCommandLine(int argc, const char *argv[], utils::Properties &props);
@@ -137,6 +180,8 @@ int main(int argc, const char *argv[])
     std::cout << "YCSB test:" << dbName << std::endl;
     if(dbName == "fastfair") {
       db = new FastFairDb();
+    } else if(dbName == "fptree") {
+      db = new FPTreeDb();
     }
     db->Init();
 
