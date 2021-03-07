@@ -6,7 +6,7 @@ Author: Ben Tsai ( @BenTsai7 )
 Descrption:using pmem library to allocate memories for leafs and stored data in leaf-group files.
 
 **/
-#include"utility/p_allocator.h"
+#include"p_allocator.h"
 #include<iostream>
 #include<string.h>
 #include<assert.h>
