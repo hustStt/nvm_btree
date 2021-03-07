@@ -19,6 +19,8 @@ all: ycsb
 	# ln -s src/pmdk_test test
 clean:
 	rm -rf /mnt/pmem0/ycsb
+	rm -rf /mnt/pmem0/persistent
+	rm -rf /mnt/pmem0/log_persistent
 	rm -rf ycsb
 	make clean -C src
 
