@@ -85,10 +85,10 @@ private:
 
 class FPTreeDb : public ycsbc::KvDB {
 public:
-    FPTreeDb(): tree_(nullptr) {}
-    FPTreeDb(FPTree *tree): tree_(tree) {}
+    FPTreeDb(): tree(nullptr) {}
+    FPTreeDb(FPTree *tree): tree(tree) {}
     virtual ~FPTreeDb() {
-      
+      delete tree;
     }
     void Init()
     {
