@@ -1113,8 +1113,10 @@ char* subtree::DFS(char* root, nvmpage **pre, bool ifdel) {
 
     // 整块刷下去
     if (isflush) {
-      memcpy(nvm_node_ptr, tmp_ptr, sizeof(nvmpage));
-      pmemobj_persist(pop, nvm_node_ptr, sizeof(nvmpage));
+      //TX_BEGIN(pop) {
+        //pmemobj_tx_add_range_direct(nvm_node_ptr, sizeof(nvmpage));
+        pmemobj_memcpy_persist(pop, nvm_node_ptr, tmp_ptr, sizeof(nvmpage));
+      //} TX_END
     }
 
     if (node->hdr.leftmost_ptr == nullptr) {
