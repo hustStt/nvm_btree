@@ -555,7 +555,7 @@ LeafNode::LeafNode(FPTree* t) {
     //PA->getLeaf(pPointer,pmem_addr);
     //initial bitmap
     //bitmap=(Byte*)pmem_addr;
-    bitmapSize=(LEAF_DEGREE*2)/8;
+    bitmapSize=(LEAF_DEGREE*2 + 7)/8;
     //initial pNext
     // Byte* cursor = (Byte*) (pmem_addr);
     // cursor = cursor+bitmapSize;
@@ -699,9 +699,7 @@ int LeafNode::getBit(const int& idx) {
     assert(idx<2*degree);
     int offset = idx%8;
     int pos=idx/8;
-    Byte* cursor = bitmap;
-    cursor += pos;
-    Byte bits = *cursor;
+    Byte bits = bitmap[pos];
     bits = (bits>>offset) & 1;
     return (int) bits;
 }
@@ -710,21 +708,17 @@ void LeafNode::setBit(const int& idx){
     assert(idx<2*degree);
     int offset = idx%8;
     int pos=idx/8;
-    Byte* cursor = bitmap;
-    cursor += pos;
-    Byte bits = *cursor;
+    Byte bits = bitmap[pos];
     bits = bits | (1<<offset);
-    *(cursor) = bits;
+    bitmap[pos] = bits;
 }
 void LeafNode::resetBit(const int& idx){
     assert(idx<2*degree);
     int offset = idx%8;
     int pos=idx/8;
-    Byte* cursor = bitmap;
-    cursor += pos;
-    Byte bits = *cursor;
+    Byte bits = bitmap[pos];
     bits = ~((~bits) | (1<<offset));
-    *(cursor) = bits;
+    bitmap[pos] = bits;
 }
 
 Key LeafNode::getKey(const int& idx) {

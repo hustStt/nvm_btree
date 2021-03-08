@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include<queue>
 
-#include "src/nvm_common.h"
+#include "../src/nvm_common.h"
 #include "utility.h"
 
 // In Mac C++, it is little-endian
