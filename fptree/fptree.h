@@ -144,6 +144,11 @@ public:
     //LeafNode(PPointer p, FPTree* t);       // read a leaf from NVM/SSD
     ~LeafNode();
 
+    void *operator new(size_t size) {
+        char *mem =  node_alloc->Allocate(size);
+        return mem;
+    }
+
     KeyNode*    insert(const Key& k, const Value& v);
     void        insertNonFull(const Key& k, const Value& v);
     bool        remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete);
