@@ -177,6 +177,11 @@ int main(int argc, const char *argv[])
     int total_ops = 0;
     int sum = 0;
 
+    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
+        print_log(LV_ERR, "Initial allocator failed");
+        return 0;
+    }
+
     std::cout << "YCSB test:" << dbName << std::endl;
     if(dbName == "fastfair") {
       db = new FastFairDb();
@@ -184,11 +189,6 @@ int main(int argc, const char *argv[])
       db = new FPTreeDb();
     }
     db->Init();
-
-    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
-        print_log(LV_ERR, "Initial allocator failed");
-        return 0;
-    }
 
     {
       string workload = workdloads_dir + "/" + workloads[0];
