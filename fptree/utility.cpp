@@ -1,7 +1,7 @@
 #include"utility.h"
-#include"clhash.h"
 #include<string>
 #include<fstream>
+#include "../include/ycsb/core/utils.h"
 
 using namespace std;
 
@@ -26,12 +26,7 @@ uint64_t countOneBits(Byte b) {
 
 // func that generates the fingerprints
 Byte keyHash(Key k) {
-    clhasher h(UINT64_C(0x23a23cf5033c3c81),UINT64_C(0xb3816f6a2c68e530));
-    string kStr = std::to_string(k);
-    uint64_t temp = h(kStr);
-    Byte result;
-    memcpy(&result, &temp, sizeof(Byte));
-    return result;
+    return utils::Hash(k) & 0xff;
 }
 
 bool PPointer::operator==(const PPointer p) const {
