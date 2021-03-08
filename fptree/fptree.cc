@@ -551,29 +551,30 @@ LeafNode::LeafNode(FPTree* t) {
     degree=LEAF_DEGREE;
     isLeaf=true;
     //new a leaf
-    PAllocator* PA = PAllocator::getAllocator();
-    PA->getLeaf(pPointer,pmem_addr);
+    //PAllocator* PA = PAllocator::getAllocator();
+    //PA->getLeaf(pPointer,pmem_addr);
     //initial bitmap
-    bitmap=(Byte*)pmem_addr;
-    bitmapSize=(LEAF_DEGREE*2+7)/8;
+    //bitmap=(Byte*)pmem_addr;
+    bitmapSize=(LEAF_DEGREE*2)/8;
     //initial pNext
-    Byte* cursor = (Byte*) (pmem_addr);
-    cursor = cursor+bitmapSize;
-    pNext=(PPointer*) cursor;
+    // Byte* cursor = (Byte*) (pmem_addr);
+    // cursor = cursor+bitmapSize;
+    //pNext=(PPointer*) cursor;
     //initial fingerprints, use cursor to make a pointer move
-    cursor = cursor+sizeof(PPointer);
-    fingerprints=cursor;
+    //cursor = cursor+sizeof(PPointer);
+    //fingerprints=cursor;
     //initial kv
-    cursor = cursor+ LEAF_DEGREE*2 * sizeof(Byte);
-    kv=(KeyValue*)cursor;
+    //cursor = cursor+ LEAF_DEGREE*2 * sizeof(Byte);
+    //kv=(KeyValue*)cursor;
     n=0;
     prev=NULL;
     next=NULL;
-    filePath=DATA_DIR+ to_string(pPointer.fileId);
+    //filePath=DATA_DIR+ to_string(pPointer.fileId);
 }
 
 // reload the leaf with the specific Persistent Pointer
 // need to call the PAllocator
+/*
 LeafNode::LeafNode(PPointer p, FPTree* t) {
     // TODO
     //initial Node
@@ -583,10 +584,10 @@ LeafNode::LeafNode(PPointer p, FPTree* t) {
     degree=LEAF_DEGREE;
     isLeaf=true;
     //reload a leaf
-    PAllocator* PA = PAllocator::getAllocator();
-    pmem_addr=PA->getLeafPmemAddr(p);      // the pmem address of the leaf node
-    assert(pmem_addr!=NULL);
-    pPointer=p;
+    //PAllocator* PA = PAllocator::getAllocator();
+    //pmem_addr=PA->getLeafPmemAddr(p);      // the pmem address of the leaf node
+    //assert(pmem_addr!=NULL);
+    //pPointer=p;
     //initial bitmap
     bitmap=(Byte*)pmem_addr;
     bitmapSize=(LEAF_DEGREE*2+7)/8;
@@ -612,9 +613,9 @@ LeafNode::LeafNode(PPointer p, FPTree* t) {
         next = new LeafNode(*pNext, tree);
         next->prev = this;
     }
-    filePath=DATA_DIR+ to_string(p.fileId);
+    //filePath=DATA_DIR+ to_string(p.fileId);
 }
-
+*/
 LeafNode::~LeafNode() {
     // TODO
     this->persist();
@@ -668,7 +669,7 @@ KeyNode* LeafNode::split() {
         newLeaf->insertNonFull(getKey(i),getValue(i));
     }
     n=n/2;
-    *pNext = newLeaf->getPPointer();
+    //*pNext = newLeaf->getPPointer();
     newChild->node=newLeaf;
     newChild->key=midkey;
     newLeaf->persist();
@@ -733,9 +734,9 @@ Value LeafNode::getValue(const int& idx) {
     return this->kv[idx].v;
 }
 
-PPointer& LeafNode::getPPointer() {
-    return this->pPointer;
-}
+// PPointer& LeafNode::getPPointer() {
+//     return this->pPointer;
+// }
 
 // remove an entry from the leaf
 // if it has no entry after removement return TRUE to indicate outer func to delete this leaf.
@@ -762,9 +763,9 @@ bool LeafNode::remove(const Key& k, const int& index, InnerNode* const& parent, 
         if (this->next != NULL)
             this->next->prev = this->prev;
         //free leaf
-        PAllocator *pa = PAllocator::getAllocator();
-        auto pp = this->getPPointer();
-        pa->freeLeaf(pp);
+        // PAllocator *pa = PAllocator::getAllocator();
+        // auto pp = this->getPPointer();
+        // pa->freeLeaf(pp);
         parent->removeChild(index, index);
     }
     else persist(); //has entry so persist
@@ -819,7 +820,7 @@ int LeafNode::findFirstZero() {
 // use PMDK
 void LeafNode::persist() {
     // TODO
-    pmem_msync(pmem_addr,calLeafSize());
+    //pmem_msync(pmem_addr,calLeafSize());
 }
 
 // call by the ~FPTree(), delete the whole tree
@@ -906,10 +907,10 @@ void FPTree::printTree() {
 // need to call the PALlocator
 bool FPTree::bulkLoading() {
     // TODO
-    PAllocator* PA = PAllocator::getAllocator();
-    PPointer startPointer=PA->getStartPointer();
-    if(startPointer.fileId==0) return false;
-    LeafNode* startLeaf = new LeafNode(startPointer,this);
+    //PAllocator* PA = PAllocator::getAllocator();
+    //PPointer startPointer=PA->getStartPointer();
+    //if(startPointer.fileId==0) return false;
+    LeafNode* startLeaf = new LeafNode(this);
     //travesal list
     KeyNode bulkLeaf;
     for(auto leafnode=startLeaf;leafnode!=NULL;leafnode=leafnode->next){

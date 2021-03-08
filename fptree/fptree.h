@@ -3,7 +3,8 @@
 #include<stdlib.h>
 #include<queue>
 
-#include"p_allocator.h"
+#include "src/nvm_common.h"
+#include "utility.h"
 
 // In Mac C++, it is little-endian
 // 0x12345677 --> 78 56 34 12
@@ -120,27 +121,27 @@ private:
     friend class InnerNode;
 
     // the NVM relative variables
-    char*      pmem_addr;      // the pmem address of the leaf node
+    //char*      pmem_addr;      // the pmem address of the leaf node
 
     // the pointer below are all pmem address based on pmem_addr
     // need to set the pointer pointed to NVM address
-    Byte*      bitmap;         // bitmap of the KV slots
-    PPointer*  pNext;          // next leafnode
-    Byte*      fingerprints;   // the fingerprint of the keys array
-    KeyValue*  kv;             // the keyValue pairs array
+    Byte      bitmap[LEAF_DEGREE*2];         // bitmap of the KV slots
+    //PPointer*  pNext;          // next leafnode
+    Byte      fingerprints[LEAF_DEGREE*2];   // the fingerprint of the keys array
+    KeyValue  kv[LEAF_DEGREE*2];             // the keyValue pairs array
 
     // the DRAM relative variables
     int        n;              // amount of entries
     LeafNode*  prev;           // the address of previous leafnode      
     LeafNode*  next;           // the address of next leafnode  
-    PPointer   pPointer;        // the persistent pointer pointed to the leaf in NVM
-    string     filePath;        // the file path of the leaf
+    //PPointer   pPointer;        // the persistent pointer pointed to the leaf in NVM
+    //string     filePath;        // the file path of the leaf
     
     uint64_t   bitmapSize;      // the bitmap size of the leaf(bytes)
 
 public:
     LeafNode(FPTree* tree);                // allocate a new leaf
-    LeafNode(PPointer p, FPTree* t);       // read a leaf from NVM/SSD
+    //LeafNode(PPointer p, FPTree* t);       // read a leaf from NVM/SSD
     ~LeafNode();
 
     KeyNode*    insert(const Key& k, const Value& v);
@@ -161,7 +162,7 @@ public:
     void        resetBit(const int& idx);
     Key         getKey(const int& idx);
     Value       getValue(const int& idx);
-    PPointer&    getPPointer();
+    // PPointer&    getPPointer();
 
     // interface with NVM
     void        persist();

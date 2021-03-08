@@ -6,7 +6,7 @@
 #define UTILITY_VALUE
 #define MAX_DEGREE 256
 #define MIN_DEGREE 2
-#define LEAF_DEGREE 56 // 叶子的度
+#define LEAF_DEGREE 15 // 叶子的度
 #define INNER_DEGREE 4096 // 中间节点的度
 
 #define MAX_KEY UINT64_MAX; // 键值最大值

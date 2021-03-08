@@ -92,7 +92,7 @@ public:
     }
     void Init()
     {
-      tree = new FPTree(32);
+      tree = new FPTree(15);
     }
 
     void Info()
