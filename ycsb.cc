@@ -12,9 +12,9 @@
 
 using namespace std;
 
-#define LOGPATH "/mnt/pmem0/log_persistent"
-#define PATH "/mnt/pmem0/ycsb"
-#define NODEPATH   "/mnt/pmem0/persistent"
+#define LOGPATH "/mnt/pmem1/log_persistent"
+#define PATH "/mnt/pmem1/ycsb"
+#define NODEPATH   "/mnt/pmem1/persistent"
 
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
