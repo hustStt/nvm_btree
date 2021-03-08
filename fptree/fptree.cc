@@ -651,7 +651,9 @@ void LeafNode::insertNonFull(const Key& k, const Value& v) {
     kv[idx].k=k;
     kv[idx].v=v;
     ++n;
-    persist();
+    //persist();
+    pmem_persist(&(fingerprints[idx]),sizeof(fingerprints[idx]));
+    pmem_persist(&(kv[idx]),sizeof(kv[idx]));
 }
 
 // split the leaf node
@@ -763,7 +765,7 @@ bool LeafNode::remove(const Key& k, const int& index, InnerNode* const& parent, 
         // pa->freeLeaf(pp);
         parent->removeChild(index, index);
     }
-    else persist(); //has entry so persist
+    //else persist(); //has entry so persist
     // TODO
     return ifRemove;
 }
@@ -780,10 +782,11 @@ bool LeafNode::update(const Key& k, const Value& v) {
                 kv[i].v=v;
                 ifUpdate=true;
                 break;
+                pmem_persist(&(kv[i].v),sizeof(kv[i].v));
             }
         }
     } 
-    persist();
+    //persist();
     return ifUpdate;
 }
 
@@ -816,6 +819,7 @@ int LeafNode::findFirstZero() {
 void LeafNode::persist() {
     // TODO
     //pmem_msync(pmem_addr,calLeafSize());
+    pmem_persist(this,sizeof(LeafNode));
 }
 
 // call by the ~FPTree(), delete the whole tree
