@@ -569,6 +569,7 @@ LeafNode::LeafNode(FPTree* t) {
     n=0;
     prev=NULL;
     next=NULL;
+    memset(bitmap,0,sizeof(bitmap));
     //filePath=DATA_DIR+ to_string(pPointer.fileId);
 }
 

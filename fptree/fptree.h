@@ -125,7 +125,7 @@ private:
 
     // the pointer below are all pmem address based on pmem_addr
     // need to set the pointer pointed to NVM address
-    Byte      bitmap[LEAF_DEGREE*2];         // bitmap of the KV slots
+    Byte      bitmap[(LEAF_DEGREE*2+7)/8];         // bitmap of the KV slots
     //PPointer*  pNext;          // next leafnode
     Byte      fingerprints[LEAF_DEGREE*2];   // the fingerprint of the keys array
     KeyValue  kv[LEAF_DEGREE*2];             // the keyValue pairs array
