@@ -70,31 +70,34 @@ void LogAllocator::operateTree(uint64_t src, uint64_t dst, int64_t key, int64_t 
 }
 
 void LogAllocator::log_persist(char* addr, uint64_t aligns) {
-    if ((uint64_t)addr + 24 - (uint64_t)last_index_ > aligns) {
+    if ((uint64_t)addr + 16 - (uint64_t)last_index_ > aligns) {
         nvm_persist(last_index_, aligns);
         last_index_ = addr;
     } 
 }
 
 void LogAllocator::writeKv(int64_t key, char *value) {
-    char* logvalue = this->AllocateAligned(24);
+    char* logvalue = this->AllocateAligned(16);
     SimpleLogNode tmp(1, key, (uint64_t)value);
-    memcpy(logvalue, &tmp, 24);
-    log_persist(logvalue + 24);
+    memcpy(logvalue, &tmp, 16);
+    //log_persist(logvalue + 16);
+    nvm_persist(logvalue, 16);
 }
 
 void LogAllocator::updateKv(int64_t key, char *value) {
-    char* logvalue = this->AllocateAligned(24);
+    char* logvalue = this->AllocateAligned(16);
     SimpleLogNode tmp(2, key, (uint64_t)value);
-    memcpy(logvalue, &tmp, 24);
-    log_persist(logvalue + 24);
+    memcpy(logvalue, &tmp, 16);
+    //log_persist(logvalue + 16);
+    nvm_persist(logvalue, 16);
 }
 
 void LogAllocator::deleteKey(int64_t key) {
-    char* logvalue = this->AllocateAligned(24);
+    char* logvalue = this->AllocateAligned(16);
     SimpleLogNode tmp(0, key, 0);
-    memcpy(logvalue, &tmp, 24);
-    log_persist(logvalue + 24);
+    memcpy(logvalue, &tmp, 16);
+    //log_persist(logvalue + 16);
+    nvm_persist(logvalue, 16);
 }
 
 void LogAllocator::operateTree(int64_t key, int64_t type) {
@@ -102,10 +105,11 @@ void LogAllocator::operateTree(int64_t key, int64_t type) {
     // nvm <-- dram   写log 恢复dram的时候修改根节点 3
     // dram --> nvm   写log 恢复dram的时候将records[m].ptr = nullptr即可 4
     // dram <-- nvm   dram下刷，下刷时失败回滚即可
-    char* logvalue = this->AllocateAligned(24);
+    char* logvalue = this->AllocateAligned(16);
     SimpleLogNode tmp(type, key, 0);
-    memcpy(logvalue, &tmp, 24);
-    log_persist(logvalue + 24);
+    memcpy(logvalue, &tmp, 16);
+    //log_persist(logvalue + 16);
+    nvm_persist(logvalue, 16);
 }
 
 static void alloc_memalign(void **ret, size_t alignment, size_t size) {

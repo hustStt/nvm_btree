@@ -194,10 +194,10 @@ public:
 
 class SimpleLogNode {
 public:
-    uint64_t type;
+    uint64_t type:3;
+    uint64_t value:61;
     uint64_t key;
-    uint64_t value;
-    SimpleLogNode(uint64_t t, uint64_t k, uint64_t v):type(t),key(k),value(v){};
+    SimpleLogNode(uint64_t t, uint64_t k,uint64_t v):type(t),key(k),value(v){};
 };
 
 class LogAllocator {
@@ -301,7 +301,7 @@ public:
     }
 
     SimpleLogNode* getNextSimpleLogNode(uint64_t n) {
-        char* ret = pmemaddr_ + n * 24;
+        char* ret = pmemaddr_ + n * 16;
         if (ret >= cur_index_) {
             return nullptr;
         }
