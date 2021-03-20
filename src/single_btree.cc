@@ -247,6 +247,9 @@ btree::btree(PMEMobjpool *pool){
   flag2 = false;
   total_size = 0;
   pop = pool;
+  log_off = getNewLogAllocator();
+  log_alloc = node_alloc->getNVMptr(log_off);
+  log_alloc->setCapacity(BigLogSize);
 }
 
 btree::btree(PMEMobjpool *pool, uint32_t level){
@@ -348,13 +351,14 @@ char *btree::btree_search(entry_key_t key){
 void btree::btreeInsert(entry_key_t key, char* right) {
     if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
         CalcuRootLevel();
-        deform();
+        //deform();
     }
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(key);
         sub_root->subtree_insert(this, key, right);
     } else {
         btree_insert(key, right);
+        if (log_alloc) log_alloc->writeKv(key,right);
         total_size += sizeof(key) + sizeof(right);
     }
 }
@@ -384,6 +388,7 @@ void btree::btreeUpdate(entry_key_t key, char* right) {
         sub_root->subtree_update(this, key, right);
     } else {
         btree_update(key, right);
+        if (log_alloc) log_alloc->updateKv(key,right);
     }
 }
 
@@ -426,6 +431,7 @@ void btree::btreeDelete(entry_key_t key) {
         }
     } else {
         btree_delete(key);
+        if (log_alloc) log_alloc->deleteKey(key);
     }
 }
 

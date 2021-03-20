@@ -13,6 +13,7 @@ static inline int file_exists_(char const *file) { return access(file, F_OK); }
 const uint64_t NVMSectorSize = 256;
 const uint64_t MemReserved = (5 << 20);  // 保留 5M 空间
 const uint64_t LogSize = 100 * (1 << 20);
+const uint64_t BigLogSize = 10 * (1 << 30);
 
 static inline void clflush(void *data, int len)
 {
@@ -220,6 +221,10 @@ public:
         memused = 0;
         last_index_ = pmemaddr_;
         clflush(this, sizeof(LogAllocator));
+    }
+
+    void setCapacity(uint64_t n) {
+        this->capacity_ = n;
     }
 
     void *operator new(size_t size);

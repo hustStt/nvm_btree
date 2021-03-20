@@ -53,6 +53,8 @@ class btree{
     nvmpage* nvm_root;
     uint32_t tar_level;
     uint64_t total_size;
+    uint64_t log_off;
+    LogAllocator* log_alloc;
     bool flag;
     bool flag2;
 

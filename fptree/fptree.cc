@@ -825,7 +825,7 @@ void LeafNode::persist() {
 // call by the ~FPTree(), delete the whole tree
 void FPTree::recursiveDelete(Node* n) {
     if (n->isLeaf) {
-        delete n;
+        //delete n;
     } else {
         for (int i = 0; i < ((InnerNode*)n)->nChild; i++) {
             recursiveDelete(((InnerNode*)n)->childrens[i]);
