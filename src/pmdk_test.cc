@@ -4,14 +4,10 @@
 #include <cstring>
 #include <thread>
 
-#include "single_pmdk.h"
+#include "fastfair.h"
 #include "random.h"
 #include "debug.h"
 #include "statistic.h"
-#include "single_pmdk.h"
-
-#define NODEPATH   "/mnt/pmem0/persistent"
-#define VALUEPATH "/mnt/pmem0/value_persistent"
 
 static inline int file_exists_(char const *file) { return access(file, F_OK); }
 
@@ -22,7 +18,7 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-void motivationtest(TOID(nvmbtree) bt);
+void motivationtest(TOID(btree) bt);
 void nvm_print(int ops_num);
 
 int main(int argc, char *argv[]) {
@@ -33,21 +29,21 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
-    //NVMBtree *bt = new NVMBtree();
+    //btree *bt = new btree();
 
     char* persistent_path = "/mnt/pmem0/mytest";
 
-    TOID(nvmbtree) bt = TOID_NULL(nvmbtree);
+    TOID(btree) bt = TOID_NULL(btree);
     PMEMobjpool *pop;
 
     if (file_exists_(persistent_path) != 0) {
         pop = pmemobj_create(persistent_path, "btree", 8000000000,
                             0666); // make 1GB memory pool
-        bt = POBJ_ROOT(pop, nvmbtree);
+        bt = POBJ_ROOT(pop, btree);
         D_RW(bt)->constructor(pop);
     } else {
         pop = pmemobj_open(persistent_path, "btree");
-        bt = POBJ_ROOT(pop, nvmbtree);
+        bt = POBJ_ROOT(pop, btree);
         D_RW(bt)->setPop(pop);
     }
 
@@ -66,7 +62,7 @@ int main(int argc, char *argv[]) {
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
 
-void motivationtest(TOID(nvmbtree) bt) {
+void motivationtest(TOID(btree) bt) {
     uint64_t i;
     uint64_t ops;
     Statistic stats;

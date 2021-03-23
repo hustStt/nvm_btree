@@ -17,7 +17,7 @@ using namespace std;
 #define NODEPATH   "/mnt/pmem1/persistent"
 
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
-const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
+const uint64_t NVM_NODE_SIZE = 20 * (1ULL << 30);
 
 const char *workloads[] = {
   // "workloada_insert_0.spec",

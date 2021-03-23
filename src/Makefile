@@ -33,14 +33,24 @@ default:  all
 # all:  clean single_test mult_test skiplist nvtree
 all: clean single_test
 
+cfile:
+	rm -f /mnt/pmem1/mytest
+	rm -f /mnt/pmem1/persistent
+	rm -f /mnt/pmem1/log_persistent
+
 clean: 
-	rm -f /mnt/pmem0/mytest
+	rm -f /mnt/pmem1/mytest
+	rm -f /mnt/pmem1/persistent
+	rm -f /mnt/pmem1/log_persistent
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
 	rm -f single_test mult_test pmdk_test
 
 pmdk_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o pmdk_test $(LDFLAGS)
+
+fastfair:
+	$(CXX) $(SING_CXXFLAGS) pmdk_test.cc -o fastfair $(LDFLAGS)
 
 single_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o single_test $(LDFLAGS)
