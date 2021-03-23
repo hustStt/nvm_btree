@@ -62,6 +62,7 @@ public:
                              bool *, page **);
   char *btree_search(entry_key_t);
   void btree_search_range(entry_key_t, entry_key_t, unsigned long *);
+  void btree_search_range(entry_key_t min, entry_key_t max, void **values, int &size);
   void printAll();
   void randScounter();
 

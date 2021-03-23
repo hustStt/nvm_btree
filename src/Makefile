@@ -44,7 +44,7 @@ clean:
 	rm -f /mnt/pmem1/log_persistent
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
-	rm -f single_test mult_test pmdk_test
+	rm -f single_test mult_test pmdk_test fastfair
 
 pmdk_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o pmdk_test $(LDFLAGS)
