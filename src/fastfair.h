@@ -1100,6 +1100,22 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max,
   }
 }
 
+void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
+  TOID(page) p = root;
+
+  while (p.oid.off != 0) {
+    if (D_RO(p)->hdr.leftmost_ptr != NULL) {
+      // The current page is internal
+      p.oid.off = (uint64_t)D_RW(p)->linear_search(min);
+    } else {
+      // Found a leaf
+      D_RW(p)->linear_search_range(min, max, values, size);
+
+      break;
+    }
+  }
+}
+
 void btree::printAll() {
   int total_keys = 0;
   TOID(page) leftmost = root;

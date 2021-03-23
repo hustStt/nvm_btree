@@ -201,7 +201,7 @@ void motivationtest(TOID(btree) bt) {
                 uint64_t key = rnd_scan.Next();
 
                 void *pvalues[scan_count];
-                D_RW(bt)->linear_search_range(key, MAX_KEY, pvalues, size);
+                D_RW(bt)->btree_search_range(key, MAX_KEY, pvalues, size);
 
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
