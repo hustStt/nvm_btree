@@ -50,7 +50,7 @@ pmdk_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o pmdk_test $(LDFLAGS)
 
 fastfair:
-	$(CXX) $(SING_CXXFLAGS) pmdk_test.cc -o fastfair $(LDFLAGS)
+	$(CXX) $(SING_CXXFLAGS) nvm_allocator.cc fastfair_test.cc -o fastfair $(LDFLAGS)
 
 single_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o single_test $(LDFLAGS)

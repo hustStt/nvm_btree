@@ -184,7 +184,7 @@ void motivationtest(TOID(btree) bt) {
     nvm_print(ops);
 
     //* Scan测试
-    /*
+    
     ops = 100;
     start_time = get_now_micros();
     int scantimes = 4;
@@ -199,13 +199,10 @@ void motivationtest(TOID(btree) bt) {
             for(uint64_t i = from; i < to; i ++) {
                 int size = scan_count;
                 uint64_t key = rnd_scan.Next();
-#ifdef NO_VALUE
+
                 void *pvalues[scan_count];
-                bt->GetRange(key, MAX_KEY, pvalues, size);
-#else
-                std::vector<std::string> values;
-                bt->GetRange(key, MAX_KEY, values, size);
-#endif
+                D_RW(bt)->linear_search_range(key, MAX_KEY, pvalues, size);
+
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -226,7 +223,7 @@ void motivationtest(TOID(btree) bt) {
     scantimes --;
     }
 
-    */
+    
     //* 删除测试
     ops = 10000000;
     start_time = get_now_micros();

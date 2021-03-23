@@ -669,6 +669,114 @@ public:
     }
   }
 
+  void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
+    int i, off = 0;
+    uint8_t previous_switch_counter;
+    page *current = this;
+
+    while (current) {
+      int old_off = off;
+      do {
+        previous_switch_counter = current->hdr.switch_counter;
+        off = old_off;
+
+        entry_key_t tmp_key;
+        char *tmp_ptr;
+
+        if (IS_FORWARD(previous_switch_counter)) {
+          if ((tmp_key = current->records[0].key) > min) {
+            if (tmp_key < max) {
+              if ((tmp_ptr = current->records[0].ptr) != NULL) {
+                if (tmp_key == current->records[0].key) {
+                  if (tmp_ptr) {
+                    //buf[off++] = (unsigned long)tmp_ptr;
+                    values[off] = tmp_ptr;
+                    off++;
+                    if(off >= size) {
+                      return ;
+                    }
+                  }
+                }
+              }
+            } else {
+              size = off;
+              return;
+            }
+          }
+
+          for (i = 1; current->records[i].ptr != NULL; ++i) {
+            if ((tmp_key = current->records[i].key) > min) {
+              if (tmp_key < max) {
+                if ((tmp_ptr = current->records[i].ptr) !=
+                    current->records[i - 1].ptr) {
+                  if (tmp_key == current->records[i].key) {
+                    if (tmp_ptr) {
+                      //buf[off++] = (unsigned long)tmp_ptr;
+                      values[off] = tmp_ptr;
+                      off++;
+                      if(off >= size) {
+                        return ;
+                      }
+                    }
+                  }
+                }
+              } else {
+                size = off;
+                return;
+              }
+            }
+          }
+        } else {
+          for (i = current->count() - 1; i > 0; --i) {
+            if ((tmp_key = current->records[i].key) > min) {
+              if (tmp_key < max) {
+                if ((tmp_ptr = current->records[i].ptr) !=
+                    current->records[i - 1].ptr) {
+                  if (tmp_key == current->records[i].key) {
+                    if (tmp_ptr) {
+                      //buf[off++] = (unsigned long)tmp_ptr;
+                      values[off] = tmp_ptr;
+                      off++;
+                      if(off >= size) {
+                          return ;
+                      }
+                    }
+                  }
+                }
+              } else {
+                size = off;
+                return;
+              }
+            }
+          }
+
+          if ((tmp_key = current->records[0].key) > min) {
+            if (tmp_key < max) {
+              if ((tmp_ptr = current->records[0].ptr) != NULL) {
+                if (tmp_key == current->records[0].key) {
+                  if (tmp_ptr) {
+                    //buf[off++] = (unsigned long)tmp_ptr;
+                    values[off] = tmp_ptr;
+                    off++;
+                    if(off >= size) {
+                        return ;
+                    }
+                  }
+                }
+              }
+            } else {
+              size = off;
+              return;
+            }
+          }
+        }
+      } while (previous_switch_counter != current->hdr.switch_counter);
+
+      // todo
+      current = D_RW(current->hdr.sibling_ptr);
+    }
+  }
+
   char *linear_search(entry_key_t key) {
     int i = 1;
     uint8_t previous_switch_counter;
