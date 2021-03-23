@@ -8,8 +8,7 @@
 #include "random.h"
 #include "debug.h"
 #include "statistic.h"
-
-static inline int file_exists_(char const *file) { return access(file, F_OK); }
+#include "nvm_common.h"
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -44,7 +43,7 @@ int main(int argc, char *argv[]) {
     } else {
         pop = pmemobj_open(persistent_path, "btree");
         bt = POBJ_ROOT(pop, btree);
-        D_RW(bt)->setPop(pop);
+        //D_RW(bt)->setPop(pop);
     }
 
     // bt->PrintInfo();
