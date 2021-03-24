@@ -47,12 +47,15 @@ InnerNode::~InnerNode() {
 // binary search the first key in the innernode larger than input key
 int InnerNode::findIndex(const Key& k) {
     // TODO
-    for (int i = 0; i< nKeys;++i) {
-        if (k < keys[i]) {
-            return i; 
+    int low=0,high=nKeys-1;
+    while(low<=high){
+        int mid = low+(high-low)/2;
+        if (k >= keys[mid])
+            low = mid+1;
+        else
+            high = mid-1;
         }
-    }
-    return nKeys;
+    return low;
 }
 
 
@@ -644,15 +647,15 @@ void LeafNode::insertNonFull(const Key& k, const Value& v) {
     int idx=findFirstZero();
     assert(idx!=-1);
     //set free to use bit
-    setBit(idx);
     fingerprints[idx]=keyHash(k);
     kv[idx].k=k;
     kv[idx].v=v;
     ++n;
     //persist();
-    pmem_persist(bitmap, 4);
     pmem_persist(&(fingerprints[idx]),sizeof(fingerprints[idx]));
     pmem_persist(&(kv[idx]),sizeof(kv[idx]));
+    setBit(idx);
+    pmem_persist(bitmap, 4);
 }
 
 // split the leaf node
@@ -661,8 +664,7 @@ KeyNode* LeafNode::split() {
     // TODO
     //LeafNode split when n = 2*d-1;
     LeafNode* newLeaf = new LeafNode(tree);
-    LeafNode* tmp = new LeafNode(tree);
-    memcpy(newLeaf,this,sizeof(LeafNode));
+    pmem_memcpy_persist(newLeaf,this,sizeof(LeafNode));
     //memset(bitmap,0,bitmapSize);
     Key midkey=findSplitKey();
     // for(int i=0;i<n/2;++i){ //original leaf
