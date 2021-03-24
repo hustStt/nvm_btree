@@ -10,6 +10,10 @@
 #include "../src/statistic.h"
 #include "../src/nvm_common.h"
 
+#define LOGPATH "/mnt/pmem1/log_persistent"
+#define PATH "/mnt/pmem1/ycsb"
+#define NODEPATH   "/mnt/pmem1/persistent"
+
 int using_existing_data = 0;
 int test_type = 1;
 int thread_num = 1;
@@ -28,8 +32,13 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
+    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
+        print_log(LV_ERR, "Initial allocator failed");
+        return 0;
+    }
+
     //btree *bt = new btree();
-    FPTree* bt;
+    FPTree* bt = new FPTree(15);
     
 
     // bt->PrintInfo();
