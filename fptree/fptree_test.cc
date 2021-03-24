@@ -201,7 +201,7 @@ void motivationtest(FPTree* bt) {
                 uint64_t key = rnd_scan.Next();
 
                 void *pvalues[scan_count];
-                bt->scan(key, UINT64_MAX, pvalues, scan_count);
+                bt->scan(key, UINT64_MAX, pvalues, size);
 
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);

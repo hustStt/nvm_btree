@@ -662,17 +662,26 @@ KeyNode* LeafNode::split() {
     LeafNode* newLeaf = new LeafNode(tree);
     memset(bitmap,0,bitmapSize);
     Key midkey=findSplitKey();
-    for(int i=0;i<n/2;++i){ //original leaf
-        fingerprints[i]=keyHash(getKey(i));
-        setBit(i);
+    // for(int i=0;i<n/2;++i){ //original leaf
+    //     fingerprints[i]=keyHash(getKey(i));
+    //     setBit(i);
+    // }
+    // for(int i=n/2;i<n;++i){//new Leaf
+    //     newLeaf->insertNonFull(getKey(i),getValue(i));
+    // }
+    // n=n/2;
+
+    for(int i = 0;i < 2*degree; ++i){
+        if (getBit(i) == 1 && getKey(i) >= midkey) {
+            newLeaf->insertNonFull(getKey(i),getValue(i));
+            resetBit(i);
+        }
     }
-    for(int i=n/2;i<n;++i){//new Leaf
-        newLeaf->insertNonFull(getKey(i),getValue(i));
-    }
-    n=n/2;
+
     //*pNext = newLeaf->getPPointer();
     newChild->node=newLeaf;
     newChild->key=midkey;
+    newLeaf->next = this->next;
     newLeaf->persist();
     this->persist();
     return newChild;
@@ -688,8 +697,23 @@ inline int cmp_kv(const void* a,const void* b)
 Key LeafNode::findSplitKey() {
     Key midKey = 0;
     // TODO
-    qsort(kv,n,sizeof(KeyValue),cmp_kv);
-    midKey = kv[n/2].k;
+    //qsort(kv,n,sizeof(KeyValue),cmp_kv);
+    //midKey = kv[n/2].k;
+    int size_n = n / 2;
+    priority_queue<Key, vector<Key>, greater<Key>> q;
+    for(int i = 0;i < 2*degree; ++i){
+        if (getBit(i) == 1) {
+            if (q.size() < size_n) {
+                q.push(getKey(i));
+            } else {
+                if (getKey(i) > q.top()) {
+                    q.pop();
+                    q.push(getKey(i));
+                }
+            }
+        }
+    }
+    midKey = q.top();
     return midKey;
 }
 // get the target bit in bitmap
@@ -897,6 +921,7 @@ void FPTree::scan(Key min, Key max, void **values, int &size) {
         }
         current = current->next;
     }
+    size = off;
 }
 
 
