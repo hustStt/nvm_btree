@@ -661,24 +661,31 @@ KeyNode* LeafNode::split() {
     // TODO
     //LeafNode split when n = 2*d-1;
     LeafNode* newLeaf = new LeafNode(tree);
-    memset(bitmap,0,bitmapSize);
+    LeafNode* tmp = new LeafNode(tree);
+    memcpy(newLeaf,this,sizeof(LeafNode));
+    //memset(bitmap,0,bitmapSize);
     Key midkey=findSplitKey();
-    for(int i=0;i<n/2;++i){ //original leaf
-        fingerprints[i]=keyHash(getKey(i));
-        setBit(i);
-    }
-    for(int i=n/2;i<n;++i){//new Leaf
-        newLeaf->insertNonFull(getKey(i),getValue(i));
-    }
-    n=n/2;
-
-    // for(int i = 0;i < 2*degree; ++i){
-    //     if (getBit(i) == 1 && getKey(i) >= midkey) {
-    //         newLeaf->insertNonFull(getKey(i),getValue(i));
-    //         resetBit(i);
-    //         n--; 
-    //     }
+    // for(int i=0;i<n/2;++i){ //original leaf
+    //     fingerprints[i]=keyHash(getKey(i));
+    //     setBit(i);
     // }
+    // for(int i=n/2;i<n;++i){//new Leaf
+    //     newLeaf->insertNonFull(getKey(i),getValue(i));
+    // }
+    // n=n/2;
+
+    for(int i = 0;i < 2*degree; ++i){
+        if (getBit(i) == 0) {
+            continue;
+        }
+        if (getKey(i) >= midkey) {
+            resetBit(i);
+        } else {
+            newLeaf->resetBit(i);
+        }
+    }
+    newLeaf->n = n / 2;
+    n = n - n / 2;
 
     //*pNext = newLeaf->getPPointer();
     newChild->node=newLeaf;
@@ -699,23 +706,23 @@ inline int cmp_kv(const void* a,const void* b)
 Key LeafNode::findSplitKey() {
     Key midKey = 0;
     // TODO
-    qsort(kv,n,sizeof(KeyValue),cmp_kv);
-    midKey = kv[n/2].k;
-    // int size_n = n / 2;
-    // priority_queue<Key, vector<Key>, greater<Key>> q;
-    // for(int i = 0;i < 2*degree; ++i){
-    //     if (getBit(i) == 1) {
-    //         if (q.size() < size_n) {
-    //             q.push(getKey(i));
-    //         } else {
-    //             if (getKey(i) > q.top()) {
-    //                 q.pop();
-    //                 q.push(getKey(i));
-    //             }
-    //         }
-    //     }
-    // }
-    // midKey = q.top();
+    //qsort(kv,n,sizeof(KeyValue),cmp_kv);
+    //midKey = kv[n/2].k;
+    int size_n = n / 2;
+    priority_queue<Key, vector<Key>, greater<Key>> q;
+    for(int i = 0;i < 2*degree; ++i){
+        if (getBit(i) == 1) {
+            if (q.size() < size_n) {
+                q.push(getKey(i));
+            } else {
+                if (getKey(i) > q.top()) {
+                    q.pop();
+                    q.push(getKey(i));
+                }
+            }
+        }
+    }
+    midKey = q.top();
     return midKey;
 }
 // get the target bit in bitmap
