@@ -187,6 +187,7 @@ public:
     bool       remove(Key k);
     bool       update(Key k, Value v);
     Value      find(Key k);
+    void       scan(Key min, Key max, void **values, int &size);
     LeafNode*  findLeaf(Key K);
 
     InnerNode* getRoot();

@@ -47,16 +47,14 @@ InnerNode::~InnerNode() {
 // binary search the first key in the innernode larger than input key
 int InnerNode::findIndex(const Key& k) {
     // TODO
-    int low=0,high=nKeys-1;
-    while(low<=high){
-        int mid = low+(high-low)/2;
-        if (k >= keys[mid])
-            low = mid+1;
-        else
-            high = mid-1;
+    for (int i = 0; i< nKeys;++i) {
+        if (k < keys[i]) {
+            return i; 
         }
-    return low;
+    }
+    return nKeys;
 }
+
 
 // insert the node that is assumed not full
 // insert format:
@@ -882,6 +880,38 @@ Value FPTree::find(Key k) {
         return root->find(k);
     }
     return MAX_VALUE;
+}
+
+void FPTree::scan(Key min, Key max, void **values, int &size) {
+    LeafNode* current = findLeaf(min);
+    int off = 0;
+    while (current) {
+        for(int i = 0;i < 2*degree; ++i){
+            if(current->getBit(i)==1 && (current->kv[i].k > min)){
+                values[off] = (char *)(current->kv[i].v);
+                off++;
+                if(off >= size) {
+                    return ;
+                }
+            }
+        }
+        current = current->next;
+    }
+}
+
+
+
+LeafNode* FPTree::findLeaf(Key k) {
+    if (root == nullptr) {
+        return nullptr;
+    }
+    InnerNode* current = root;
+    int idx;
+    while(!current->isLeaf) {
+        idx = current->findIndex(k);
+        current = (InnerNode *)(current->childrens[idx]);
+    }
+    return (LeafNode*)current;
 }
 
 // call the InnerNode and LeafNode print func to print the whole tree
