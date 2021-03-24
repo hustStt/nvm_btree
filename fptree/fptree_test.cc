@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <future>
 
 #include "fptree.h"
 #include "../src/random.h"
@@ -13,6 +14,10 @@
 #define LOGPATH "/mnt/pmem1/log_persistent"
 #define PATH "/mnt/pmem1/ycsb"
 #define NODEPATH   "/mnt/pmem1/persistent"
+
+const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
+const uint64_t NVM_NODE_SIZE = 20 * (1ULL << 30);
+
 
 int using_existing_data = 0;
 int test_type = 1;
