@@ -11,7 +11,7 @@ MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
 
-SING_LIB_SOURCES = clhash.c fptree.cc utility.cpp p_allocator.cpp
+SING_LIB_SOURCES = fptree.cc utility.cpp ../src/nvm_allocator.cc
 
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
@@ -26,7 +26,7 @@ default:  all
 all: clean single_test
 
 clean: 
-	rm -f /mnt/pmem0/mytest
+	rm -f /mnt/pmem1/mytest
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
 	rm -f single_test mult_test pmdk_test
