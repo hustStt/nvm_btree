@@ -184,7 +184,7 @@ void motivationtest(FPTree* bt) {
     nvm_print(ops);
 
     //* Scan测试
-    /*
+    
     ops = 100;
     start_time = get_now_micros();
     int scantimes = 4;
@@ -201,7 +201,7 @@ void motivationtest(FPTree* bt) {
                 uint64_t key = rnd_scan.Next();
 
                 void *pvalues[scan_count];
-                
+                bt->scan(key, UINT64_MAX, pvalues, scan_count);
 
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
@@ -222,7 +222,7 @@ void motivationtest(FPTree* bt) {
     scan_count *= 10;
     scantimes --;
     }
-*/
+
     
     //* 删除测试
     ops = 10000000;
