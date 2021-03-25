@@ -18,6 +18,7 @@
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 const uint64_t NVM_NODE_SIZE = 20 * (1ULL << 30);
 
+extern Statistic stats_leaf;
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -97,11 +98,12 @@ void motivationtest(FPTree* bt, uint64_t load_num) {
                 stats.add_put();
 
                 if ((i % 50000) == 0) {
+                    cout<<"leaf_put:";
+                    stats_leaf.print_latency();
+                    stats_leaf.clear_period();
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
-                    stats_leaf.print_latency();
-                    stats_leaf.clear_period();
                 }
                 // if ((i % 40000000) == 0) {
                 //     printf("Number %ld", i / 40000000);
