@@ -5,6 +5,7 @@
 
 #include "../src/nvm_common.h"
 #include "utility.h"
+#include "../src/statistic.h"
 
 // In Mac C++, it is little-endian
 // 0x12345677 --> 78 56 34 12
@@ -15,6 +16,8 @@ typedef struct t_NodeLevel NodeLevel;
 class FPTree;
 class InnerNode;
 class LeafNode;
+
+static Statistic stats_leaf;
 
 class Node {
 protected:

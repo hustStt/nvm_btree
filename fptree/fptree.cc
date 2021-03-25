@@ -631,6 +631,7 @@ LeafNode::~LeafNode() {
 
 // insert an entry into the leaf, need to split it if it is full
 KeyNode* LeafNode::insert(const Key& k, const Value& v) {
+    stats_leaf.start();
     KeyNode* newChild = NULL;
     // TODO
     if(n<2*degree-1){
@@ -643,6 +644,8 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
         next=(LeafNode*)(newChild->node);
         ((LeafNode*)(newChild->node))->prev=this;
     }
+    stats_leaf.end();
+    stats_leaf.add_put();
     return newChild;
 }
 
@@ -839,8 +842,6 @@ Value LeafNode::find(const Key& k) {
         if(getBit(i)==1&&(fingerprints[i]==hash)){
             if(getKey(i)==k) {
                 return getValue(i);
-            } else {
-                printf("not find\n");
             }
         }
         ++cursor;
