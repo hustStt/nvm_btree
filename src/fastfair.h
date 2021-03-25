@@ -26,6 +26,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <vector>
+#include <statistic.h>
 
 #define PAGESIZE (512)
 
@@ -44,6 +45,8 @@ POBJ_LAYOUT_END(btree);
 using entry_key_t = int64_t;
 
 using namespace std;
+
+static Statistic stats_leaf;
 
 class btree {
 private:
@@ -500,20 +503,23 @@ public:
   page *store(btree *bt, char *left, entry_key_t key, char *right, bool flush,
               page *invalid_sibling = NULL) {
     // If this node has a sibling node,
-    if ((hdr.sibling_ptr.oid.off != 0) &&
-        ((page *)hdr.sibling_ptr.oid.off != invalid_sibling)) {
-      // Compare this key with the first key of the sibling
-      if (key > D_RO(hdr.sibling_ptr)->records[0].key) {
-        return D_RW(hdr.sibling_ptr)
-            ->store(bt, NULL, key, right, true, invalid_sibling);
-      }
-    }
+    // if ((hdr.sibling_ptr.oid.off != 0) &&
+    //     ((page *)hdr.sibling_ptr.oid.off != invalid_sibling)) {
+    //   // Compare this key with the first key of the sibling
+    //   if (key > D_RO(hdr.sibling_ptr)->records[0].key) {
+    //     return D_RW(hdr.sibling_ptr)
+    //         ->store(bt, NULL, key, right, true, invalid_sibling);
+    //   }
+    // }
+    stats_leaf.start();
 
     register int num_entries = count();
 
     // FAST
     if (num_entries < cardinality - 1) {
       insert_key(bt->pop, key, right, &num_entries, flush);
+      stats_leaf.end();
+      stats_leaf.add_put();
       return (page *)pmemobj_oid(this).off;
     } else { // FAIR
       // overflow
@@ -569,6 +575,8 @@ public:
         sibling_ptr->insert_key(bt->pop, key, right, &sibling_cnt);
         ret = (page *)sibling.oid.off;
       }
+      stats_leaf.end();
+      stats_leaf.add_put();
 
       // Set a new root or insert the split key to the parent
       if (D_RO(bt->root) == this) { // only one node can update the root ptr
