@@ -24,16 +24,9 @@ uint64_t countOneBits(Byte b) {
     return count;
 }
 
-const uint64_t kFNVOffsetBasis64_ = 0xCBF29CE484222325;
-const uint64_t kFNVPrime64_ = 1099511628211;
-
 // func that generates the fingerprints
 Byte keyHash(Key k) {
-    uint64_t hash = kFNVOffsetBasis64_;
-    uint64_t octet = k & 0x00ff;
-    hash = hash ^ octet;
-    hash = hash * kFNVPrime64_;
-    return hash & 0x00ff;
+    return utils::Hash(k) & 0x00ff;
 }
 
 bool PPointer::operator==(const PPointer p) const {
