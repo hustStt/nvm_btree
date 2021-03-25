@@ -76,7 +76,7 @@ void motivationtest(TOID(btree) bt, uint64_t load_num) {
     vector<future<void>> futures(thread_num);
 
     //*插入初始化数据
-    ops = 400000000;
+    ops = load_num;
     start_time = get_now_micros();
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;
