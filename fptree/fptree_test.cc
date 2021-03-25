@@ -97,12 +97,12 @@ void motivationtest(FPTree* bt, uint64_t load_num) {
                 stats.add_put();
 
                 if ((i % 50000) == 0) {
-                    cout<<"leaf_put:";
-                    stats_leaf.print_latency();
-                    stats_leaf.clear_period();
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
+                    cout<<"leaf_put:";
+                    stats_leaf.print_latency();
+                    stats_leaf.clear_period();
                 }
                 // if ((i % 40000000) == 0) {
                 //     printf("Number %ld", i / 40000000);
