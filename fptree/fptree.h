@@ -17,6 +17,8 @@ class FPTree;
 class InnerNode;
 class LeafNode;
 
+extern Statistic stats_leaf;
+
 class Node {
 protected:
     friend class FPTree;
