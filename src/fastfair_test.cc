@@ -17,10 +17,14 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-void motivationtest(TOID(btree) bt);
+void motivationtest(TOID(btree) bt, uint64_t load_num);
 void nvm_print(int ops_num);
+int parse_input(int num, char **para);
 
 int main(int argc, char *argv[]) {
+    if(parse_input(argc, argv) != 0) {
+        return 0;
+    }
 
 #ifdef NO_VALUE
     printf("Have define NO_VALUE\n");
@@ -30,13 +34,13 @@ int main(int argc, char *argv[]) {
 
     //btree *bt = new btree();
 
-    char* persistent_path = "/mnt/pmem0/mytest";
+    char* persistent_path = "/mnt/pmem1/mytest";
 
     TOID(btree) bt = TOID_NULL(btree);
     PMEMobjpool *pop;
 
     if (file_exists_(persistent_path) != 0) {
-        pop = pmemobj_create(persistent_path, "btree", 8000000000,
+        pop = pmemobj_create(persistent_path, "btree", 30000000000,
                             0666); // make 1GB memory pool
         bt = POBJ_ROOT(pop, btree);
         D_RW(bt)->constructor(pop);
@@ -61,7 +65,7 @@ int main(int argc, char *argv[]) {
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
 
-void motivationtest(TOID(btree) bt) {
+void motivationtest(TOID(btree) bt, uint64_t load_num) {
     uint64_t i;
     uint64_t ops;
     Statistic stats;
@@ -92,7 +96,7 @@ void motivationtest(TOID(btree) bt) {
                 stats.end();
                 stats.add_put();
 
-                if ((i % 1000) == 0) {
+                if ((i % 50000) == 0) {
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
@@ -269,4 +273,26 @@ void nvm_print(int ops_num)
                 1.0 * (NVM_KeySize + NVM_ValueSize) * ops_num * 1e6 / use_time / 1048576, 
                 1.0 * ops_num * 1e6 / use_time);
     printf("-------------   write to nvm  end: ----------------------\n");
+}
+
+int parse_input(int num, char **para)
+{
+    if(num < 4) {
+        cout << "input parameter nums incorrect! " << num << endl;
+        return -1; 
+    }
+
+    using_existing_data = atoi(para[1]);
+    test_type = atoi(para[2]);
+    ops_num = atoi(para[3]);
+
+    if(num > 4) {
+        thread_num = atoi(para[4]);
+    }
+
+    print_log(LV_INFO, "using_existing_data: %d(0:no, 1:yes)", using_existing_data);
+    print_log(LV_INFO, "test_type: %d(0:Motivation test, 1:Function test)", test_type);
+    print_log(LV_INFO, "ops_num: %llu", ops_num);
+    print_log(LV_INFO, "thread number: %d", thread_num);
+    return 0;
 }

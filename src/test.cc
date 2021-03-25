@@ -354,7 +354,6 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
                 auto key = rnd_put.Next();
                 snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
                 string value(valuebuf, NVM_ValueSize);
-                stats.start();
                 // printf("Insert number %ld, key %llx.\n", i, key);
 #ifdef NO_VALUE
                 char *pvalue = (char *)key;
@@ -362,13 +361,9 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
 #else
                 bt->Insert(key, value);
 #endif
-                stats.end();
-                stats.add_put();
 
                 if ((i % 50000) == 0) {
-                    cout<<"Put_test:"<<i;
-                    stats.print_latency();
-                    stats.clear_period();
+                    cout<<"Put_test:"<<i<<endl;
                 }
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
@@ -477,17 +472,11 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_delete.Next();
-                stats.start();
 
                 bt->Delete(key);
 
-                stats.end();
-                stats.add_put();
-
                 if ((i % 50000) == 0) {
-                    cout<<"Del_test:"<<i;
-                    stats.print_latency();
-                    stats.clear_period();
+                    cout<<"Del_test:"<<i<<endl;
                 }
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
