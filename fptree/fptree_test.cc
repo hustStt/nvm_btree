@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     
 
     // bt->PrintInfo();
-    motivationtest(bt);
+    motivationtest(bt,ops_num);
 
     
     //AllocatorExit();
