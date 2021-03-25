@@ -831,7 +831,11 @@ Value LeafNode::find(const Key& k) {
     Byte* cursor=fingerprints;
     for(int i=0;i<2*degree;++i){
         if(getBit(i)==1&&(fingerprints[i]==hash)){
-            if(getKey(i)==k) return getValue(i);
+            if(getKey(i)==k) {
+                return getValue(i);
+            } else {
+                printf("not find\n");
+            }
         }
         ++cursor;
     }
