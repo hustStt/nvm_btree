@@ -13,6 +13,8 @@
 #define NODEPATH   "/mnt/pmem1/persistent"
 #define LOGPATH "/mnt/pmem1/log_persistent"
 
+extern Statistic stats_leaf;
+
 const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 
@@ -313,6 +315,9 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
+                    cout<<"leaf:";
+                    stats_leaf.print_latency();
+                    stats_leaf.clear_period();
                 }
                 // if ((i % 40000000) == 0) {
                 //     printf("Number %ld", i / 40000000);

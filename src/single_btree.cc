@@ -1164,6 +1164,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
   //         sub_root, invalid_sibling);
   //   }
   // }
+  stats_leaf.start();
 
   register int num_entries = count();
   // ptr
@@ -1181,8 +1182,6 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     if (this->hdr.leftmost_ptr == nullptr) { 
         stats_leaf.end();
         stats_leaf.add_put();
-        stats_leaf.print_latency();
-        stats_leaf.clear_period();
       }
     return this;
   }
@@ -1237,9 +1236,6 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     if (this->hdr.leftmost_ptr == nullptr) {
         stats_leaf.end();
         stats_leaf.add_put();
-        printf("split\n");
-        stats_leaf.print_latency();
-        stats_leaf.clear_period();
       }
 
     // create a new nvmpage
