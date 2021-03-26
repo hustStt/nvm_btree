@@ -73,7 +73,7 @@ private:
     friend class FPTree;
 
     FPTree* tree;     // the tree that the node belongs to
-    int     degree;   // the degree of the node
+    int     level;   // the degree of the node
     bool    isLeaf;   // judge whether the node is leaf
 
     bool   isRoot;     // judge whether the node is root
