@@ -47,12 +47,12 @@ public:
 // only allocated in func split()
 typedef struct t_KeyNode {
     Key key;
-    Node* node;
+    void* node;
 } KeyNode;
 
 // used by print func
 typedef struct t_NodeLevel {
-    Node* node;
+    void* node;
     int level;
 } NodeLevel;
 
@@ -68,15 +68,19 @@ typedef struct t_KeyValue {
 | nKeys | Keys = {k1,...,kn} | Children = {c1,...,cn+1} |
 ---------------------------------------------------------
 */
-class InnerNode : public Node {
+class InnerNode {
 private:
     friend class FPTree;
+
+    FPTree* tree;     // the tree that the node belongs to
+    int     degree;   // the degree of the node
+    bool    isLeaf;   // judge whether the node is leaf
 
     bool   isRoot;     // judge whether the node is root
     int    nKeys;      // amount of keys
     int    nChild;     // amount of children
     Key*   keys;       // max (2 * d + 1) keys
-    Node** childrens;  // max (2 * d + 2) node pointers
+    void** childrens;  // max (2 * d + 2) node pointers
 
     int findIndex(const Key& k);
 
@@ -95,7 +99,7 @@ public:
     ~InnerNode();
 
     KeyNode* insert(const Key& k, const Value& v);
-    void     insertNonFull(const Key& k, Node* const& node);
+    void     insertNonFull(const Key& k, void* const& node);
     KeyNode* insertLeaf(const KeyNode& leaf);
     bool     remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete);
     bool     update(const Key& k, const Value& v);
@@ -104,7 +108,7 @@ public:
     KeyNode* split();
     void     removeChild(const int& KeyIdx, const int& childIdx);
 
-    Node*    getChild(const int& idx);
+    void*    getChild(const int& idx);
     Key      getKey(const int& idx);
     int      getKeyNum() { return this->nKeys; }
     int      getChildNum() { return this->nChild; }
@@ -118,10 +122,14 @@ public:
 -------------------------------------------------------------
 */
 // LeafNode structure is the leaf node in NVM that is buffered in the DRAM.
-class LeafNode : public Node{
+class LeafNode{
 private:
     friend class FPTree;
     friend class InnerNode;
+
+    FPTree* tree;     // the tree that the node belongs to
+    int     degree;   // the degree of the node
+    bool    isLeaf;   // judge whether the node is leaf
 
     // the NVM relative variables
     //char*      pmem_addr;      // the pmem address of the leaf node
@@ -181,7 +189,7 @@ private:
     InnerNode* root;
     uint64_t   degree;
 
-    void recursiveDelete(Node* n);
+    void recursiveDelete(void* n);
 public:
     FPTree(uint64_t degree);
     ~FPTree();

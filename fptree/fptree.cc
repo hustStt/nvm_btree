@@ -34,7 +34,7 @@ InnerNode::InnerNode(const int& d, FPTree* const& t, bool _isRoot) {
     you should PAY ATTENTION to this.
     **/
     keys = new Key[2*d+1];// max (2 * d + 1) keys
-    childrens = new Node*[2*d+2];//max (2 * d + 2)  node pointers
+    childrens = new void*[2*d+2];//max (2 * d + 2)  node pointers
     //
     isRoot = _isRoot;     // judge whether the node is root
 }
@@ -74,7 +74,7 @@ int InnerNode::findIndex(const Key& k) {
 // | key | node pointer |
 // ======================
 // WARNING: can not insert when it has no entry
-void InnerNode::insertNonFull(const Key& k, Node* const& node) {
+void InnerNode::insertNonFull(const Key& k, void* const& node) {
     // TODO
     //the keys nodekey in node satisfies nodekey>=key;
     //if it has no entry,return
@@ -112,7 +112,12 @@ KeyNode* InnerNode::insert(const Key& k, const Value& v) {
     // TODO
     //find insert positon+
     int index = findIndex(k);
-    newChild = childrens[index]->insert(k,v);
+    if (((InnerNode *)childrens[index])->isLeaf) {
+        newChild = ((LeafNode *)childrens[index])->insert(k,v);
+    } else {
+        newChild = ((InnerNode *)childrens[index])->insert(k,v);
+    }
+    
     if(newChild==NULL) return newChild;
     else{
         //if Innernode has enough space
@@ -163,7 +168,7 @@ KeyNode* InnerNode::insertLeaf(const KeyNode& leaf) {
     // next level is leaf, insert to childrens array
     // TODO
     int index = findIndex(leaf.key);
-    if(childrens[0]->ifLeaf()){ //if next level is leaf
+    if(((InnerNode *)childrens[0])->isLeaf){ //if next level is leaf
         if(this->nKeys<degree*2){
             insertNonFull(leaf.key,leaf.node);
         }
@@ -244,7 +249,7 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
     bool ifRemove = false; 
     // only have one leaf
     // TODO
-    if (this->isRoot && this->nKeys == 0 && this->nChild == 1 && getChild(0)->ifLeaf()) {
+    if (this->isRoot && this->nKeys == 0 && this->nChild == 1 && ((LeafNode *)getChild(0))->isLeaf) {
         LeafNode * removeLeaf = (LeafNode *)getChild(0);
         ifRemove = removeLeaf->remove(k, 0, this, ifDelete);
         if (ifDelete) {
@@ -503,7 +508,10 @@ bool InnerNode::update(const Key& k, const Value& v) {
     // TODO
     if(nKeys==0&&nChild==0) return false;
     int idx=findIndex(k);
-    return childrens[idx]->update(k,v);
+    if (((InnerNode *)childrens[idx])->isLeaf) {
+        return ((LeafNode *)childrens[idx])->update(k, v);
+    }
+    return ((InnerNode *)childrens[idx])->update(k,v);
 }
 
 // find the target value with the search key, return MAX_VALUE if it fails.
@@ -511,11 +519,14 @@ Value InnerNode::find(const Key& k) {
     // TODO
     if(nKeys==0&&nChild==0) return MAX_VALUE;
     int idx=findIndex(k);
-    return childrens[idx]->find(k);
+    if (((InnerNode *)childrens[idx])->isLeaf) {
+        return ((LeafNode *)childrens[idx])->find(k);
+    }
+    return ((InnerNode *)childrens[idx])->find(k);
 }
 
 // get the children node of this InnerNode
-Node* InnerNode::getChild(const int& idx) {
+void* InnerNode::getChild(const int& idx) {
     // TODO
     if (idx < this->nChild){
         return this->childrens[idx];
@@ -865,15 +876,8 @@ void LeafNode::persist() {
 }
 
 // call by the ~FPTree(), delete the whole tree
-void FPTree::recursiveDelete(Node* n) {
-    if (n->isLeaf) {
-        //delete n;
-    } else {
-        for (int i = 0; i < ((InnerNode*)n)->nChild; i++) {
-            recursiveDelete(((InnerNode*)n)->childrens[i]);
-        }
-        delete n;
-    }
+void FPTree::recursiveDelete(void* n) {
+   
 }
 
 FPTree::FPTree(uint64_t t_degree) {
@@ -963,14 +967,16 @@ LeafNode* FPTree::findLeaf(Key k) {
 // TIPS: use Queue
 void FPTree::printTree() {
     // TODO
-    queue<Node*> q;
+    queue<void*> q;
     q.push(root);
     while(!q.empty()){
-        Node* tmp = q.front();
+        InnerNode* tmp = (InnerNode*)q.front();
         if(!tmp->isLeaf){
             for(int i=0;i<((InnerNode*)(tmp))->nChild;++i) q.push(((InnerNode*)(tmp))->getChild(i));
-        } 
-        tmp->printNode();
+            tmp->printNode();
+        } else {
+            ((LeafNode *)tmp)->printNode();
+        }
         q.pop();
     }
 }
