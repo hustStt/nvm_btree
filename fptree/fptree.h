@@ -153,7 +153,7 @@ public:
     }
 */
     KeyNode*    insert(const Key& k, const Value& v);
-    void        insertNonFull(const Key& k, const Value& v);
+    void        insertNonFull(const Key& k, const Value& v, bool flush = true);
     bool        remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete);
     bool        update(const Key& k, const Value& v);
     Value       find(const Key& k);

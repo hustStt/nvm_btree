@@ -658,7 +658,7 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
 }
 
 // insert into the leaf node that is assumed not full
-void LeafNode::insertNonFull(const Key& k, const Value& v) {
+void LeafNode::insertNonFull(const Key& k, const Value& v,bool flush) {
     // TODO
     //find the first free slot
     int idx=findFirstZero();
@@ -669,10 +669,12 @@ void LeafNode::insertNonFull(const Key& k, const Value& v) {
     kv[idx].v=v;
     ++n;
     //persist();
-    //pmem_persist(&(fingerprints[idx]),sizeof(fingerprints[idx]));
-    //pmem_persist(&(kv[idx]),sizeof(kv[idx]));
+    if (flush) {
+        pmem_persist(&(fingerprints[idx]),sizeof(fingerprints[idx]));
+        pmem_persist(&(kv[idx]),sizeof(kv[idx]));
+    }
     setBit(idx);
-    //pmem_persist(bitmap, 4);
+    if (flush ) pmem_persist(bitmap, 4);
 }
 
 // split the leaf node
@@ -681,30 +683,17 @@ KeyNode* LeafNode::split() {
     // TODO
     //LeafNode split when n = 2*d-1;
     LeafNode* newLeaf = new LeafNode(tree);
-    pmem_memcpy_persist(newLeaf,this,sizeof(LeafNode));
-    //memset(bitmap,0,bitmapSize);
+    //pmem_memcpy_persist(newLeaf,this,sizeof(LeafNode));
+    memset(bitmap,0,bitmapSize);
     Key midkey=findSplitKey();
-    // for(int i=0;i<n/2;++i){ //original leaf
-    //     fingerprints[i]=keyHash(getKey(i));
-    //     setBit(i);
-    // }
-    // for(int i=n/2;i<n;++i){//new Leaf
-    //     newLeaf->insertNonFull(getKey(i),getValue(i));
-    // }
-    // n=n/2;
-
-    for(int i = 0;i < 2*degree; ++i){
-        if (getBit(i) == 0) {
-            continue;
-        }
-        if (getKey(i) >= midkey) {
-            resetBit(i);
-        } else {
-            newLeaf->resetBit(i);
-        }
+    for(int i=0;i<n/2;++i){ //original leaf
+        fingerprints[i]=keyHash(getKey(i));
+        setBit(i);
     }
-    newLeaf->n = n / 2;
-    n = n - n / 2;
+    for(int i=n/2;i<n;++i){//new Leaf
+        newLeaf->insertNonFull(getKey(i),getValue(i),false);
+    }
+    n=n/2;
 
     //*pNext = newLeaf->getPPointer();
     newChild->node=newLeaf;
@@ -725,23 +714,23 @@ inline int cmp_kv(const void* a,const void* b)
 Key LeafNode::findSplitKey() {
     Key midKey = 0;
     // TODO
-    //qsort(kv,n,sizeof(KeyValue),cmp_kv);
-    //midKey = kv[n/2].k;
-    int size_n = n / 2;
-    priority_queue<Key, vector<Key>, greater<Key>> q;
-    for(int i = 0;i < 2*degree; ++i){
-        if (getBit(i) == 1) {
-            if (q.size() < size_n) {
-                q.push(getKey(i));
-            } else {
-                if (getKey(i) > q.top()) {
-                    q.pop();
-                    q.push(getKey(i));
-                }
-            }
-        }
-    }
-    midKey = q.top();
+    qsort(kv,n,sizeof(KeyValue),cmp_kv);
+    midKey = kv[n/2].k;
+    // int size_n = n / 2;
+    // priority_queue<Key, vector<Key>, greater<Key>> q;
+    // for(int i = 0;i < 2*degree; ++i){
+    //     if (getBit(i) == 1) {
+    //         if (q.size() < size_n) {
+    //             q.push(getKey(i));
+    //         } else {
+    //             if (getKey(i) > q.top()) {
+    //                 q.pop();
+    //                 q.push(getKey(i));
+    //             }
+    //         }
+    //     }
+    // }
+    // midKey = q.top();
     return midKey;
 }
 // get the target bit in bitmap
@@ -801,7 +790,7 @@ bool LeafNode::remove(const Key& k, const int& index, InnerNode* const& parent, 
                 break;
             }
     }
-    //pmem_persist(bitmap, 4);
+    pmem_persist(bitmap, 4);
     if (n == 0) {
         //the leafnode have no entry so free this leaf
         ifDelete = true;
@@ -832,7 +821,7 @@ bool LeafNode::update(const Key& k, const Value& v) {
             if(getKey(i)==k){
                 kv[i].v=v;
                 ifUpdate=true;
-                //pmem_persist(&(kv[i].v),sizeof(kv[i].v));
+                pmem_persist(&(kv[i].v),sizeof(kv[i].v));
                 break;
             }
         }
@@ -872,7 +861,7 @@ int LeafNode::findFirstZero() {
 void LeafNode::persist() {
     // TODO
     //pmem_msync(pmem_addr,calLeafSize());
-    //pmem_persist(this,sizeof(LeafNode));
+    pmem_persist(this,sizeof(LeafNode));
 }
 
 // call by the ~FPTree(), delete the whole tree
