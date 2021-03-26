@@ -114,7 +114,7 @@ KeyNode* InnerNode::insert(const Key& k, const Value& v) {
     int index = findIndex(k);
     InnerNode *p = (InnerNode *)childrens[index];
     while (!p->isLeaf) {
-        p = (InnerNode *)childrens[p->findIndex(k)];
+        p = (InnerNode *)(p->childrens[p->findIndex(k)]);
     }
     newChild = ((LeafNode *)p)->insert(k,v);
     
@@ -514,7 +514,7 @@ bool InnerNode::update(const Key& k, const Value& v) {
     int idx=findIndex(k);
     InnerNode *p = (InnerNode *)childrens[idx];
     while (!p->isLeaf) {
-        p = (InnerNode *)childrens[p->findIndex(k)];
+        p = (InnerNode *)p->childrens[p->findIndex(k)];
     }
     return ((LeafNode *)p)->update(k, v);
 }
@@ -526,7 +526,7 @@ Value InnerNode::find(const Key& k) {
     int idx=findIndex(k);
     InnerNode *p = (InnerNode *)childrens[idx];
     while (!p->isLeaf) {
-        p = (InnerNode *)childrens[p->findIndex(k)];
+        p = (InnerNode *)p->childrens[p->findIndex(k)];
     }
     return ((LeafNode *)p)->find(k);
 }
