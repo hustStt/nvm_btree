@@ -267,7 +267,7 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
         return false;
     }
     while (!removeChild->isLeaf) {
-        removeChild = (InnerNode *)childrens[removeChild->findIndex(k)];
+        removeChild = (InnerNode *)removeChild->childrens[removeChild->findIndex(k)];
     }
     ifRemove = ((LeafNode *)removeChild)->remove(k, childIdx, this, ifDelete);
     
