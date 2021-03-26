@@ -634,7 +634,7 @@ LeafNode::~LeafNode() {
 
 // insert an entry into the leaf, need to split it if it is full
 KeyNode* LeafNode::insert(const Key& k, const Value& v) {
-    stats_leaf.start();
+    // stats_leaf.start();
     KeyNode* newChild = NULL;
     // TODO
     if(n<2*degree-1){
@@ -647,13 +647,13 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
         next=(LeafNode*)(newChild->node);
         ((LeafNode*)(newChild->node))->prev=this;
     }
-    count_num++;
-    stats_leaf.end();
-    stats_leaf.add_put();
-    if (count_num % 50000) {
-        stats_leaf.print_latency();
-        stats_leaf.clear_period();
-    }
+    // count_num++;
+    // stats_leaf.end();
+    // stats_leaf.add_put();
+    // if (count_num % 50000) {
+    //     stats_leaf.print_latency();
+    //     stats_leaf.clear_period();
+    // }
     return newChild;
 }
 
