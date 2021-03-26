@@ -14,6 +14,7 @@ Descrption: implementation of FPTREE
 using namespace std;
 
 Statistic stats_leaf;
+uint64_t count_num = 0;
 
 // Initial the new InnerNode
 InnerNode::InnerNode(const int& d, FPTree* const& t, bool _isRoot) {
@@ -638,10 +639,6 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
     // TODO
     if(n<2*degree-1){
         insertNonFull(k,v);
-        stats_leaf.end();
-        stats_leaf.add_put();
-        stats_leaf.print_latency();
-        stats_leaf.clear_period();
     }
     //it's full
     else{
@@ -649,9 +646,11 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
         newChild=split();
         next=(LeafNode*)(newChild->node);
         ((LeafNode*)(newChild->node))->prev=this;
-        stats_leaf.end();
-        stats_leaf.add_put();
-        printf("split\n");
+    }
+    count_num++;
+    stats_leaf.end();
+    stats_leaf.add_put();
+    if (count_num % 50000) {
         stats_leaf.print_latency();
         stats_leaf.clear_period();
     }

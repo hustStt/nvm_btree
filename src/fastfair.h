@@ -511,21 +511,21 @@ public:
     //         ->store(bt, NULL, key, right, true, invalid_sibling);
     //   }
     // }
-    if (this->hdr.leftmost_ptr == nullptr) {
-      stats_leaf.start();
-    }
+    // if (this->hdr.leftmost_ptr == nullptr) {
+    //   stats_leaf.start();
+    // }
 
     register int num_entries = count();
 
     // FAST
     if (num_entries < cardinality - 1) {
       insert_key(bt->pop, key, right, &num_entries, flush);
-      if (this->hdr.leftmost_ptr == nullptr) { 
-        stats_leaf.end();
-        stats_leaf.add_put();
-        stats_leaf.print_latency();
-        stats_leaf.clear_period();
-      }
+      // if (this->hdr.leftmost_ptr == nullptr) { 
+      //   stats_leaf.end();
+      //   stats_leaf.add_put();
+      //   stats_leaf.print_latency();
+      //   stats_leaf.clear_period();
+      // }
       return (page *)pmemobj_oid(this).off;
     } else { // FAIR
       // overflow
@@ -581,13 +581,13 @@ public:
         sibling_ptr->insert_key(bt->pop, key, right, &sibling_cnt);
         ret = (page *)sibling.oid.off;
       }
-      if (this->hdr.leftmost_ptr == nullptr) {
-        stats_leaf.end();
-        stats_leaf.add_put();
-        printf("split\n");
-        stats_leaf.print_latency();
-        stats_leaf.clear_period();
-      }
+      // if (this->hdr.leftmost_ptr == nullptr) {
+      //   stats_leaf.end();
+      //   stats_leaf.add_put();
+      //   printf("split\n");
+      //   stats_leaf.print_latency();
+      //   stats_leaf.clear_period();
+      // }
       // Set a new root or insert the split key to the parent
       if (D_RO(bt->root) == this) { // only one node can update the root ptr
         TOID(page) new_root;
