@@ -79,8 +79,8 @@ private:
     bool   isRoot;     // judge whether the node is root
     int    nKeys;      // amount of keys
     int    nChild;     // amount of children
-    Key*   keys;       // max (2 * d + 1) keys
-    void** childrens;  // max (2 * d + 2) node pointers
+    Key   keys[LEAF_DEGREE * 2 + 1];       // max (2 * d + 1) keys
+    void* childrens[LEAF_DEGREE * 2 + 2];  // max (2 * d + 2) node pointers
 
     int findIndex(const Key& k);
 

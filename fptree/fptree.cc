@@ -33,8 +33,8 @@ InnerNode::InnerNode(const int& d, FPTree* const& t, bool _isRoot) {
     and it DOSEN'T mean B+ Tree Inner node can contain 2*d+1 keys 
     you should PAY ATTENTION to this.
     **/
-    keys = new Key[2*d+1];// max (2 * d + 1) keys
-    childrens = new void*[2*d+2];//max (2 * d + 2)  node pointers
+    //keys = new Key[2*d+1];// max (2 * d + 1) keys
+    //childrens = new void*[2*d+2];//max (2 * d + 2)  node pointers
     //
     isRoot = _isRoot;     // judge whether the node is root
 }
@@ -112,11 +112,11 @@ KeyNode* InnerNode::insert(const Key& k, const Value& v) {
     // TODO
     //find insert positon+
     int index = findIndex(k);
-    if (((InnerNode *)childrens[index])->isLeaf) {
-        newChild = ((LeafNode *)childrens[index])->insert(k,v);
-    } else {
-        newChild = ((InnerNode *)childrens[index])->insert(k,v);
+    InnerNode *p = (InnerNode *)childrens[index];
+    while (!p->isLeaf) {
+        p = (InnerNode *)childrens[p->findIndex(k)];
     }
+    newChild = ((LeafNode *)p)->insert(k,v);
     
     if(newChild==NULL) return newChild;
     else{
@@ -266,11 +266,11 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
     if (removeChild == NULL) {
         return false;
     }
-    if (removeChild->isLeaf) {
-        ifRemove = ((LeafNode *)removeChild)->remove(k, childIdx, this, ifDelete);
-    } else {
-        ifRemove = removeChild->remove(k, childIdx, this, ifDelete);
+    while (!removeChild->isLeaf) {
+        removeChild = (InnerNode *)childrens[removeChild->findIndex(k)];
     }
+    ifRemove = ((LeafNode *)removeChild)->remove(k, childIdx, this, ifDelete);
+    
     if (ifDelete) { //child node is delete and may need adjustment
         ifDelete = false;
         if (degree + 1 > nChild && !this->isRoot) {
@@ -512,10 +512,11 @@ bool InnerNode::update(const Key& k, const Value& v) {
     // TODO
     if(nKeys==0&&nChild==0) return false;
     int idx=findIndex(k);
-    if (((InnerNode *)childrens[idx])->isLeaf) {
-        return ((LeafNode *)childrens[idx])->update(k, v);
+    InnerNode *p = (InnerNode *)childrens[idx];
+    while (!p->isLeaf) {
+        p = (InnerNode *)childrens[p->findIndex(k)];
     }
-    return ((InnerNode *)childrens[idx])->update(k,v);
+    return ((LeafNode *)p)->update(k, v);
 }
 
 // find the target value with the search key, return MAX_VALUE if it fails.
@@ -523,10 +524,11 @@ Value InnerNode::find(const Key& k) {
     // TODO
     if(nKeys==0&&nChild==0) return MAX_VALUE;
     int idx=findIndex(k);
-    if (((InnerNode *)childrens[idx])->isLeaf) {
-        return ((LeafNode *)childrens[idx])->find(k);
+    InnerNode *p = (InnerNode *)childrens[idx];
+    while (!p->isLeaf) {
+        p = (InnerNode *)childrens[p->findIndex(k)];
     }
-    return ((InnerNode *)childrens[idx])->find(k);
+    return ((LeafNode *)p)->find(k);
 }
 
 // get the children node of this InnerNode
