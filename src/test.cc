@@ -315,9 +315,6 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
                     cout<<"Put_test:"<<i;
                     stats.print_latency();
                     stats.clear_period();
-                    cout<<"leaf:";
-                    stats_leaf.print_latency();
-                    stats_leaf.clear_period();
                 }
                 // if ((i % 40000000) == 0) {
                 //     printf("Number %ld", i / 40000000);
