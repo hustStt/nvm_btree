@@ -669,10 +669,10 @@ void LeafNode::insertNonFull(const Key& k, const Value& v) {
     kv[idx].v=v;
     ++n;
     //persist();
-    pmem_persist(&(fingerprints[idx]),sizeof(fingerprints[idx]));
-    pmem_persist(&(kv[idx]),sizeof(kv[idx]));
+    //pmem_persist(&(fingerprints[idx]),sizeof(fingerprints[idx]));
+    //pmem_persist(&(kv[idx]),sizeof(kv[idx]));
     setBit(idx);
-    pmem_persist(bitmap, 4);
+    //pmem_persist(bitmap, 4);
 }
 
 // split the leaf node
@@ -801,7 +801,7 @@ bool LeafNode::remove(const Key& k, const int& index, InnerNode* const& parent, 
                 break;
             }
     }
-    pmem_persist(bitmap, 4);
+    //pmem_persist(bitmap, 4);
     if (n == 0) {
         //the leafnode have no entry so free this leaf
         ifDelete = true;
@@ -832,8 +832,8 @@ bool LeafNode::update(const Key& k, const Value& v) {
             if(getKey(i)==k){
                 kv[i].v=v;
                 ifUpdate=true;
+                //pmem_persist(&(kv[i].v),sizeof(kv[i].v));
                 break;
-                pmem_persist(&(kv[i].v),sizeof(kv[i].v));
             }
         }
     } 
@@ -872,7 +872,7 @@ int LeafNode::findFirstZero() {
 void LeafNode::persist() {
     // TODO
     //pmem_msync(pmem_addr,calLeafSize());
-    pmem_persist(this,sizeof(LeafNode));
+    //pmem_persist(this,sizeof(LeafNode));
 }
 
 // call by the ~FPTree(), delete the whole tree
