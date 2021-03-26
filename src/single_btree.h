@@ -27,6 +27,7 @@
 
 #include "nvm_common.h"
 #include "single_pmdk.h"
+#include "statistic.h"
 
 //#define PAGESIZE 256
 

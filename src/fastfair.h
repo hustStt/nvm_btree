@@ -523,6 +523,8 @@ public:
       if (this->hdr.leftmost_ptr == nullptr) { 
         stats_leaf.end();
         stats_leaf.add_put();
+        stats_leaf.print_latency();
+        stats_leaf.clear_period();
       }
       return (page *)pmemobj_oid(this).off;
     } else { // FAIR
@@ -582,6 +584,9 @@ public:
       if (this->hdr.leftmost_ptr == nullptr) {
         stats_leaf.end();
         stats_leaf.add_put();
+        printf("split\n");
+        stats_leaf.print_latency();
+        stats_leaf.clear_period();
       }
       // Set a new root or insert the split key to the parent
       if (D_RO(bt->root) == this) { // only one node can update the root ptr

@@ -638,6 +638,10 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
     // TODO
     if(n<2*degree-1){
         insertNonFull(k,v);
+        stats_leaf.end();
+        stats_leaf.add_put();
+        stats_leaf.print_latency();
+        stats_leaf.clear_period();
     }
     //it's full
     else{
@@ -645,9 +649,12 @@ KeyNode* LeafNode::insert(const Key& k, const Value& v) {
         newChild=split();
         next=(LeafNode*)(newChild->node);
         ((LeafNode*)(newChild->node))->prev=this;
+        stats_leaf.end();
+        stats_leaf.add_put();
+        printf("split\n");
+        stats_leaf.print_latency();
+        stats_leaf.clear_period();
     }
-    stats_leaf.end();
-    stats_leaf.add_put();
     return newChild;
 }
 

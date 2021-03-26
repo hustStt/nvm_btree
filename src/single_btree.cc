@@ -1,6 +1,7 @@
 #include "single_btree.h"
 #include "single_pmdk.h"
 
+Statistic stats_leaf;
 /*
  *  class btree
  */
@@ -349,17 +350,17 @@ char *btree::btree_search(entry_key_t key){
 }
 
 void btree::btreeInsert(entry_key_t key, char* right) {
-    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
-        CalcuRootLevel();
-        //deform();
-    }
+    //if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
+    //    CalcuRootLevel();
+    //    deform();
+    //}
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(key);
         sub_root->subtree_insert(this, key, right);
     } else {
         btree_insert(key, right);
-        if (log_alloc) log_alloc->writeKv(key,right);
-        total_size += sizeof(key) + sizeof(right);
+        //if (log_alloc) log_alloc->writeKv(key,right);
+        //total_size += sizeof(key) + sizeof(right);
     }
 }
 
@@ -431,7 +432,7 @@ void btree::btreeDelete(entry_key_t key) {
         }
     } else {
         btree_delete(key);
-        if (log_alloc) log_alloc->deleteKey(key);
+        //if (log_alloc) log_alloc->deleteKey(key);
     }
 }
 
@@ -1177,6 +1178,12 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     //   sub_root->log_alloc->writeKv(hdr.nvmpage_off, key, target);
     // }
     insert_key(key, right, &num_entries);
+    if (this->hdr.leftmost_ptr == nullptr) { 
+        stats_leaf.end();
+        stats_leaf.add_put();
+        stats_leaf.print_latency();
+        stats_leaf.clear_period();
+      }
     return this;
   }
   else {// FAIR
@@ -1227,6 +1234,13 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       sibling->insert_key(key, right, &sibling_cnt);
       ret = sibling;
     }
+    if (this->hdr.leftmost_ptr == nullptr) {
+        stats_leaf.end();
+        stats_leaf.add_put();
+        printf("split\n");
+        stats_leaf.print_latency();
+        stats_leaf.clear_period();
+      }
 
     // create a new nvmpage
     if (sub_root != NULL && hdr.level <= sub_root->dram_ptr->hdr.level) {
