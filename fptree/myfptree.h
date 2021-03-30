@@ -1068,234 +1068,6 @@ void page::linear_search_range(entry_key_t min, entry_key_t max, void **values, 
     size = off;
 }
 
-btree::btree(){
-  root = (char*)new page();
-  printf("[Fast-Fair]: root is %p, btree is %p.\n", root, this);
-  height = 1;
-}
-
-btree::btree(page *root_) {
-    if(root_ == nullptr) {
-        root = (char*)new page();
-        height = 1;
-    } else {
-        root = (char *)root_;
-        height = root_->GetLevel() + 1;
-    }
-    printf("[Fast-Fair]: root is %p, btree is %p, height is %d.\n", root, this, height);
-}
-
-void btree::setNewRoot(char *new_root) {
-  this->root = (char*)new_root;
-  clflush((char*)&(this->root),sizeof(char*));
-  ++height;
-}
-
-char *btree::btree_search(entry_key_t key){
-  page* p = (page*)root;
-
-  while(p->hdr.leftmost_ptr != NULL) {
-    p = (page *)p->linear_search(key);
-  }
-
-  page *t;
-  while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
-    p = t;
-    if(!p) {
-      break;
-    }
-  }
-
-  if(!t) {
-    // printf("NOT FOUND %llx, t = %x\n", key, t);
-    return NULL;
-  }
-
-  return (char *)t;
-}
-
-page *btree::btree_search_leaf(entry_key_t key){
-  page* p = (page*)root;
-
-  while(p->hdr.leftmost_ptr != NULL) {
-    p = (page *)p->linear_search(key);
-  }
-  return p;
-}
-
-
-
-// store the key into the node at the given level 
-void btree::btree_insert_internal
-(char *left, entry_key_t key, char *right, uint32_t level) {
-  if(level > ((page *)root)->hdr.level)
-    return;
-
-  page *p = (page *)this->root;
-
-  while(p->hdr.level > level) 
-    p = (page *)p->linear_search(key);
-
-  if(!p->store(this, NULL, key, right, true)) {
-    btree_insert_internal(left, key, right, level);
-  }
-}
-
-void btree::btree_delete(entry_key_t key) {
-  page* p = (page*)root;
-
-  while(p->hdr.leftmost_ptr != NULL){
-    p = (page*) p->linear_search(key);
-  }
-
-  page *t;
-  while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
-    p = t;
-    if(!p)
-      break;
-  }
-
-  if(p && t) {
-    if(!p->remove(this, key)) {
-      btree_delete(key);
-    }
-  }
-  else {
-      ;
-    // printf("not found the key to delete %llx\n", key);
-  }
-}
-
-void btree::btree_delete_internal
-(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
-bool *is_leftmost_node, page **left_sibling) {
-  if(level > ((page *)this->root)->hdr.level)
-    return;
-
-  page *p = (page *)this->root;
-
-  while(p->hdr.level > level) {
-    p = (page *)p->linear_search(key);
-  }
-
-  if((char *)p->hdr.leftmost_ptr == ptr) {
-    *is_leftmost_node = true;
-    return;
-  }
-
-  *is_leftmost_node = false;
-
-  for(int i=0; p->records[i].ptr != NULL; ++i) {
-    if(p->records[i].ptr == ptr) {
-      if(i == 0) {
-        if((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
-          *deleted_key = p->records[i].key;
-          *left_sibling = p->hdr.leftmost_ptr;
-          p->remove(this, *deleted_key, false, false);
-          break;
-        }
-      }
-      else {
-        if(p->records[i - 1].ptr != p->records[i].ptr) {
-          *deleted_key = p->records[i].key;
-          *left_sibling = (page *)p->records[i - 1].ptr;
-          p->remove(this, *deleted_key, false, false);
-          break;
-        }
-      }
-    }
-  }
-}
-
-// Function to search keys from "min" to "max"
-void btree::btree_search_range
-(entry_key_t min, entry_key_t max, unsigned long *buf) {
-  page *p = (page *)root;
-
-  while(p) {
-    if(p->hdr.leftmost_ptr != NULL) {
-      // The current page is internal
-      p = (page *)p->linear_search(min);
-    }
-    else {
-      // Found a leaf
-      p->linear_search_range(min, max, buf);
-
-      break;
-    }
-  }
-}
-
-void btree::btree_search_range(entry_key_t min, entry_key_t max, 
-    std::vector<pair<entry_key_t, uint64_t>> &result, int &size) {
-    page *p = (page *)root;
-
-    while(p) {
-        if(p->hdr.leftmost_ptr != NULL) {
-        // The current page is internal
-            p = (page *)p->linear_search(min);
-        }
-        else {
-        // Found a leaf
-            p->linear_search_range(min, max, result, size);
-
-        break;
-        }
-    }
-}
-
-void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
-    page *p = (page *)root;
-
-    while(p) {
-        if(p->hdr.leftmost_ptr != NULL) {
-        // The current page is internal
-            p = (page *)p->linear_search(min);
-        }
-        else {
-        // Found a leaf
-            p->linear_search_range(min, max, values, size);
-
-        break;
-        }
-    }
-}
-
-void btree::printAll(){
-  int total_keys = 0;
-  page *leftmost = (page *)root;
-  printf("root: %p\n", root);
-  if(root) {
-    do {
-      page *sibling = leftmost;
-      while(sibling) {
-        if(sibling->hdr.level == 0) {
-          total_keys += sibling->hdr.last_index + 1;
-        }
-        sibling->print();
-        sibling = sibling->hdr.sibling_ptr;
-      }
-      printf("-----------------------------------------\n");
-      leftmost = leftmost->hdr.leftmost_ptr;
-    } while(leftmost);
-  }
-
-  printf("total number of keys: %d\n", total_keys);
-}
-
-void btree::CalculateSapce(uint64_t &space) {
-    if(root != nullptr) {
-        ((page*)root)->CalculateSapce(space);
-    }
-}
-
-void btree::PrintInfo() {
-    printf("This is a b+ tree.\n");
-    printf("Node size is %lu, M path is %d.\n", sizeof(page), cardinality);
-    printf("Tree height is %d.\n", height);
-
-}
-
 inline int cmp_kv(const void* a,const void* b)
     {
         return ((entry*)a)->key>((entry*)b)->key;
@@ -1303,6 +1075,7 @@ inline int cmp_kv(const void* a,const void* b)
 
 class LeafNode :public page {
     char  fingerprints[cardinality];
+    public:
 
     LeafNode() {
         hdr.n = 0;
@@ -1518,6 +1291,63 @@ class LeafNode :public page {
     }
 };
 
+
+btree::btree(){
+    root = (char *) new LeafNode();
+  //root = (char*)new page();
+  printf("[Fast-Fair]: root is %p, btree is %p.\n", root, this);
+  height = 1;
+}
+
+btree::btree(page *root_) {
+    if(root_ == nullptr) {
+        root = (char*)new page();
+        height = 1;
+    } else {
+        root = (char *)root_;
+        height = root_->GetLevel() + 1;
+    }
+    printf("[Fast-Fair]: root is %p, btree is %p, height is %d.\n", root, this, height);
+}
+
+void btree::setNewRoot(char *new_root) {
+  this->root = (char*)new_root;
+  clflush((char*)&(this->root),sizeof(char*));
+  ++height;
+}
+
+char *btree::btree_search(entry_key_t key){
+  page* p = (page*)root;
+
+  while(p->hdr.leftmost_ptr != NULL) {
+    p = (page *)p->linear_search(key);
+  }
+
+  page *t;
+  while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
+    p = t;
+    if(!p) {
+      break;
+    }
+  }
+
+  if(!t) {
+    // printf("NOT FOUND %llx, t = %x\n", key, t);
+    return NULL;
+  }
+
+  return (char *)t;
+}
+
+page *btree::btree_search_leaf(entry_key_t key){
+  page* p = (page*)root;
+
+  while(p->hdr.leftmost_ptr != NULL) {
+    p = (page *)p->linear_search(key);
+  }
+  return p;
+}
+
     // insert the key in the leaf node
 void btree::btree_insert(entry_key_t key, char* right){ //need to be string
   page* p = (page*)root;
@@ -1531,6 +1361,177 @@ void btree::btree_insert(entry_key_t key, char* right){ //need to be string
   if(!leaf_ptr->insert(this, NULL, key, right)) { // store 
     btree_insert(key, right);
   }
+}
+
+// store the key into the node at the given level 
+void btree::btree_insert_internal
+(char *left, entry_key_t key, char *right, uint32_t level) {
+  if(level > ((page *)root)->hdr.level)
+    return;
+
+  page *p = (page *)this->root;
+
+  while(p->hdr.level > level) 
+    p = (page *)p->linear_search(key);
+
+  if(!p->store(this, NULL, key, right, true)) {
+    btree_insert_internal(left, key, right, level);
+  }
+}
+
+void btree::btree_delete(entry_key_t key) {
+  page* p = (page*)root;
+
+  while(p->hdr.leftmost_ptr != NULL){
+    p = (page*) p->linear_search(key);
+  }
+
+  page *t;
+  while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
+    p = t;
+    if(!p)
+      break;
+  }
+
+  if(p && t) {
+    if(!p->remove(this, key)) {
+      btree_delete(key);
+    }
+  }
+  else {
+      ;
+    // printf("not found the key to delete %llx\n", key);
+  }
+}
+
+void btree::btree_delete_internal
+(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
+bool *is_leftmost_node, page **left_sibling) {
+  if(level > ((page *)this->root)->hdr.level)
+    return;
+
+  page *p = (page *)this->root;
+
+  while(p->hdr.level > level) {
+    p = (page *)p->linear_search(key);
+  }
+
+  if((char *)p->hdr.leftmost_ptr == ptr) {
+    *is_leftmost_node = true;
+    return;
+  }
+
+  *is_leftmost_node = false;
+
+  for(int i=0; p->records[i].ptr != NULL; ++i) {
+    if(p->records[i].ptr == ptr) {
+      if(i == 0) {
+        if((char *)p->hdr.leftmost_ptr != p->records[i].ptr) {
+          *deleted_key = p->records[i].key;
+          *left_sibling = p->hdr.leftmost_ptr;
+          p->remove(this, *deleted_key, false, false);
+          break;
+        }
+      }
+      else {
+        if(p->records[i - 1].ptr != p->records[i].ptr) {
+          *deleted_key = p->records[i].key;
+          *left_sibling = (page *)p->records[i - 1].ptr;
+          p->remove(this, *deleted_key, false, false);
+          break;
+        }
+      }
+    }
+  }
+}
+
+// Function to search keys from "min" to "max"
+void btree::btree_search_range
+(entry_key_t min, entry_key_t max, unsigned long *buf) {
+  page *p = (page *)root;
+
+  while(p) {
+    if(p->hdr.leftmost_ptr != NULL) {
+      // The current page is internal
+      p = (page *)p->linear_search(min);
+    }
+    else {
+      // Found a leaf
+      p->linear_search_range(min, max, buf);
+
+      break;
+    }
+  }
+}
+
+void btree::btree_search_range(entry_key_t min, entry_key_t max, 
+    std::vector<pair<entry_key_t, uint64_t>> &result, int &size) {
+    page *p = (page *)root;
+
+    while(p) {
+        if(p->hdr.leftmost_ptr != NULL) {
+        // The current page is internal
+            p = (page *)p->linear_search(min);
+        }
+        else {
+        // Found a leaf
+            p->linear_search_range(min, max, result, size);
+
+        break;
+        }
+    }
+}
+
+void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, int &size) {
+    page *p = (page *)root;
+
+    while(p) {
+        if(p->hdr.leftmost_ptr != NULL) {
+        // The current page is internal
+            p = (page *)p->linear_search(min);
+        }
+        else {
+        // Found a leaf
+            p->linear_search_range(min, max, values, size);
+
+        break;
+        }
+    }
+}
+
+void btree::printAll(){
+  int total_keys = 0;
+  page *leftmost = (page *)root;
+  printf("root: %p\n", root);
+  if(root) {
+    do {
+      page *sibling = leftmost;
+      while(sibling) {
+        if(sibling->hdr.level == 0) {
+          total_keys += sibling->hdr.last_index + 1;
+        }
+        sibling->print();
+        sibling = sibling->hdr.sibling_ptr;
+      }
+      printf("-----------------------------------------\n");
+      leftmost = leftmost->hdr.leftmost_ptr;
+    } while(leftmost);
+  }
+
+  printf("total number of keys: %d\n", total_keys);
+}
+
+void btree::CalculateSapce(uint64_t &space) {
+    if(root != nullptr) {
+        ((page*)root)->CalculateSapce(space);
+    }
+}
+
+void btree::PrintInfo() {
+    printf("This is a b+ tree.\n");
+    printf("Node size is %lu, M path is %d.\n", sizeof(page), cardinality);
+    printf("Tree height is %d.\n", height);
+
 }
 
 } // namespace FastFair
