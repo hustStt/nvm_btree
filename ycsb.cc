@@ -9,8 +9,11 @@
 #include "include/ycsb/ycsb-c.h"
 #include "random.h"
 #include "fptree/fptree.h"
+#include "fastfair/fastfair.h"
 
 using namespace std;
+
+using FastFair::FastFair;
 
 #define LOGPATH "/mnt/pmem1/log_persistent"
 #define PATH "/mnt/pmem1/ycsb"
@@ -86,28 +89,14 @@ private:
 class FastFairDb : public ycsbc::KvDB {
 public:
     FastFairDb(): tree(nullptr) {}
-    FastFairDb(FPTree *tree): tree(tree) {}
+    FastFairDb(FastFair *tree): tree(tree) {}
     virtual ~FastFairDb() {
       delete tree;
     }
     void Init()
     {
-      char* persistent_path = "/mnt/pmem1/mytest";
-
-      TOID(btree) bt = TOID_NULL(btree);
-      PMEMobjpool *pop;
-
-      if (file_exists_(persistent_path) != 0) {
-          pop = pmemobj_create(persistent_path, "btree", 30000000000,
-                              0666); // make 1GB memory pool
-          bt = POBJ_ROOT(pop, btree);
-          D_RW(bt)->constructor(pop);
-      } else {
-          pop = pmemobj_open(persistent_path, "btree");
-          bt = POBJ_ROOT(pop, btree);
-          //D_RW(bt)->setPop(pop);
-      }
-      tree = D_RW(bt);
+      NVM::data_init();
+      tree = new FastFair();
     }
 
     void Info()
@@ -119,26 +108,26 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
-        tree->insert(key, value);
+        bt->btree_insert(key, pvalue);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
     {
-        value = tree->find(key);
+        value = (uint64_t)tree->btree_search(key);
         return 1;
     }
     int Update(uint64_t key, uint64_t value) {
-        tree->update(key, value);
+        tree->btree_delete(key);
+        tree->btree_insert(key, (char *)value);
         return 1;
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
     {
-        //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
-        //tree->scan(start_key, UINT64_MAX)
+        tree->btree_search_range(start_key, UINT64_MAX, results, len);
         return 1;
     }
 private:
-    FPTree *tree;
+    FastFair *tree;
 };
 
 class FPTreeDb : public ycsbc::KvDB {
