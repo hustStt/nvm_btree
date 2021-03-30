@@ -1323,20 +1323,10 @@ char *btree::btree_search(entry_key_t key){
     p = (page *)p->linear_search(key);
   }
 
-  page *t;
-  while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
-    p = t;
-    if(!p) {
-      break;
-    }
-  }
+  LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
-  if(!t) {
-    // printf("NOT FOUND %llx, t = %x\n", key, t);
-    return NULL;
-  }
-
-  return (char *)t;
+  char *t = leaf_ptr->find(key);
+  return t;
 }
 
 page *btree::btree_search_leaf(entry_key_t key){
@@ -1386,22 +1376,9 @@ void btree::btree_delete(entry_key_t key) {
     p = (page*) p->linear_search(key);
   }
 
-  page *t;
-  while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
-    p = t;
-    if(!p)
-      break;
-  }
-
-  if(p && t) {
-    if(!p->remove(this, key)) {
-      btree_delete(key);
-    }
-  }
-  else {
-      ;
-    // printf("not found the key to delete %llx\n", key);
-  }
+  LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
+  bool ifDelete = false;
+  leaf_ptr->remove(this, key, ifDelete);
 }
 
 void btree::btree_delete_internal

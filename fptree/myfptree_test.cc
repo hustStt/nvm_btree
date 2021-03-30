@@ -186,7 +186,7 @@ void motivationtest(btree *bt, uint64_t load_num) {
     nvm_print(ops);
 
     //* Scan测试
-    
+    /*
     ops = 100;
     start_time = get_now_micros();
     int scantimes = 4;
@@ -224,7 +224,7 @@ void motivationtest(btree *bt, uint64_t load_num) {
     scan_count *= 10;
     scantimes --;
     }
-
+*/
     
     //* 删除测试
     ops = 10000000;
