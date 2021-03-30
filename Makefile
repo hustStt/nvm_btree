@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++ -std=c++17
 AR = ar
 ARFLAGS = rs
 
