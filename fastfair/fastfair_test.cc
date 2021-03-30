@@ -5,10 +5,9 @@
 #include <thread>
 
 #include "fastfair.h"
-#include "random.h"
-#include "debug.h"
-#include "statistic.h"
-#include "nvm_common.h"
+#include "../src/random.h"
+#include "../src/debug.h"
+#include "../src/statistic.h"
 
 int using_existing_data = 0;
 int test_type = 1;
