@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include<queue>
 
-#include "../src/nvm_common.h"
+#include "../fastfair/nvm_alloc.h"
 #include "utility.h"
 #include "../src/statistic.h"
 
@@ -154,12 +154,12 @@ public:
     LeafNode(FPTree* tree);                // allocate a new leaf
     //LeafNode(PPointer p, FPTree* t);       // read a leaf from NVM/SSD
     ~LeafNode();
-    /*
+    
     void *operator new(size_t size) {
-        char *mem =  node_alloc->Allocate(size);
+        void *mem =  NVM::data_alloc->alloc(size);
         return mem;
     }
-*/
+
     KeyNode*    insert(const Key& k, const Value& v);
     void        insertNonFull(const Key& k, const Value& v, bool flush = true);
     bool        remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete);
