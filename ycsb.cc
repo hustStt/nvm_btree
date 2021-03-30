@@ -100,7 +100,7 @@ public:
     void Init()
     {
       NVM::data_init();
-      tree = new FastFair();
+      tree = new FastFair::btree();
     }
 
     void Info()
@@ -112,7 +112,7 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
-        tree->btree_insert(key, pvalue);
+        tree->btree_insert(key, value);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
