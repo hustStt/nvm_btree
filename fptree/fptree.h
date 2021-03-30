@@ -3,9 +3,9 @@
 #include<stdlib.h>
 #include<queue>
 
+#include "../src/nvm_common.h"
 #include "utility.h"
 #include "../src/statistic.h"
-#include "../fastfair/nvm_alloc.h"
 
 // In Mac C++, it is little-endian
 // 0x12345677 --> 78 56 34 12
@@ -79,8 +79,8 @@ private:
     bool   isRoot;     // judge whether the node is root
     int    nKeys;      // amount of keys
     int    nChild;     // amount of children
-    Key   keys[LEAF_DEGREE * 2 + 1];       // max (2 * d + 1) keys
-    void* childrens[LEAF_DEGREE * 2 + 2];  // max (2 * d + 2) node pointers
+    Key*   keys;       // max (2 * d + 1) keys
+    void** childrens;  // max (2 * d + 2) node pointers
 
     int findIndex(const Key& k);
 
@@ -154,12 +154,12 @@ public:
     LeafNode(FPTree* tree);                // allocate a new leaf
     //LeafNode(PPointer p, FPTree* t);       // read a leaf from NVM/SSD
     ~LeafNode();
-    
+    /*
     void *operator new(size_t size) {
-        void *mem =  NVM::data_alloc->alloc(size); 
+        char *mem =  node_alloc->Allocate(size);
         return mem;
     }
-
+*/
     KeyNode*    insert(const Key& k, const Value& v);
     void        insertNonFull(const Key& k, const Value& v, bool flush = true);
     bool        remove(const Key& k, const int& index, InnerNode* const& parent, bool &ifDelete);
