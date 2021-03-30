@@ -13,6 +13,8 @@ ARFLAGS = rs
 
 SING_LIB_SOURCES = fptree.cc utility.cpp ../fastfair/enviroment.cc
 
+FPTREE_LIB_SOURCES = ../fastfair/enviroment.cc
+
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
 TARGET_OBJS = $(SING_LIB_SOURCES:.cc=)
@@ -33,6 +35,9 @@ clean:
 
 fptree_test:
 	$(CXX) $(SING_CXXFLAGS) fptree_test.cc $(SING_LIB_SOURCES) -o test $(LDFLAGS)
+
+fptree:
+	$(CXX) $(SING_CXXFLAGS) myfptree_test.cc $(FPTREE_LIB_SOURCES) -o fptree $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
