@@ -4,12 +4,12 @@
 #include <cstring>
 #include <thread>
 #include <future>
+#include <sys/time.h>
 
 #include "fptree.h"
 #include "../src/random.h"
 #include "../src/debug.h"
 #include "../src/statistic.h"
-#include "../src/nvm_common.h"
 
 #define LOGPATH "/mnt/pmem1/log_persistent"
 #define PATH "/mnt/pmem1/ycsb"
@@ -18,6 +18,9 @@
 const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
 const uint64_t NVM_NODE_SIZE = 20 * (1ULL << 30);
 
+
+const int NVM_ValueSize = 8;
+const int NVM_KeySize = 8;
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -30,6 +33,12 @@ void motivationtest(FPTree* bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
+static inline uint64_t get_now_micros(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec) * 1000000 + tv.tv_usec;
+}
+
 int main(int argc, char *argv[]) {
     if(parse_input(argc, argv) != 0) {
         return 0;
@@ -41,10 +50,7 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
-    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
-        print_log(LV_ERR, "Initial allocator failed");
-        return 0;
-    }
+    NVM::data_init();
 
     //btree *bt = new btree();
     FPTree* bt = new FPTree(15);
