@@ -5,7 +5,7 @@
 #include <thread>
 #include <sys/time.h>
 
-#include "fastfair.h"
+#include "myfptree.h"
 #include "../src/random.h"
 #include "../src/debug.h"
 #include "../src/statistic.h"
@@ -20,7 +20,7 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-using FastFair::btree;
+using FPTree::btree;
 
 void motivationtest(btree* bt, uint64_t load_num);
 void nvm_print(int ops_num);
