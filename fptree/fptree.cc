@@ -262,11 +262,15 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
     // TODO
     int keyIdx = findIndex(k);
     int childIdx = keyIdx;
-    Node * removeChild = (Node *)getChild(childIdx);
+    InnerNode * removeChild = (InnerNode *)getChild(childIdx);
     if (removeChild == NULL) {
         return false;
     }
-    ifRemove = removeChild->remove(k, childIdx, this, ifDelete);
+    if (removeChild->isLeaf) {
+        ifRemove = ((LeafNode *)removeChild)->remove(k, childIdx, this, ifDelete);
+    } else {
+        ifRemove = removeChild->remove(k, childIdx, this, ifDelete);
+    }
     if (ifDelete) { //child node is delete and may need adjustment
         ifDelete = false;
         if (degree + 1 > nChild && !this->isRoot) {
