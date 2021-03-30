@@ -128,11 +128,11 @@ public:
             printf("%s: map at %p \n", __FUNCTION__, pmemaddr_);
         }
         log_num_ = size / LogSize;
-        begin_addr = pmemaddr_ + 256;
+        begin_addr = pmemaddr_ + 512;
         printf("%s: begin_addr at %p \n", __FUNCTION__, begin_addr);
         capacity_ = size;
         if (exist != 0) {
-            pmem_memset_persist(pmemaddr_, 0, 256);
+            pmem_memset_persist(pmemaddr_, 0, 512);
         }
     }
 
