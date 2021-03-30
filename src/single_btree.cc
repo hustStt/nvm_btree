@@ -350,16 +350,16 @@ char *btree::btree_search(entry_key_t key){
 }
 
 void btree::btreeInsert(entry_key_t key, char* right) {
-    //if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
-    //    CalcuRootLevel();
-    //    deform();
-    //}
+    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
+       CalcuRootLevel();
+       deform();
+    }
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(key);
         sub_root->subtree_insert(this, key, right);
     } else {
         btree_insert(key, right);
-        //if (log_alloc) log_alloc->writeKv(key,right);
+        if (log_alloc) log_alloc->writeKv(key,right);
         //total_size += sizeof(key) + sizeof(right);
     }
 }
@@ -432,7 +432,7 @@ void btree::btreeDelete(entry_key_t key) {
         }
     } else {
         btree_delete(key);
-        //if (log_alloc) log_alloc->deleteKey(key);
+        if (log_alloc) log_alloc->deleteKey(key);
     }
 }
 
@@ -739,6 +739,7 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         return true;
       }
       // // 不同介质间的合并操作
+      printf("不同介质合并\n");
       // merge(bt, left_nvm_sibling, deleted_key_from_parent ,sub_root, left_subtree_sibling);
       RebalanceTask * rt = new RebalanceTask(left_subtree_sibling, sub_root, this, nullptr, deleted_key_from_parent);
       sub_root->rt = rt;
@@ -813,10 +814,10 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         //sub_root->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 6);
         //left_subtree_sibling->log_alloc->operateTree(left_sibling->hdr.nvmpage_off, hdr.nvmpage_off, parent_key, 6);
         // sync right left
-        nvmpage *pre = nullptr;
-        sub_root->sync_subtree(&pre);
-        pre = nullptr;
-        left_subtree_sibling->sync_subtree(&pre);
+        // nvmpage *pre = nullptr;
+        // sub_root->sync_subtree(&pre);
+        // pre = nullptr;
+        // left_subtree_sibling->sync_subtree(&pre);
 
         // heat
         uint64_t l = left_subtree_sibling->getHeat();
@@ -1251,10 +1252,10 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
       subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root);
       // sync
-      nvmpage *pre = nullptr;
-      next->sync_subtree(&pre);
-      pre = nullptr;
-      sub_root->sync_subtree(&pre);
+      // nvmpage *pre = nullptr;
+      // next->sync_subtree(&pre);
+      // pre = nullptr;
+      // sub_root->sync_subtree(&pre);
 
       if (sub_root->getSiblingPtr()) 
         sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
