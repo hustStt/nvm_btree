@@ -1658,7 +1658,7 @@ void MyBtree::constructor(PMEMobjpool * pool) {
   pop = pool;
   head = nullptr;
   time_ = 60; // 1min
-  subtree_num = 100;  
+  subtree_num = 1000;  
   bt = new btree(pool);
   switch_ = true;
 
