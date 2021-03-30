@@ -16,7 +16,7 @@
 extern Statistic stats_leaf;
 
 const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
-const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
+const uint64_t NVM_LOG_SIZE = 20 * (1ULL << 30);
 
 int using_existing_data = 0;
 int test_type = 1;
