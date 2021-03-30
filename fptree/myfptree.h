@@ -109,10 +109,9 @@ class header{
 };
 
 class entry{ 
-  private:
+  public :
     entry_key_t key; // 8 bytes
     char* ptr; // 8 bytes
-  public :
     entry(){
       key = LONG_MAX;
       ptr = NULL;
