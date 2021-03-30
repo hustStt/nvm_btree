@@ -42,10 +42,7 @@ const char *workloads[] = {
 class HBKV : public ycsbc::KvDB {
 public:
     HBKV(): tree_(nullptr) {
-      if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
-        print_log(LV_ERR, "Initial allocator failed");
-        return 0;
-      }
+      AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE);
     }
     HBKV(btree *tree): tree_(tree) {}
     virtual ~HBKV() {

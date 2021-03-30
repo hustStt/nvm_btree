@@ -51,7 +51,7 @@ POBJ_LAYOUT_TOID(btree, nvmpage);
 POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
 
-using entry_key_t = int64_t;
+using entry_key_t = uint64_t;
 
 using namespace std;
 
