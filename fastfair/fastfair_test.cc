@@ -17,9 +17,18 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-void motivationtest(TOID(btree) bt, uint64_t load_num);
+void motivationtest( bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
+
+int data_init() {
+    if(!data_alloc) {
+#ifndef USE_MEM
+        data_alloc  = new  NVM::Alloc(PMEM_DIR"data", data_alloc_size);
+#endif
+    }
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
     if(parse_input(argc, argv) != 0) {
@@ -36,19 +45,7 @@ int main(int argc, char *argv[]) {
 
     char* persistent_path = "/mnt/pmem1/mytest";
 
-    TOID(btree) bt = TOID_NULL(btree);
-    PMEMobjpool *pop;
-
-    if (file_exists_(persistent_path) != 0) {
-        pop = pmemobj_create(persistent_path, "btree", 30000000000,
-                            0666); // make 1GB memory pool
-        bt = POBJ_ROOT(pop, btree);
-        D_RW(bt)->constructor(pop);
-    } else {
-        pop = pmemobj_open(persistent_path, "btree");
-        bt = POBJ_ROOT(pop, btree);
-        //D_RW(bt)->setPop(pop);
-    }
+    
 
     // bt->PrintInfo();
     motivationtest(bt,ops_num);

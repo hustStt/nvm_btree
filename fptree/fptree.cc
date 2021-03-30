@@ -20,7 +20,7 @@ uint64_t count_num = 0;
 InnerNode::InnerNode(const int& d, FPTree* const& t, bool _isRoot) {
     // TODO
     tree=t;
-    level = d;
+    degree=d;
     isLeaf=false;
     nKeys = 0;      // amount of keys
     nChild = 0;     // amount of children
@@ -78,7 +78,7 @@ void InnerNode::insertNonFull(const Key& k, void* const& node) {
     // TODO
     //the keys nodekey in node satisfies nodekey>=key;
     //if it has no entry,return
-    if(nKeys==LEAF_DEGREE*2+1) return;
+    if(nKeys==degree*2+1) return;
     int index=findIndex(k);
     //move keys and pointers
     for(int i=nKeys;i>index;--i)
@@ -111,17 +111,17 @@ KeyNode* InnerNode::insert(const Key& k, const Value& v) {
     // 2.recursive insertion
     // TODO
     //find insert positon+
-    InnerNode *p = this;
-    while (p->level != 0) {
-        p = (InnerNode *)(p->childrens[p->findIndex(k)]);
+    int index = findIndex(k);
+    InnerNode *p = (InnerNode *)childrens[index];
+    while (!p->isLeaf) {
+        p = (InnerNode *)childrens[p->findIndex(k)];
     }
-    int index = p->findIndex(k);
-    newChild = ((LeafNode *)childrens[index])->insert(k,v);
+    newChild = ((LeafNode *)p)->insert(k,v);
     
     if(newChild==NULL) return newChild;
     else{
         //if Innernode has enough space
-        if(this->nKeys<LEAF_DEGREE*2){
+        if(this->nKeys<degree*2){
             insertNonFull(newChild->key,newChild->node);
             delete newChild;
             newChild=NULL;
@@ -133,7 +133,7 @@ KeyNode* InnerNode::insert(const Key& k, const Value& v) {
             newChild = this->split();
             if(this->isRoot){
                 //setting new root
-                InnerNode* newRoot= new InnerNode(level + 1,tree,true);
+                InnerNode* newRoot= new InnerNode(degree,tree,true);
                 this->isRoot=false;
                 newRoot->childrens[0]=this;
                 ++(newRoot->nChild);
@@ -169,14 +169,14 @@ KeyNode* InnerNode::insertLeaf(const KeyNode& leaf) {
     // TODO
     int index = findIndex(leaf.key);
     if(((InnerNode *)childrens[0])->isLeaf){ //if next level is leaf
-        if(this->nKeys<LEAF_DEGREE*2){
+        if(this->nKeys<degree*2){
             insertNonFull(leaf.key,leaf.node);
         }
         else{
             insertNonFull(leaf.key,leaf.node);//insert overflow key-value
             newChild = this->split();
             if(this->isRoot){
-            InnerNode* newRoot= new InnerNode(level + 1,tree,true);
+            InnerNode* newRoot= new InnerNode(degree,tree,true);
             this->isRoot=false;
             newRoot->childrens[0]=this;
             ++(newRoot->nChild);
@@ -192,7 +192,7 @@ KeyNode* InnerNode::insertLeaf(const KeyNode& leaf) {
     if(newChild==NULL) return newChild;
     else{
         //if Innernode has enough space
-        if(this->nKeys<LEAF_DEGREE*2){
+        if(this->nKeys<degree*2){
             insertNonFull(newChild->key,newChild->node);
             delete newChild;
             newChild=NULL;
@@ -204,7 +204,7 @@ KeyNode* InnerNode::insertLeaf(const KeyNode& leaf) {
             newChild = this->split();
             if(this->isRoot){
                 //setting new root
-                InnerNode* newRoot= new InnerNode(level + 1,tree,true);
+                InnerNode* newRoot= new InnerNode(degree,tree,true);
                 this->isRoot=false;
                 newRoot->childrens[0]=this;
                 ++(newRoot->nChild);
@@ -267,13 +267,13 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
         return false;
     }
     while (!removeChild->isLeaf) {
-        removeChild = (InnerNode *)removeChild->childrens[removeChild->findIndex(k)];
+        removeChild = (InnerNode *)childrens[removeChild->findIndex(k)];
     }
     ifRemove = ((LeafNode *)removeChild)->remove(k, childIdx, this, ifDelete);
     
     if (ifDelete) { //child node is delete and may need adjustment
         ifDelete = false;
-        if (LEAF_DEGREE + 1 > nChild && !this->isRoot) {
+        if (degree + 1 > nChild && !this->isRoot) {
             //if it is needed adjustment to node
             InnerNode *leftBro, *rightBro;
             /*
@@ -294,22 +294,22 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
                 4. left  have enough room to merge -> mergeLeft
                 5. parent is root and only has two node -> mergeparent
             */
-            if (LEAF_DEGREE + 1 <= right_nChild - 1) { 
+            if (degree + 1 <= right_nChild - 1) { 
                 //right node have enougth children node to give
                 this->redistributeRight(index, rightBro, parent);
             }
-            else if (LEAF_DEGREE + 1 <= left_nChild - 1) {
+            else if (degree + 1 <= left_nChild - 1) {
                 //left node have enougth children node to give
                 this->redistributeLeft(index, leftBro, parent);
             }
-            else if (right_nChild != 0 &&right_nChild + this->nChild <= 2 * LEAF_DEGREE + 1) {
+            else if (right_nChild != 0 &&right_nChild + this->nChild <= 2 * degree + 1) {
                 //right have enough room to merge
                 auto rk = this->keys[keyIdx];   //the key between two node
                 this->mergeRight(rightBro, rk);
                 ifDelete = true;
                 parent->removeChild(keyIdx, index); //delete the node being merged 
             }
-            else if (left_nChild != 0 && left_nChild + this->nChild <= 2 * LEAF_DEGREE + 1) {
+            else if (left_nChild != 0 && left_nChild + this->nChild <= 2 * degree + 1) {
                 //right have enough room to merge
                 auto lk = this->keys[keyIdx - 1]; //the key between two node
                 this->mergeLeft(leftBro, lk);
@@ -514,7 +514,7 @@ bool InnerNode::update(const Key& k, const Value& v) {
     int idx=findIndex(k);
     InnerNode *p = (InnerNode *)childrens[idx];
     while (!p->isLeaf) {
-        p = (InnerNode *)p->childrens[p->findIndex(k)];
+        p = (InnerNode *)childrens[p->findIndex(k)];
     }
     return ((LeafNode *)p)->update(k, v);
 }
@@ -526,7 +526,7 @@ Value InnerNode::find(const Key& k) {
     int idx=findIndex(k);
     InnerNode *p = (InnerNode *)childrens[idx];
     while (!p->isLeaf) {
-        p = (InnerNode *)p->childrens[p->findIndex(k)];
+        p = (InnerNode *)childrens[p->findIndex(k)];
     }
     return ((LeafNode *)p)->find(k);
 }
@@ -888,9 +888,9 @@ void FPTree::recursiveDelete(void* n) {
 
 FPTree::FPTree(uint64_t t_degree) {
     FPTree* temp = this;
-    this->root = new InnerNode(0, temp, true);
+    this->root = new InnerNode(t_degree, temp, true);
     this->degree = t_degree;
-    //bulkLoading();
+    bulkLoading();
 }
 
 FPTree::~FPTree() {

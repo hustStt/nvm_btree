@@ -38,11 +38,11 @@ const char *workloads[] = {
 
 #define ArrayLen(arry) (sizeof(arry) / sizeof(arry[0]))
 
-class FastFairDb : public ycsbc::KvDB {
+class HBKV : public ycsbc::KvDB {
 public:
-    FastFairDb(): tree_(nullptr) {}
-    FastFairDb(btree *tree): tree_(tree) {}
-    virtual ~FastFairDb() {
+    HBKV(): tree_(nullptr) {}
+    HBKV(btree *tree): tree_(tree) {}
+    virtual ~HBKV() {
       mybt->exitBtree();
     }
     void Init()
@@ -83,6 +83,64 @@ private:
     MyBtree *mybt;
 };
 
+class FastFairDb : public ycsbc::KvDB {
+public:
+    FastFairDb(): tree(nullptr) {}
+    FastFairDb(FPTree *tree): tree(tree) {}
+    virtual ~FastFairDb() {
+      delete tree;
+    }
+    void Init()
+    {
+      char* persistent_path = "/mnt/pmem1/mytest";
+
+      TOID(btree) bt = TOID_NULL(btree);
+      PMEMobjpool *pop;
+
+      if (file_exists_(persistent_path) != 0) {
+          pop = pmemobj_create(persistent_path, "btree", 30000000000,
+                              0666); // make 1GB memory pool
+          bt = POBJ_ROOT(pop, btree);
+          D_RW(bt)->constructor(pop);
+      } else {
+          pop = pmemobj_open(persistent_path, "btree");
+          bt = POBJ_ROOT(pop, btree);
+          //D_RW(bt)->setPop(pop);
+      }
+      tree = D_RW(bt);
+    }
+
+    void Info()
+    {
+    }
+
+    void Close() { 
+
+    }
+    int Put(uint64_t key, uint64_t value) 
+    {
+        tree->insert(key, value);
+        return 1;
+    }
+    int Get(uint64_t key, uint64_t &value)
+    {
+        value = tree->find(key);
+        return 1;
+    }
+    int Update(uint64_t key, uint64_t value) {
+        tree->update(key, value);
+        return 1;
+    }
+    int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
+    {
+        //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
+        //tree->scan(start_key, UINT64_MAX)
+        return 1;
+    }
+private:
+    FPTree *tree;
+};
+
 class FPTreeDb : public ycsbc::KvDB {
 public:
     FPTreeDb(): tree(nullptr) {}
@@ -119,6 +177,7 @@ public:
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
     {
         //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
+        //tree->scan(start_key, UINT64_MAX)
         return 1;
     }
 private:
@@ -183,10 +242,12 @@ int main(int argc, const char *argv[])
     }
 
     std::cout << "YCSB test:" << dbName << std::endl;
-    if(dbName == "fastfair") {
-      db = new FastFairDb();
+    if(dbName == "hbkv") {
+      db = new HBKV();
     } else if(dbName == "fptree") {
       db = new FPTreeDb();
+    } else if(dbName == "fastfair") {
+
     }
     db->Init();
 

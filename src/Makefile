@@ -15,12 +15,6 @@ SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
 PMDK_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc single_pmdk.cc
 
-MULT_LIB_SOURCES = nvm_allocator.cc con_btree.cc nvm_btree.cc
-
-SKIPLIST_LIB_SOURCES = nvm_allocator.cc
-
-NVTREE_LIB_SOURCES = nvm_allocator.cc
-
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
 TARGET_OBJS = $(SING_LIB_SOURCES:.cc=)
@@ -44,25 +38,10 @@ clean:
 	rm -f /mnt/pmem1/log_persistent
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
-	rm -f single_test mult_test pmdk_test fastfair
+	rm -f pmdk_test
 
 pmdk_test:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o pmdk_test $(LDFLAGS)
-
-fastfair:
-	$(CXX) $(SING_CXXFLAGS) nvm_allocator.cc fastfair_test.cc -o fastfair $(LDFLAGS)
-
-single_test:
-	$(CXX) $(SING_CXXFLAGS) test.cc $(SING_LIB_SOURCES) -o single_test $(LDFLAGS)
-
-mult_test:
-	$(CXX) $(MULT_CXXFLAGS) test.cc $(MULT_LIB_SOURCES) -o mult_test $(LDFLAGS)
-
-skiplist:
-	$(CXX) $(MULT_CXXFLAGS) test_skiplist.cc $(SKIPLIST_LIB_SOURCES) -o skiplist_test $(LDFLAGS)
-
-nvtree:
-	$(CXX) $(MULT_CXXFLAGS) test_nvtree.cc $(NVTREE_LIB_SOURCES) -o nvtree_test $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
