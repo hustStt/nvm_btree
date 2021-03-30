@@ -16,18 +16,12 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
+using FastFair::btree;
+
 void motivationtest(btree* bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
-int data_init() {
-    if(!data_alloc) {
-#ifndef USE_MEM
-        data_alloc  = new  NVM::Alloc(PMEM_DIR"data", data_alloc_size);
-#endif
-    }
-    return 0;
-}
 
 int main(int argc, char *argv[]) {
     if(parse_input(argc, argv) != 0) {
