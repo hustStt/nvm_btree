@@ -9,6 +9,8 @@
 #include "../src/debug.h"
 #include "../src/statistic.h"
 
+const int NVM_ValueSize = 8;
+
 int using_existing_data = 0;
 int test_type = 1;
 int thread_num = 1;
@@ -41,8 +43,7 @@ int main(int argc, char *argv[]) {
     // bt->PrintInfo();
     motivationtest(bt,ops_num);
 
-    pmemobj_close(pop);
-    //AllocatorExit();
+    NVM::env_exit();
     return 0;
 }
 
@@ -195,7 +196,7 @@ void motivationtest(btree *bt, uint64_t load_num) {
                 uint64_t key = rnd_scan.Next();
 
                 void *pvalues[scan_count];
-                bt->btree_search_range(key, MAX_KEY, pvalues, size);
+                bt->btree_search_range(key, UINT64_MAX, pvalues, size);
 
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
