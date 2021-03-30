@@ -11,6 +11,7 @@
 #include "../src/statistic.h"
 
 const int NVM_ValueSize = 8;
+const int NVM_KeySize = 8;
 
 int using_existing_data = 0;
 int test_type = 1;
