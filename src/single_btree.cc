@@ -350,7 +350,7 @@ char *btree::btree_search(entry_key_t key){
 }
 
 void btree::btreeInsert(entry_key_t key, char* right) {
-    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 6) {
+    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
        CalcuRootLevel();
        deform();
     }
@@ -608,7 +608,7 @@ void btree::PrintInfo() {
 }
 
 void btree::CalcuRootLevel() {
-    tar_level = 6;
+    tar_level = 5;
 }
 
 void btree::deform() {
