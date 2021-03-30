@@ -156,7 +156,7 @@ public:
     ~LeafNode();
     
     void *operator new(size_t size) {
-        char *mem =  NVM::data_alloc->alloc(size);
+        void *mem =  NVM::data_alloc->alloc(size);
         return mem;
     }
 
