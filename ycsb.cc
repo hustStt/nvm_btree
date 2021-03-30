@@ -112,7 +112,7 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
-        tree->btree_insert(key, value);
+        tree->btree_insert(key, (char *)value);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
@@ -143,7 +143,7 @@ public:
     }
     void Init()
     {
-      tree = new FPTree(15);
+      tree = new FPTree(7);
     }
 
     void Info()
