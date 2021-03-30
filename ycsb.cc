@@ -13,8 +13,6 @@
 
 using namespace std;
 
-using FastFair::FastFair;
-
 #define LOGPATH "/mnt/pmem1/log_persistent"
 #define PATH "/mnt/pmem1/ycsb"
 #define NODEPATH   "/mnt/pmem1/persistent"
@@ -95,7 +93,7 @@ private:
 class FastFairDb : public ycsbc::KvDB {
 public:
     FastFairDb(): tree(nullptr) {}
-    FastFairDb(FastFair *tree): tree(tree) {}
+    FastFairDb(FastFair::btree *tree): tree(tree) {}
     virtual ~FastFairDb() {
       delete tree;
     }
@@ -114,7 +112,7 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
-        bt->btree_insert(key, pvalue);
+        tree->btree_insert(key, pvalue);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
@@ -133,7 +131,7 @@ public:
         return 1;
     }
 private:
-    FastFair *tree;
+    FastFair::btree *tree;
 };
 
 class FPTreeDb : public ycsbc::KvDB {
