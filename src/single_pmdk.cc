@@ -564,7 +564,7 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
       if (sub_root->getSiblingPtr()) 
         sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
       sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
-      sub_root->setHeat(sub_root->getHeat() / 2);
+      sub_root->setHeat(sub_root->getHeat() * 2 / 3);
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
           hdr.level + 1);

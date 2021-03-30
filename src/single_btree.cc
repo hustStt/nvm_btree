@@ -1260,7 +1260,7 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       if (sub_root->getSiblingPtr()) 
         sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
       sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
-      sub_root->setHeat(sub_root->heat / 2);
+      sub_root->setHeat(sub_root->heat * 2 / 3);
 
       // log
       // sub_root->log_alloc->operateTree(hdr.nvmpage_off, sibling->hdr.nvmpage_off, m, 4);

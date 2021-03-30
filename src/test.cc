@@ -340,7 +340,7 @@ void motivationtest(NVMBtree *bt, uint64_t load_num) {
     printf("Initial_insert test finished\n");
     nvm_print(ops);
 
-    //bt->test();
+    bt->test();
 
     //* 随机写测试
     ops = 10000000;

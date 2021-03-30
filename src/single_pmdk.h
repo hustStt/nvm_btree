@@ -772,7 +772,7 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree *
     POBJ_NEW(pop, &node, subtree, NULL, NULL);
     if (pre) {
       // 分裂生成
-      D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() / 2);
+      D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() * 2 / 3);
     } else {
       // 新生成
       D_RW(node)->constructor(pop, subtree_root);
