@@ -43,10 +43,16 @@ const char *workloads[] = {
 
 class HBKV : public ycsbc::KvDB {
 public:
-    HBKV(): tree_(nullptr) {}
+    HBKV(): tree_(nullptr) {
+      if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
+        print_log(LV_ERR, "Initial allocator failed");
+        return 0;
+      }
+    }
     HBKV(btree *tree): tree_(tree) {}
     virtual ~HBKV() {
       mybt->exitBtree();
+      AllocatorExit();
     }
     void Init()
     {
@@ -225,18 +231,13 @@ int main(int argc, const char *argv[])
     int total_ops = 0;
     int sum = 0;
 
-    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
-        print_log(LV_ERR, "Initial allocator failed");
-        return 0;
-    }
-
     std::cout << "YCSB test:" << dbName << std::endl;
     if(dbName == "hbkv") {
       db = new HBKV();
     } else if(dbName == "fptree") {
       db = new FPTreeDb();
     } else if(dbName == "fastfair") {
-
+      db = new FastFairDb();
     }
     db->Init();
 
@@ -294,7 +295,6 @@ int main(int argc, const char *argv[])
       db->Info();
     }
     delete db;
-    AllocatorExit();
     return 0;
 }
 
