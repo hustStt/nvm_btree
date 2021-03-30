@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     NVM::data_init();
 
     //btree *bt = new btree();
-    FPTree* bt = new FPTree(15);
+    FPTree* bt = new FPTree(7);
     
 
     // bt->PrintInfo();
