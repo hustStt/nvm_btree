@@ -1132,7 +1132,7 @@ void btree::btree_insert(entry_key_t key, char* right){ //need to be string
     p = (page*)p->linear_search(key);
   }
 
-  LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>p;
+  LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
   if(!leaf_ptr->store(this, NULL, key, right, true)) { // store 
     btree_insert(key, right);
@@ -1327,7 +1327,7 @@ class LeafNode :public page {
     }
 
     char keyHash(entry_key_t key) {
-        return utils::Hash(k) & 0x00ff;
+        return utils::Hash(key) & 0x00ff;
     }
 
     int getBit(const int& idx) {
@@ -1335,7 +1335,7 @@ class LeafNode :public page {
         assert(idx<cardinality);
         int offset = idx%8;
         int pos=idx/8;
-        char bits = bitmap[pos];
+        char bits = hdr.bitmap[pos];
         bits = (bits>>offset) & 1;
         return (int) bits;
     }
@@ -1344,17 +1344,17 @@ class LeafNode :public page {
         assert(idx<cardinality);
         int offset = idx%8;
         int pos=idx/8;
-        char bits = bitmap[pos];
+        char bits = hdr.bitmap[pos];
         bits = bits | (1<<offset);
-        bitmap[pos] = bits;
+        hdr.bitmap[pos] = bits;
     }
     void resetBit(const int& idx){
         assert(idx<cardinality);
         int offset = idx%8;
         int pos=idx/8;
-        char bits = bitmap[pos];
+        char bits = hdr.bitmap[pos];
         bits = ~((~bits) | (1<<offset));
-        bitmap[pos] = bits;
+        hdr.bitmap[pos] = bits;
     }
 
     int findFirstZero() {
@@ -1394,7 +1394,7 @@ class LeafNode :public page {
         return ((entry*)a)->key>((entry*)b)->key;
     }
 
-    Key LeafNode::findSplitKey() {
+    entry_key_t LeafNode::findSplitKey() {
         entry_key_t midKey = 0;
         // TODO
         qsort(records,hdr.n,sizeof(entry),cmp_kv);
@@ -1418,7 +1418,7 @@ class LeafNode :public page {
         hdr.n=hdr.n/2;
 
         //*pNext = newLeaf->getPPointer();
-        newLeaf->next = this->next;
+        newLeaf->hdr.sibling_ptr = this->hdr.sibling_ptr;
         newLeaf->persist();
         this->persist();
         return newLeaf;
@@ -1477,7 +1477,7 @@ class LeafNode :public page {
             }
             ++cursor;
         }
-        return UINT64_MAX;
+        return nullptr;
     }
 
     bool update(const entry_key_t& k, char* v) {
@@ -1531,6 +1531,6 @@ class LeafNode :public page {
         // TODO
         return ifRemove;
     }
-}
+};
 
 } // namespace FastFair
