@@ -17,7 +17,7 @@ uint64_t ops_num = 1000;
 
 uint64_t start_time, end_time, use_time;
 
-void motivationtest( bt, uint64_t load_num);
+void motivationtest(btree* bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
 
@@ -41,12 +41,10 @@ int main(int argc, char *argv[]) {
     printf("Have not define NO_VALUE\n");
 #endif
 
-    //btree *bt = new btree();
-
-    char* persistent_path = "/mnt/pmem1/mytest";
+    NVM::data_init();
 
     
-
+    btree *bt = new btree();
     // bt->PrintInfo();
     motivationtest(bt,ops_num);
 

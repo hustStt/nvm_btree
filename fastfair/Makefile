@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++ -std=c++17
 LDFLAGS = -pthread -lpmemobj -lpmem -lrt -lm
 DEFS = -DSINGLE_BTREE -DNO_VALUE
 MULT_DEFS = -DNO_VALUE
