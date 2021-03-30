@@ -13,7 +13,7 @@ Descrption: implementation of FPTREE
 #include<assert.h>
 using namespace std;
 
-Statistic stats_leaf;
+Statistic stats_leaf2;
 uint64_t count_num = 0;
 
 // Initial the new InnerNode
