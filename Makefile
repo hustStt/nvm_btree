@@ -9,7 +9,7 @@ WFLAGS = -Wall -Wno-format -Wno-unused-variable
 CFLAGS = -ggdb -msse4.2 -mpclmul -march=native -funroll-loops # -Wstrict-overflow -Wstrict-aliasing -Wall -Wextra -pedantic -Wshadow
 
 MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS) $(CFLAGS)
-MULT_LIB_SOURCES = src/nvm_allocator.cc src/single_btree.cc src/single_pmdk.cc fptree/fptree.cc fptree/utility.cpp
+MULT_LIB_SOURCES = src/nvm_allocator.cc src/single_btree.cc src/single_pmdk.cc fptree/fptree.cc fptree/utility.cpp fastfair/enviroment.cc
 
 all: ycsb
 	rm -rf test
