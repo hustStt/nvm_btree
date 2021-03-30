@@ -1134,7 +1134,7 @@ void btree::btree_insert(entry_key_t key, char* right){ //need to be string
 
   LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
-  if(!leaf_ptr->store(this, NULL, key, right, true)) { // store 
+  if(!leaf_ptr->insert(this, NULL, key, right)) { // store 
     btree_insert(key, right);
   }
 }
@@ -1310,6 +1310,11 @@ void btree::PrintInfo() {
 
 }
 
+inline int cmp_kv(const void* a,const void* b)
+    {
+        return ((entry*)a)->key>((entry*)b)->key;
+    }
+
 class LeafNode :public page {
     char  fingerprints[cardinality];
 
@@ -1389,12 +1394,7 @@ class LeafNode :public page {
         pmem_persist(this,sizeof(LeafNode));
     }
 
-    inline int cmp_kv(const void* a,const void* b)
-    {
-        return ((entry*)a)->key>((entry*)b)->key;
-    }
-
-    entry_key_t LeafNode::findSplitKey() {
+    entry_key_t findSplitKey() {
         entry_key_t midKey = 0;
         // TODO
         qsort(records,hdr.n,sizeof(entry),cmp_kv);
@@ -1425,9 +1425,8 @@ class LeafNode :public page {
     }
 
 
-    LeafNode *store
-      (btree* bt, char* left, entry_key_t key, char* right,
-       bool flush, page *invalid_sibling = NULL) {
+    LeafNode *insert
+      (btree* bt, char* left, entry_key_t key, char* right) {
         LeafNode* ret =  nullptr;
 
         // FAST
