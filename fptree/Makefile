@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++ -std=c++17
 LDFLAGS = -pthread -lpmemobj -lpmem -lrt -lm
 DEFS = -DSINGLE_BTREE -DNO_VALUE
 MULT_DEFS = -DNO_VALUE
@@ -11,7 +11,7 @@ MULT_CXXFLAGS += $(MULT_DEFS) $(IFLAGS) $(WFLAGS)
 AR = ar
 ARFLAGS = rs
 
-SING_LIB_SOURCES = fptree.cc utility.cpp ../src/nvm_allocator.cc
+SING_LIB_SOURCES = fptree.cc utility.cpp ../fastfair/enviroment.cc
 
 LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
 
