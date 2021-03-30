@@ -1123,20 +1123,7 @@ page *btree::btree_search_leaf(entry_key_t key){
   return p;
 }
 
-// insert the key in the leaf node
-void btree::btree_insert(entry_key_t key, char* right){ //need to be string
-  page* p = (page*)root;
 
-  while(p->hdr.leftmost_ptr != NULL) {
-    p = (page*)p->linear_search(key);
-  }
-
-  LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
-
-  if(!leaf_ptr->insert(this, NULL, key, right)) { // store 
-    btree_insert(key, right);
-  }
-}
 
 // store the key into the node at the given level 
 void btree::btree_insert_internal
@@ -1530,5 +1517,20 @@ class LeafNode :public page {
         return ifRemove;
     }
 };
+
+    // insert the key in the leaf node
+void btree::btree_insert(entry_key_t key, char* right){ //need to be string
+  page* p = (page*)root;
+
+  while(p->hdr.leftmost_ptr != NULL) {
+    p = (page*)p->linear_search(key);
+  }
+
+  LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
+
+  if(!leaf_ptr->insert(this, NULL, key, right)) { // store 
+    btree_insert(key, right);
+  }
+}
 
 } // namespace FastFair
