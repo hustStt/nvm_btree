@@ -3,9 +3,9 @@
 #include<stdlib.h>
 #include<queue>
 
-#include "../fastfair/nvm_alloc.h"
 #include "utility.h"
 #include "../src/statistic.h"
+#include "../fastfair/nvm_alloc.h"
 
 // In Mac C++, it is little-endian
 // 0x12345677 --> 78 56 34 12
@@ -156,7 +156,7 @@ public:
     ~LeafNode();
     
     void *operator new(size_t size) {
-        void *mem =  NVM::data_alloc->alloc(size);
+        void *mem =  NVM::data_alloc->alloc(size); 
         return mem;
     }
 

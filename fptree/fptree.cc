@@ -13,7 +13,7 @@ Descrption: implementation of FPTREE
 #include<assert.h>
 using namespace std;
 
-Statistic stats_leaf2;
+Statistic stats_leaf;
 uint64_t count_num = 0;
 
 // Initial the new InnerNode
@@ -114,7 +114,7 @@ KeyNode* InnerNode::insert(const Key& k, const Value& v) {
     int index = findIndex(k);
     InnerNode *p = (InnerNode *)childrens[index];
     while (!p->isLeaf) {
-        p = (InnerNode *)childrens[p->findIndex(k)];
+        p = (InnerNode *)(p->childrens[p->findIndex(k)]);
     }
     newChild = ((LeafNode *)p)->insert(k,v);
     
@@ -267,7 +267,7 @@ bool InnerNode::remove(const Key& k, const int& index, InnerNode* const& parent,
         return false;
     }
     while (!removeChild->isLeaf) {
-        removeChild = (InnerNode *)childrens[removeChild->findIndex(k)];
+        removeChild = (InnerNode *)removeChild->childrens[removeChild->findIndex(k)];
     }
     ifRemove = ((LeafNode *)removeChild)->remove(k, childIdx, this, ifDelete);
     
@@ -514,7 +514,7 @@ bool InnerNode::update(const Key& k, const Value& v) {
     int idx=findIndex(k);
     InnerNode *p = (InnerNode *)childrens[idx];
     while (!p->isLeaf) {
-        p = (InnerNode *)childrens[p->findIndex(k)];
+        p = (InnerNode *)p->childrens[p->findIndex(k)];
     }
     return ((LeafNode *)p)->update(k, v);
 }
@@ -526,7 +526,7 @@ Value InnerNode::find(const Key& k) {
     int idx=findIndex(k);
     InnerNode *p = (InnerNode *)childrens[idx];
     while (!p->isLeaf) {
-        p = (InnerNode *)childrens[p->findIndex(k)];
+        p = (InnerNode *)p->childrens[p->findIndex(k)];
     }
     return ((LeafNode *)p)->find(k);
 }
