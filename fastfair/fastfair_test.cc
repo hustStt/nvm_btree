@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
 
-void motivationtest(TOID(btree) bt, uint64_t load_num) {
+void motivationtest(btree *bt, uint64_t load_num) {
     uint64_t i;
     uint64_t ops;
     Statistic stats;
@@ -86,7 +86,7 @@ void motivationtest(TOID(btree) bt, uint64_t load_num) {
                 // printf("Insert number %ld, key %llx.\n", i, key);
 
                 char *pvalue = (char *)key;
-                D_RW(bt)->btree_insert(key, pvalue);
+                bt->btree_insert(key, pvalue);
                 stats.end();
                 stats.add_put();
 
@@ -134,7 +134,7 @@ void motivationtest(TOID(btree) bt, uint64_t load_num) {
                 string value(valuebuf, NVM_ValueSize);
                 // printf("Insert number %ld, key %llx.\n", i, key);
                 char *pvalue = (char *)key;
-                D_RW(bt)->btree_insert(key, pvalue);
+                bt->btree_insert(key, pvalue);
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -165,7 +165,7 @@ void motivationtest(TOID(btree) bt, uint64_t load_num) {
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_get.Next();
                 char *pvalue = nullptr;
-                pvalue = D_RW(bt)->btree_search(key);
+                pvalue = bt->btree_search(key);
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
@@ -201,7 +201,7 @@ void motivationtest(TOID(btree) bt, uint64_t load_num) {
                 uint64_t key = rnd_scan.Next();
 
                 void *pvalues[scan_count];
-                D_RW(bt)->btree_search_range(key, MAX_KEY, pvalues, size);
+                bt->btree_search_range(key, MAX_KEY, pvalues, size);
 
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
@@ -236,7 +236,7 @@ void motivationtest(TOID(btree) bt, uint64_t load_num) {
             char valuebuf[NVM_ValueSize + 1];
             for(uint64_t i = from; i < to; i ++) {
                 auto key = rnd_delete.Next();
-                D_RW(bt)->btree_delete(key);;
+                bt->btree_delete(key);;
             }
             print_log(LV_INFO, "thread %d finished.\n", tid);
         }, tid, from, to);
