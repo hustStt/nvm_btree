@@ -698,7 +698,7 @@ void btree::scan_all_leaf() {
     while (leaf != nullptr) {
       totul_num += leaf->hdr.last_index + 1;
       if (IS_VALID_PTR(leaf->hdr.sibling_ptr)) {
-        leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + pop);
+        leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + (uint64_t)pop);
       } else {
         leaf = leaf->hdr.sibling_ptr;
       }
