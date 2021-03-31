@@ -1190,13 +1190,13 @@ class LeafNode :public page {
         for(int i = 0; i < hdr.n;i++) {
             if (records[i].key >= key) {
                 resetBit(i);
+                hdr.n--;
             } else {
                 newLeaf->resetBit(i);
+                newLeaf->hdr.n--;
             }
         }
-        newLeaf->hdr.n = hdr.n / 2;
         pmem_persist(newLeaf->hdr.bitmap, 8);
-        this->hdr.n -= newLeaf->hdr.n;
         pmem_persist(this->hdr.bitmap, 8);
         
         
