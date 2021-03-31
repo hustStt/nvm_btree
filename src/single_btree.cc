@@ -690,17 +690,17 @@ void btree::scan_all_leaf() {
     subtree* sub_root = (subtree *)p;
     bpnode* leaf = nullptr;
     if (sub_root->flag) {
-      leaf = getFirstDDataNode();
+      leaf = sub_root->getFirstDDataNode();
     } else {
-      leaf = (bpnode *)getFirstNDataNode();
+      leaf = (bpnode *)sub_root->getFirstNDataNode();
     }
     int totul_num = 0;
     while (leaf != nullptr) {
       totul_num += leaf->hdr.last_index + 1;
-      if (IS_VALID_PTR(current->hdr.sibling_ptr)) {
-        leaf = (bpnode *)((uint64_t)current->hdr.sibling_ptr + pop);
+      if (IS_VALID_PTR(leaf->hdr.sibling_ptr)) {
+        leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + pop);
       } else {
-        leaf = current->hdr.sibling_ptr;
+        leaf = leaf->hdr.sibling_ptr;
       }
     }
     cout << "total_nnum:" <<totul_num<<endl;

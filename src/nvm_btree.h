@@ -57,7 +57,7 @@ public:
     }
 
     void printfLeaf() {
-        mybt->scan_all_leaf();
+        bt->scan_all_leaf();
     }
 
 private:
