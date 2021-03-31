@@ -29,6 +29,7 @@ const char *workloads[] = {
   // "workloada_insert_100.spec",
   // "workload_read.spec",
    "workload_insert.spec",
+   "workloadc.spec",
    "workloada.spec",
    "workloadb.spec",
    "workloadc.spec",
@@ -61,7 +62,7 @@ public:
     }
 
     void Close() { 
-
+      mybt->closeChange();
     }
     int Put(uint64_t key, uint64_t value) 
     {
@@ -263,6 +264,9 @@ int main(int argc, const char *argv[])
     }
     db->Info();
     for(size_t i = 0; i < ArrayLen(workloads); i ++) {
+      if (i == 1) {
+        db->Close();
+      }
       // cout << "Loads[" << i << "]: " << workloads[i] << endl;
       string workload = workdloads_dir + "/" + workloads[i];
       LoadWorkLoad(props, workload);
