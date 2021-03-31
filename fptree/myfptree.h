@@ -1490,7 +1490,7 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, 
     }
 }
 
-void btree::scan(Key min, Key max, void **values, int &size) {
+void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
     page* p = (page*)root;
 
     while(p->hdr.leftmost_ptr != NULL){
