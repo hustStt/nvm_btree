@@ -67,6 +67,7 @@ class btree {
     void btree_insert(entry_key_t, char*);
     void btree_insert_internal(char *, entry_key_t, char *, uint32_t);
     void btree_delete(entry_key_t);
+    void btree_update(entry_key_t key, char *value);
     void btree_delete_internal(entry_key_t, char *, uint32_t, entry_key_t *, bool *, page **);
     char *btree_search(entry_key_t);
     page *btree_search_leaf(entry_key_t);
@@ -412,6 +413,29 @@ class page{
       }
 
       return true;
+    }
+
+    inline bool update_key(entry_key_t key, char* ptr) {
+      register int num_entries = count();
+
+      if (num_entries == 0) {
+        return false;
+      }
+      int left = 0;
+      int right = num_entries - 1;
+      while(left <= right) { // 注意
+          int mid = (right + left) / 2;
+          if(records[mid].key == key) {
+            records[mid].ptr = ptr;
+            clflush((char *)&records[mid], sizeof(entry));
+            return true; 
+          } else if (records[mid].key < key) {
+              left = mid + 1; // 注意
+          } else if (records[mid].key > key) {
+              right = mid - 1; // 注意
+          }
+      }
+      return false;
     }
 
     inline void 
@@ -1274,6 +1298,18 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, 
         break;
         }
     }
+}
+
+void btree::btree_update(entry_key_t key, char* right){ //need to be string
+  page* p = (page*)root;
+
+  while(p->hdr.leftmost_ptr != NULL) {
+    p = (page*)p->linear_search(key);
+  }
+
+  if(!p->update_key(key, right)) { // store 
+    // printf("update key failed no such key\n");
+  }
 }
 
 void btree::printAll(){
