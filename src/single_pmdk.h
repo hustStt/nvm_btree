@@ -556,6 +556,10 @@ class MyBtree{
     void closeChange() {
       switch_ = false;
     }
+    void setSubtreeNum(int num) {
+      this->subtree_num = num;
+      pmemobj_persist(pop, &(this->subtree_num), sizeof(subtree_num));
+    }
 };
 
 class subtree {

@@ -36,13 +36,14 @@
 using entry_key_t = uint64_t;
 using namespace std;
 
+namespace FPTree
+{
+
 inline void clflush(char *data, int len)
 {
 
 }
 
-namespace FPTree
-{
 
 static void alloc_memalign(void **ret, size_t alignment, size_t size) {
 #ifdef USE_MEM
