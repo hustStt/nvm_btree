@@ -1163,7 +1163,7 @@ class LeafNode :public page {
         //qsort(records_tmp,hdr.n,sizeof(entry),cmp_kv);
         //midKey = records_tmp[hdr.n/2].key;
 
-        int size_n = n / 2;
+        int size_n = hdr.n / 2;
         priority_queue<entry_key_t, vector<entry_key_t>, greater<entry_key_t>> q;
         for(int i = 0;i < cardinality; ++i){
             if (q.size() < size_n) {
