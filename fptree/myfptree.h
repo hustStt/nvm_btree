@@ -1166,7 +1166,6 @@ class LeafNode :public page {
         int size_n = hdr.n / 2;
         priority_queue<entry_key_t, vector<entry_key_t>, greater<entry_key_t>> q;
         for(int i = 0;i < cardinality; ++i){
-            cout<<getKey(i)<< " ";
             if (q.size() < size_n) {
                 q.push(getKey(i));
             } else {
@@ -1177,7 +1176,6 @@ class LeafNode :public page {
             }
         }
         midKey = q.top();
-        cout<<"midkey:"<<midKey<<endl;
         return midKey;
     }
 
