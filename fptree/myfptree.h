@@ -90,7 +90,7 @@ class header{
     uint8_t switch_counter;     // 1 bytes
     uint8_t is_deleted;         // 1 bytes
     int16_t last_index;         // 2 bytes
-    char bitmap[4];             // 4 bytes
+    unsigned char bitmap[4];             // 4 bytes
     int n;                      // 4 bytes
 
     friend class page;
@@ -1101,7 +1101,7 @@ class LeafNode :public page {
         assert(idx<cardinality);
         int offset = idx%8;
         int pos=idx/8;
-        char bits = hdr.bitmap[pos];
+        unsigned char bits = hdr.bitmap[pos];
         bits = (bits>>offset) & 1;
         return (int) bits;
     }
@@ -1110,7 +1110,7 @@ class LeafNode :public page {
         assert(idx<cardinality);
         int offset = idx%8;
         int pos=idx/8;
-        char bits = hdr.bitmap[pos];
+        unsigned char bits = hdr.bitmap[pos];
         bits = bits | (1<<offset);
         hdr.bitmap[pos] = bits;
     }
@@ -1118,7 +1118,7 @@ class LeafNode :public page {
         assert(idx<cardinality);
         int offset = idx%8;
         int pos=idx/8;
-        char bits = hdr.bitmap[pos];
+        unsigned char bits = hdr.bitmap[pos];
         bits = ~((~bits) | (1<<offset));
         hdr.bitmap[pos] = bits;
     }
@@ -1218,7 +1218,7 @@ class LeafNode :public page {
         LeafNode* ret =  nullptr;
 
         // FAST
-        if(hdr.n < cardinality - 1) {
+        if(hdr.n < cardinality) {
             insertNonFull(key, right);
             return this;
         } else {
