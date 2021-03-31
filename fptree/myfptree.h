@@ -28,7 +28,7 @@
 #include "../fastfair/nvm_alloc.h"
 #include "../include/ycsb/core/utils.h"
 
-#define PAGESIZE 512
+#define PAGESIZE 256
 #define CACHE_LINE_SIZE 64 
 
 #define IS_FORWARD(c) (c % 2 == 0)
