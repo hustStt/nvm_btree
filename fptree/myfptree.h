@@ -23,6 +23,7 @@
 #include <climits>
 #include <future>
 #include <mutex>
+#include <queue>
 
 #include "../fastfair/nvm_alloc.h"
 #include "../include/ycsb/core/utils.h"
@@ -1157,10 +1158,24 @@ class LeafNode :public page {
     entry_key_t findSplitKey() {
         entry_key_t midKey = 0;
         // TODO
-        entry records_tmp[cardinality];
-        memcpy(records_tmp, records,sizeof(records_tmp));
-        qsort(records_tmp,hdr.n,sizeof(entry),cmp_kv);
-        midKey = records_tmp[hdr.n/2].key;
+        //entry records_tmp[cardinality];
+        //memcpy(records_tmp, records,sizeof(records_tmp));
+        //qsort(records_tmp,hdr.n,sizeof(entry),cmp_kv);
+        //midKey = records_tmp[hdr.n/2].key;
+
+        int size_n = n / 2;
+        priority_queue<entry_key_t, vector<entry_key_t>, greater<entry_key_t>> q;
+        for(int i = 0;i < cardinality; ++i){
+            if (q.size() < size_n) {
+                q.push(getKey(i));
+            } else {
+                if (getKey(i) > q.top()) {
+                    q.pop();
+                    q.push(getKey(i));
+                }
+            }
+        }
+        midKey = q.top();
         return midKey;
     }
 
@@ -1177,10 +1192,11 @@ class LeafNode :public page {
                 newLeaf->resetBit(i);
             }
         }
-        this->hdr.n = hdr.n / 2;
-        pmem_persist(this->hdr.bitmap, 8);
-        newLeaf->hdr.n -= hdr.n / 2;
+        newLeaf->hdr.n = hdr.n / 2;
         pmem_persist(newLeaf->hdr.bitmap, 8);
+        this->hdr.n -= newLeaf->hdr.n;
+        pmem_persist(this->hdr.bitmap, 8);
+        
         
         //for(int i=0;i<hdr.n/2;++i){ //original leaf
         //    fingerprints[i]=keyHash(getKey(i));
