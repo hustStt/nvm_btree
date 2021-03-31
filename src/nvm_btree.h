@@ -56,6 +56,10 @@ public:
         mybt->closeChange();
     }
 
+    void printfLeaf() {
+        mybt->scan_all_leaf();
+    }
+
 private:
     btree *bt;
     MyBtree *mybt;

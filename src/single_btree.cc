@@ -350,7 +350,7 @@ char *btree::btree_search(entry_key_t key){
 }
 
 void btree::btreeInsert(entry_key_t key, char* right) {
-    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
+    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 7) {
        CalcuRootLevel();
        deform();
     }
@@ -608,7 +608,7 @@ void btree::PrintInfo() {
 }
 
 void btree::CalcuRootLevel() {
-    tar_level = 5;
+    tar_level = 7;
 }
 
 void btree::deform() {
@@ -680,6 +680,30 @@ void btree::deform() {
     flag = true;
     end_time = get_now_micros();
     printf("subtree root end  time: %f s\n", (end_time - start_time) * 1e-6);
+}
+
+void btree::scan_all_leaf() {
+    bpnode* p = (bpnode *)root;
+    while (p->hdr.level != tar_level && p->hdr.leftmost_ptr != nullptr) {
+        p = (bpnode *)p->hdr.leftmost_ptr;
+    }
+    subtree* sub_root = (subtree *)p;
+    bpnode* leaf = nullptr;
+    if (sub_root->flag) {
+      leaf = getFirstDDataNode();
+    } else {
+      leaf = (bpnode *)getFirstNDataNode();
+    }
+    int totul_num = 0;
+    while (leaf != nullptr) {
+      totul_num += leaf->hdr.last_index + 1;
+      if (IS_VALID_PTR(current->hdr.sibling_ptr)) {
+        leaf = (bpnode *)((uint64_t)current->hdr.sibling_ptr + pop);
+      } else {
+        leaf = current->hdr.sibling_ptr;
+      }
+    }
+    cout << "total_nnum:" <<totul_num<<endl;
 }
 
 bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock, subtree* sub_root) {

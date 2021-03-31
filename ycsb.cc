@@ -262,7 +262,7 @@ int main(int argc, const char *argv[])
       cout << total_ops / duration / 1000 << endl << endl;
     }
     db->Info();
-    for(size_t i = 0; i < ArrayLen(workloads); i ++) {
+    for(size_t i = 1; i < ArrayLen(workloads); i ++) {
       if (i == 1) {
         db->Close();
       }

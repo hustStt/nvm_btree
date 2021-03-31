@@ -86,6 +86,7 @@ class btree{
     void CalculateSapce(uint64_t &space);
     void deform();
     void CalcuRootLevel();
+    void scan_all_leaf();
 
     char* findSubtreeRoot(entry_key_t);
     void to_nvm();
