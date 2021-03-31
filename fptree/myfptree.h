@@ -72,7 +72,7 @@ class btree {
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void btree_search_range(entry_key_t, entry_key_t, std::vector<pair<entry_key_t, uint64_t>> &result, int &size); 
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
-    void scan(Key min, Key max, void **values, int &size);
+    void scan(entry_key_t min, entry_key_t max, void **values, int &size);
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
@@ -1192,7 +1192,7 @@ class LeafNode :public page {
         //hdr.n=hdr.n/2;
 
         //*pNext = newLeaf->getPPointer();
-        this->hdr.sibling_ptr = newLeaf;
+        this->hdr.sibling_ptr = (page *)newLeaf;
         return newLeaf;
     }
 
@@ -1490,7 +1490,7 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, 
     }
 }
 
-void scan(entry_key_t min, entry_key_t max, void **values, int &size) {
+void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
     page* p = (page*)root;
 
     while(p->hdr.leftmost_ptr != NULL){
@@ -1510,7 +1510,7 @@ void scan(entry_key_t min, entry_key_t max, void **values, int &size) {
                 }
             }
         }
-        current = current->hdr.sibling_ptr;
+        current = (LeafNode *)current->hdr.sibling_ptr;
     }
     size = off;
 }
