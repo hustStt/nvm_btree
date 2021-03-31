@@ -1314,6 +1314,11 @@ class LeafNode :public page {
             bt->btree_delete_internal(k, (char *)this, hdr.level + 1,
                 &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
             // TODO:
+            if (!is_leftmost_node) {
+                LeafNode* preNode = (LeafNode *)left_sibling->records[left_sibling->hdr.last_index].ptr;
+                preNode->hdr.sibling_ptr = this->hdr.sibling_ptr;
+                pmem_persist(preNode->hdr.sibling_ptr, sizeof(preNode->hdr.sibling_ptr));
+            }
         }
         //else persist(); //has entry so persist
         // TODO
