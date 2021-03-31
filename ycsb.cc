@@ -8,7 +8,7 @@
 #include "src/single_btree.h"
 #include "include/ycsb/ycsb-c.h"
 #include "random.h"
-#include "fptree/fptree.h"
+#include "fptree/myfptree.h"
 #include "fastfair/fastfair.h"
 
 using namespace std;
@@ -57,6 +57,7 @@ public:
 
     void Info()
     {
+      mybt->clearHeat();
     }
 
     void Close() { 
@@ -134,13 +135,14 @@ private:
 class FPTreeDb : public ycsbc::KvDB {
 public:
     FPTreeDb(): tree(nullptr) {}
-    FPTreeDb(FPTree *tree): tree(tree) {}
+    FPTreeDb(FPTree::btree *tree): tree(tree) {}
     virtual ~FPTreeDb() {
       delete tree;
     }
     void Init()
     {
-      tree = new FPTree(7);
+      NVM::data_init();
+      tree = new FPTree::btree();
     }
 
     void Info()
@@ -152,16 +154,16 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
-        tree->insert(key, value);
+        tree->btree_insert(key, value);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
     {
-        value = tree->find(key);
+        value = tree->btree_search(key);
         return 1;
     }
     int Update(uint64_t key, uint64_t value) {
-        tree->update(key, value);
+        //tree->update(key, value);
         return 1;
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
@@ -171,7 +173,7 @@ public:
         return 1;
     }
 private:
-    FPTree *tree;
+    FPTree::btree *tree;
 };
 
 void UsageMessage(const char *command);

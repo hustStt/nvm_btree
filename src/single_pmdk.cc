@@ -1769,3 +1769,11 @@ void MyBtree::exitBtree() {
   delete bt;
   pmemobj_close(pop);
 }
+
+void MyBtree::clearHeat() {
+  subtree *ptr = to_nvmptr(head);
+  while (ptr != nullptr) {
+    ptr->setHeat(0);
+    ptr = ptr->getSiblingPtr();
+  }
+}

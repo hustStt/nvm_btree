@@ -552,6 +552,7 @@ class MyBtree{
     void Redistribute();
     void later();
     void exitBtree();
+    void clearHeat();
     void closeChange() {
       switch_ = false;
     }
