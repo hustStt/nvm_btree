@@ -72,6 +72,7 @@ class btree {
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void btree_search_range(entry_key_t, entry_key_t, std::vector<pair<entry_key_t, uint64_t>> &result, int &size); 
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
+    void scan(Key min, Key max, void **values, int &size);
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
@@ -1156,30 +1157,42 @@ class LeafNode :public page {
     entry_key_t findSplitKey() {
         entry_key_t midKey = 0;
         // TODO
-        qsort(records,hdr.n,sizeof(entry),cmp_kv);
-        midKey = records[hdr.n/2].key;
+        entry records_tmp[cardinality];
+        memcpy(records_tmp, records,sizeof(records_tmp));
+        qsort(records_tmp,hdr.n,sizeof(entry),cmp_kv);
+        midKey = records_tmp[hdr.n/2].key;
         return midKey;
     }
 
 
     LeafNode* split(entry_key_t & key) {
         LeafNode* newLeaf = new LeafNode();
-        //pmem_memcpy_persist(newLeaf,this,sizeof(LeafNode));
-        memset(hdr.bitmap,0,sizeof(hdr.bitmap));
+        pmem_memcpy_persist(newLeaf,this,sizeof(LeafNode));
+        //memset(hdr.bitmap,0,sizeof(hdr.bitmap));
         key = findSplitKey();
-        for(int i=0;i<hdr.n/2;++i){ //original leaf
-            fingerprints[i]=keyHash(getKey(i));
-            setBit(i);
+        for(int i = 0; i < hdr.n;i++) {
+            if (records[i].key >= key) {
+                resetBit(i);
+            } else {
+                newLeaf->resetBit(i);
+            }
         }
-        for(int i=hdr.n/2;i<hdr.n;++i){//new Leaf
-            newLeaf->insertNonFull(getKey(i),getValue(i),false);
-        }
-        hdr.n=hdr.n/2;
+        this->hdr.n = hdr.n / 2;
+        pmem_persist(this->hdr.bitmap, 8);
+        newLeaf->hdr.n -= hdr.n / 2;
+        pmem_persist(newLeaf->hdr.bitmap, 8);
+        
+        //for(int i=0;i<hdr.n/2;++i){ //original leaf
+        //    fingerprints[i]=keyHash(getKey(i));
+        //    setBit(i);
+        //}
+        //for(int i=hdr.n/2;i<hdr.n;++i){//new Leaf
+        //    newLeaf->insertNonFull(getKey(i),getValue(i),false);
+        // }
+        //hdr.n=hdr.n/2;
 
         //*pNext = newLeaf->getPPointer();
-        newLeaf->hdr.sibling_ptr = this->hdr.sibling_ptr;
-        newLeaf->persist();
-        this->persist();
+        this->hdr.sibling_ptr = newLeaf;
         return newLeaf;
     }
 
@@ -1284,6 +1297,7 @@ class LeafNode :public page {
             page *left_sibling;
             bt->btree_delete_internal(k, (char *)this, hdr.level + 1,
                 &deleted_key_from_parent, &is_leftmost_node, &left_sibling);
+            // TODO:
         }
         //else persist(); //has entry so persist
         // TODO
@@ -1475,6 +1489,32 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, 
         }
     }
 }
+
+void btree::scan(Key min, Key max, void **values, int &size) {
+    page* p = (page*)root;
+
+    while(p->hdr.leftmost_ptr != NULL){
+        p = (page*) p->linear_search(min);
+    }
+
+    LeafNode* current = reinterpret_cast<LeafNode *>(p);
+    
+    int off = 0;
+    while (current) {
+        for(int i = 0;i < cardinality; ++i){
+            if(current->getBit(i)==1 && (current->records[i].key > min)){
+                values[off] = (char *)(current->records[i].ptr);
+                off++;
+                if(off >= size) {
+                    return ;
+                }
+            }
+        }
+        current = current->hdr.sibling_ptr;
+    }
+    size = off;
+}
+
 
 void btree::printAll(){
   int total_keys = 0;
