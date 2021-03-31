@@ -28,7 +28,7 @@
 #include "../fastfair/nvm_alloc.h"
 #include "../include/ycsb/core/utils.h"
 
-#define PAGESIZE 256
+#define PAGESIZE 512
 #define CACHE_LINE_SIZE 64 
 
 #define IS_FORWARD(c) (c % 2 == 0)
@@ -1159,24 +1159,24 @@ class LeafNode :public page {
     entry_key_t findSplitKey() {
         entry_key_t midKey = 0;
         // TODO
-        entry records_tmp[cardinality];
-        memcpy(records_tmp, records,sizeof(records_tmp));
-        qsort(records_tmp,hdr.n,sizeof(entry),cmp_kv);
-        midKey = records_tmp[hdr.n/2].key;
+        // entry records_tmp[cardinality];
+        // memcpy(records_tmp, records,sizeof(records_tmp));
+        // qsort(records_tmp,hdr.n,sizeof(entry),cmp_kv);
+        // midKey = records_tmp[hdr.n/2].key;
 
-        // int size_n = hdr.n / 2;
-        // priority_queue<entry_key_t, vector<entry_key_t>, greater<entry_key_t>> q;
-        // for(int i = 0;i < cardinality; ++i){
-        //     if (q.size() < size_n) {
-        //         q.push(getKey(i));
-        //     } else {
-        //         if (getKey(i) > q.top()) {
-        //             q.pop();
-        //             q.push(getKey(i));
-        //         }
-        //     }
-        // }
-        // midKey = q.top();
+        int size_n = hdr.n / 2;
+        priority_queue<entry_key_t, vector<entry_key_t>, greater<entry_key_t>> q;
+        for(int i = 0;i < cardinality; ++i){
+            if (q.size() < size_n) {
+                q.push(getKey(i));
+            } else {
+                if (getKey(i) > q.top()) {
+                    q.pop();
+                    q.push(getKey(i));
+                }
+            }
+        }
+        midKey = q.top();
         return midKey;
     }
 
