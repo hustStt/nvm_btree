@@ -28,7 +28,7 @@
 #include "../fastfair/nvm_alloc.h"
 #include "../include/ycsb/core/utils.h"
 
-#define PAGESIZE 256
+#define PAGESIZE 512
 #define CACHE_LINE_SIZE 64 
 
 #define IS_FORWARD(c) (c % 2 == 0)
@@ -1209,7 +1209,7 @@ class LeafNode :public page {
         //hdr.n=hdr.n/2;
 
         //*pNext = newLeaf->getPPointer();
-        newLeaf->hdr.sibling_ptr = this;
+        newLeaf->hdr.sibling_ptr = this->hdr.sibling_ptr;
         pmem_persist(newLeaf->hdr.sibling_ptr,sizeof(newLeaf->hdr.sibling_ptr));
         this->hdr.sibling_ptr = (page *)newLeaf;
         pmem_persist(this->hdr.sibling_ptr, sizeof(this->hdr.sibling_ptr));

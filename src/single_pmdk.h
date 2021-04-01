@@ -31,7 +31,7 @@
 
 #include "nvm_common.h"
 
-#define PAGESIZE 256
+#define PAGESIZE 512
 
 #define CACHE_LINE_SIZE 64
 
