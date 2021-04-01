@@ -345,7 +345,7 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
       }
 
       sub_root->nvm_ptr = (nvmpage *)new_sibling.oid.off;
-      pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
+      // pmemobj_persist(bt->pop, sub_root, sizeof(subtree));
 
       sub_root->setHeat(m / num_entries * r);
       left_subtree_sibling->setHeat(l + num_dist_entries / left_num_entries * r);
@@ -376,8 +376,11 @@ bool nvmpage::merge(btree *bt, bpnode *left_sibling, entry_key_t deleted_key_fro
     // subtree root
       //delete sub_root
     left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
-    if (left_subtree_sibling->getSiblingPtr()) 
-      left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+    if (left_subtree_sibling->getSiblingPtr()) {
+      //left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+      left_subtree_sibling->getSiblingPtr()->setPrePtr(left_subtree_sibling);
+    }
+      
     left_subtree_sibling->setHeat(l + r);
   }
 
@@ -561,9 +564,12 @@ nvmpage *nvmpage::store(btree *bt, char *left, entry_key_t key, char *right, boo
     // Set a new root or insert the split key to the parent
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) { // subtree root
       subtree* next = newSubtreeRoot(bt->pop, (nvmpage *)sibling.oid.off, sub_root);
-      if (sub_root->getSiblingPtr()) 
-        sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
-      sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
+      if (sub_root->getSiblingPtr()) {
+        sub_root->getSiblingPtr()->setPrePtr(next);
+        //sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
+      }
+      //sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
+      sub_root->setSiblingPtr(next);
       sub_root->setHeat(sub_root->getHeat() * 2 / 3);
 
       bt->btree_insert_internal(NULL, split_key, (char *)next, 
