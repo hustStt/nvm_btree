@@ -1210,9 +1210,9 @@ class LeafNode :public page {
 
         //*pNext = newLeaf->getPPointer();
         newLeaf->hdr.sibling_ptr = this->hdr.sibling_ptr;
-        pmem_persist(newLeaf->hdr.sibling_ptr,sizeof(newLeaf->hdr.sibling_ptr));
+        pmem_persist(&(newLeaf->hdr.sibling_ptr),sizeof(newLeaf->hdr.sibling_ptr));
         this->hdr.sibling_ptr = (page *)newLeaf;
-        pmem_persist(this->hdr.sibling_ptr, sizeof(this->hdr.sibling_ptr));
+        pmem_persist(&(this->hdr.sibling_ptr), sizeof(this->hdr.sibling_ptr));
         return newLeaf;
     }
 
@@ -1321,7 +1321,7 @@ class LeafNode :public page {
             if (!is_leftmost_node) {
                 LeafNode* preNode = (LeafNode *)left_sibling->records[left_sibling->hdr.last_index].ptr;
                 preNode->hdr.sibling_ptr = this->hdr.sibling_ptr;
-                pmem_persist(preNode->hdr.sibling_ptr, sizeof(preNode->hdr.sibling_ptr));
+                pmem_persist(&(preNode->hdr.sibling_ptr), sizeof(preNode->hdr.sibling_ptr));
             }
         }
         //else persist(); //has entry so persist
@@ -1526,13 +1526,21 @@ void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
     
     int off = 0;
     while (current) {
+        vector<entry> tmp;
         for(int i = 0;i < cardinality; ++i){
             if(current->getBit(i)==1 && (current->records[i].key > min)){
-                values[off] = (char *)(current->records[i].ptr);
-                off++;
-                if(off >= size) {
-                    return ;
-                }
+                tmp.push_back(current->records[i]);
+            }
+        }
+        if (tmp.size() == 0) {
+            break;
+        }
+        qsort(tmp,tmp.size(),cmp_kv);
+        for (int i = 0; i < tmp.size(); i++) {
+            values[off] = (char *)(tmp[i].ptr);
+            off++;
+            if(off >= size) {
+                return ;
             }
         }
         current = (LeafNode *)current->hdr.sibling_ptr;
