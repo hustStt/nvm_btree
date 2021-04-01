@@ -595,13 +595,15 @@ class subtree {
       this->transing = false;
 
       if (next != nullptr) {
-        this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+        //this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+        this->sibling_ptr = next;
       } else {
         this->sibling_ptr = nullptr;
       }
 
       if (pre != nullptr) {
-        this->pre_ptr = (subtree *)pmemobj_oid(pre).off;
+        //this->pre_ptr = (subtree *)pmemobj_oid(pre).off;
+        this->pre_ptr = pre;
       } else {
         this->pre_ptr = nullptr;
       }
@@ -623,13 +625,15 @@ class subtree {
       this->transing = false;
 
       if (next != nullptr) {
-        this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+        //this->sibling_ptr = (subtree *)pmemobj_oid(next).off;
+        this->sibling_ptr = next;
       } else {
         this->sibling_ptr = nullptr;
       }
 
       if (pre != nullptr) {
-        this->pre_ptr = (subtree *)pmemobj_oid(pre).off;
+        //this->pre_ptr = (subtree *)pmemobj_oid(pre).off;
+        this->pre_ptr = pre;
       } else {
         this->pre_ptr = nullptr;
       }
@@ -694,12 +698,14 @@ class subtree {
 
     subtree * getSiblingPtr() {
       if (sibling_ptr == nullptr) return nullptr;
-      return (subtree *)((uint64_t)sibling_ptr + (uint64_t)pop);
+      //return (subtree *)((uint64_t)sibling_ptr + (uint64_t)pop);
+      return sibling_ptr;
     }
 
     subtree * getPrePtr() {
       if (pre_ptr == nullptr) return nullptr;
-      return (subtree *)((uint64_t)pre_ptr + (uint64_t)pop);
+      //return (subtree *)((uint64_t)pre_ptr + (uint64_t)pop);
+      return pre_ptr;
     }
 
     void setSiblingPtr(subtree *ptr) {
@@ -785,7 +791,7 @@ static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree *
     // return D_RW(node);
     subtree *node = new subtree;
     if (pre) {
-      node_>->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() * 2 / 3);
+      node->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() * 2 / 3);
     } else {
       node->constructor(pop, subtree_root);
     }
