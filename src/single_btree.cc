@@ -664,7 +664,8 @@ void btree::deform() {
         }
         subtree_pre = tmp;
         //tmp->nvm_to_dram();
-        MyBtree::getInitial()->setHead((subtree *)pmemobj_oid(tmp).off);
+        //MyBtree::getInitial()->setHead((subtree *)pmemobj_oid(tmp).off);
+        MyBtree::getInitial()->setHead(tmp);
         for (int i = 0; i <= q->hdr.last_index; i++) {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
