@@ -48,7 +48,7 @@ class MyBtree;
 POBJ_LAYOUT_BEGIN(btree);
 POBJ_LAYOUT_ROOT(btree, MyBtree);
 POBJ_LAYOUT_TOID(btree, nvmpage);
-POBJ_LAYOUT_TOID(btree, subtree);
+//POBJ_LAYOUT_TOID(btree, subtree);
 POBJ_LAYOUT_END(btree);
 
 using entry_key_t = uint64_t;
@@ -605,7 +605,7 @@ class subtree {
       } else {
         this->pre_ptr = nullptr;
       }
-      pmemobj_persist(pop, this, sizeof(subtree));
+      //pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void constructor(PMEMobjpool *pop, nvmpage* nvm_ptr, subtree* pre = nullptr, subtree* next = nullptr, uint64_t heat = 0, bool flag = false) {
@@ -634,7 +634,7 @@ class subtree {
         this->pre_ptr = nullptr;
       }
 
-      pmemobj_persist(pop, this, sizeof(subtree));
+      //pmemobj_persist(pop, this, sizeof(subtree));
     }
 
     void subtree_insert(btree* root, entry_key_t key, char* right, bool wal = true);
@@ -684,7 +684,7 @@ class subtree {
 
     void setHeat(uint64_t heat) {
       this->heat = heat;
-      pmemobj_persist(pop, &this->heat, sizeof(uint64_t));
+      //pmemobj_persist(pop, &this->heat, sizeof(uint64_t));
     }
 
     void increaseHeat() {
@@ -704,22 +704,22 @@ class subtree {
 
     void setSiblingPtr(subtree *ptr) {
       sibling_ptr = ptr;
-      pmemobj_persist(pop, &sibling_ptr, sizeof(subtree *));
+      //pmemobj_persist(pop, &sibling_ptr, sizeof(subtree *));
     }
 
     void setPrePtr(subtree *ptr) {
       pre_ptr = ptr;
-      pmemobj_persist(pop, &pre_ptr, sizeof(subtree *));
+      //pmemobj_persist(pop, &pre_ptr, sizeof(subtree *));
     }
 
     void setNewDramRoot(bpnode *ptr) {
       dram_ptr = ptr;
-      pmemobj_persist(pop, &dram_ptr, sizeof(bpnode *));
+      //pmemobj_persist(pop, &dram_ptr, sizeof(bpnode *));
     }
 
     void setNewNvmRoot(nvmpage *ptr) {
       nvm_ptr = ptr;
-      pmemobj_persist(pop, &nvm_ptr, sizeof(nvmpage *));
+      //pmemobj_persist(pop, &nvm_ptr, sizeof(nvmpage *));
     }
 
     bool isNVMBtree() {
@@ -773,35 +773,43 @@ class subtree {
 };
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, bpnode *subtree_root, subtree * pre = nullptr) {
-    TOID(subtree) node = TOID_NULL(subtree);
-    POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    // TOID(subtree) node = TOID_NULL(subtree);
+    // POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    // if (pre) {
+    //   // 分裂生成
+    //   D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() * 2 / 3);
+    // } else {
+    //   // 新生成
+    //   D_RW(node)->constructor(pop, subtree_root);
+    // }
+    // return D_RW(node);
+    subtree *node = new subtree;
     if (pre) {
-      // 分裂生成
-      D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() * 2 / 3);
+      node_>->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() * 2 / 3);
     } else {
-      // 新生成
-      D_RW(node)->constructor(pop, subtree_root);
+      node->constructor(pop, subtree_root);
     }
-    return D_RW(node);
-    // subtree *node = new subtree;
-    // node->constructor(pop, subtree_root, next);
-    // return node;
+    return node;
 }
 
 static subtree* newSubtreeRoot(PMEMobjpool *pop, nvmpage *subtree_root, subtree * pre = nullptr) {
-    TOID(subtree) node = TOID_NULL(subtree);
-    POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    // TOID(subtree) node = TOID_NULL(subtree);
+    // POBJ_NEW(pop, &node, subtree, NULL, NULL);
+    // if (pre) {
+    //   // 分裂生成
+    //   D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() / 2);
+    // } else {
+    //   // 新生成
+    //   D_RW(node)->constructor(pop, subtree_root);
+    // }
+    // return D_RW(node);
+    subtree *node = new subtree;
     if (pre) {
-      // 分裂生成
-      D_RW(node)->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() / 2);
+      node->constructor(pop, subtree_root, pre, pre->getSiblingPtr(), pre->getHeat() / 2);
     } else {
-      // 新生成
-      D_RW(node)->constructor(pop, subtree_root);
+      node->constructor(pop, subtree_root);
     }
-    return D_RW(node);
-    // subtree *node = new subtree;
-    // node->constructor(pop, subtree_root, next);
-    // return node;
+    return node;
 }
 
 struct cmp {
