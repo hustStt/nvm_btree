@@ -1209,7 +1209,10 @@ class LeafNode :public page {
         //hdr.n=hdr.n/2;
 
         //*pNext = newLeaf->getPPointer();
+        newLeaf->hdr.sibling_ptr = this;
+        pmem_persist(newLeaf->hdr.sibling_ptr,sizeof(newLeaf->hdr.sibling_ptr));
         this->hdr.sibling_ptr = (page *)newLeaf;
+        pmem_persist(this->hdr.sibling_ptr, sizeof(this->hdr.sibling_ptr));
         return newLeaf;
     }
 
