@@ -1071,9 +1071,9 @@ void page::linear_search_range(entry_key_t min, entry_key_t max, void **values, 
     size = off;
 }
 
-inline int cmp_kv(const void* a,const void* b)
+inline int cmp_kv(const entry a,const entry b)
     {
-        return ((entry*)a)->key>((entry*)b)->key;
+        return a.key>b.key;
     }
 
 class LeafNode :public page {
@@ -1535,7 +1535,7 @@ void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
         if (tmp.size() == 0) {
             break;
         }
-        qsort(tmp,tmp.size(),cmp_kv);
+        sort(tmp.begin(),tmp.end(),cmp_kv);
         for (int i = 0; i < tmp.size(); i++) {
             values[off] = (char *)(tmp[i].ptr);
             off++;
