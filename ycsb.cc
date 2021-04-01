@@ -29,6 +29,8 @@ const char *workloads[] = {
   // "workloada_insert_100.spec",
   // "workload_read.spec",
    "workload_insert.spec",
+   "workloadc.spec",
+   "workloadc.spec",
    "workloada.spec",
    "workloadb.spec",
    "workloadc.spec",
@@ -262,10 +264,10 @@ int main(int argc, const char *argv[])
     }
     db->Info();
     for(size_t i = 1; i < ArrayLen(workloads); i ++) {
-      // if (i == 2) {
-      //   sleep(60);
-      //   db->Close();
-      // }
+      if (i == 1) {
+        sleep(60);
+        db->Close();
+      }
       // cout << "Loads[" << i << "]: " << workloads[i] << endl;
       string workload = workdloads_dir + "/" + workloads[i];
       LoadWorkLoad(props, workload);
@@ -292,8 +294,7 @@ int main(int argc, const char *argv[])
       cout << "# Transaction throughput (KTPS)" << endl;
       cout << props["dbname"] << '\t' << workloads[i] << '\t' << num_threads << '\t';
       cout << total_ops / duration / 1000 << endl << endl;
-      sleep(60);
-      db->Info();
+      // db->Info();
     }
     delete db;
     return 0;
