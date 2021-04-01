@@ -659,8 +659,10 @@ void btree::deform() {
         subtree *tmp = (subtree *)q->hdr.leftmost_ptr;
         tmp->sync_subtree(&pre);
         if (subtree_pre != nullptr) {
-          tmp->setPrePtr((subtree *)pmemobj_oid(subtree_pre).off);
-          subtree_pre->setSiblingPtr((subtree *)pmemobj_oid(tmp).off);
+          //tmp->setPrePtr((subtree *)pmemobj_oid(subtree_pre).off);
+          //subtree_pre->setSiblingPtr((subtree *)pmemobj_oid(tmp).off);
+          tmp->setPrePtr(subtree_pre);
+          subtree_pre->setSiblingPtr(tmp);
         }
         subtree_pre = tmp;
         //tmp->nvm_to_dram();
@@ -670,8 +672,10 @@ void btree::deform() {
             q->records[i].ptr = (char *)newSubtreeRoot(pop, (bpnode *)q->records[i].ptr);
             subtree *tmp = (subtree *)q->records[i].ptr;
             tmp->sync_subtree(&pre);
-            tmp->setPrePtr((subtree *)pmemobj_oid(subtree_pre).off);
-            subtree_pre->setSiblingPtr((subtree *)pmemobj_oid(tmp).off);
+            //tmp->setPrePtr((subtree *)pmemobj_oid(subtree_pre).off);
+            //subtree_pre->setSiblingPtr((subtree *)pmemobj_oid(tmp).off);
+            tmp->setPrePtr(subtree_pre);
+            subtree_pre->setSiblingPtr(tmp);
             subtree_pre = tmp;
             //tmp->nvm_to_dram();
         }
@@ -917,10 +921,10 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
         //sub_root->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 7);
         //left_subtree_sibling->log_alloc->operateTree(hdr.nvmpage_off, left_sibling->hdr.nvmpage_off, parent_key, 7);
         // sync left right
-        nvmpage *pre = nullptr;
-        left_subtree_sibling->sync_subtree(&pre);
-        pre = nullptr;
-        sub_root->sync_subtree(&pre);
+        // nvmpage *pre = nullptr;
+        // left_subtree_sibling->sync_subtree(&pre);
+        // pre = nullptr;
+        // sub_root->sync_subtree(&pre);
 
         // heat
         uint64_t l = left_subtree_sibling->getHeat();
@@ -969,8 +973,11 @@ bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_l
       //delete sub_root
       left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
       left_subtree_sibling->tmp_ptr = (subtree *)pmemobj_oid(sub_root).off;
-      if (left_subtree_sibling->getSiblingPtr()) 
-        left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+      if (left_subtree_sibling->getSiblingPtr()) {
+        //left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+        left_subtree_sibling->getSiblingPtr()->setPrePtr(left_subtree_sibling);
+      }
+        
 
       uint64_t l = left_subtree_sibling->getHeat();
       uint64_t r = sub_root->getHeat();
@@ -1101,8 +1108,11 @@ bool bpnode::merge(btree *bt, nvmpage *left_sibling, entry_key_t deleted_key_fro
     // subtree root
     //delete sub_root
     left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
-    if (left_subtree_sibling->getSiblingPtr()) 
-      left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+    if (left_subtree_sibling->getSiblingPtr()) {
+      //left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+      left_subtree_sibling->getSiblingPtr()->setPrePtr(left_subtree_sibling);
+    }
+      
     left_subtree_sibling->setHeat(l + r);
   }
 
@@ -1283,9 +1293,13 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
       // pre = nullptr;
       // sub_root->sync_subtree(&pre);
 
-      if (sub_root->getSiblingPtr()) 
-        sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
-      sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
+      if (sub_root->getSiblingPtr()) {
+        //sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);
+        sub_root->getSiblingPtr()->setPrePtr(next);
+      }
+        
+      //sub_root->setSiblingPtr((subtree *)pmemobj_oid(next).off);
+      sub_root->setSiblingPtr(next);
       sub_root->setHeat(sub_root->heat * 2 / 3);
 
       // log

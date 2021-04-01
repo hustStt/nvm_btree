@@ -245,8 +245,11 @@ bool nvmpage::remove(btree *bt, entry_key_t key, bool only_rebalance,
     if (sub_root != NULL && hdr.level == nvm_root->hdr.level) {
       //delete sub_root
       left_subtree_sibling->setSiblingPtr(sub_root->sibling_ptr);
-      if (left_subtree_sibling->getSiblingPtr()) 
-        left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+      if (left_subtree_sibling->getSiblingPtr()) {
+        //left_subtree_sibling->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(left_subtree_sibling).off);
+        left_subtree_sibling->getSiblingPtr()->setPrePtr(left_subtree_sibling);
+      }
+        
       left_subtree_sibling->setHeat(l + r);
     }
   }
