@@ -35,6 +35,8 @@ const char *workloads[] = {
    "workloadb.spec",
    "workloadc.spec",
    "workloadd.spec",
+   "workloadd.spec",
+   "workloadd.spec",
    "workloade.spec",
    "workloadf.spec",
 };
@@ -264,7 +266,7 @@ int main(int argc, const char *argv[])
     }
     db->Info();
     for(size_t i = 1; i < ArrayLen(workloads); i ++) {
-      if (i == 1) {
+      if (i == 1 || i == 8) {
         sleep(60);
         db->Close();
       }
