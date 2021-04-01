@@ -118,8 +118,10 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
 
         if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
           current = current->hdr.sibling_ptr;
-        } else {
+        } else if (current->hdr.sibling_ptr != nullptr){
           current = (bpnode *)((uint64_t)current->hdr.sibling_ptr + base);
+        } else {
+          break;
         }
     }
     size = off;
@@ -233,8 +235,10 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, void **values
 
         if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
           current = current->hdr.sibling_ptr;
-        } else {
+        } else if (current->hdr.sibling_ptr != nullptr){
           current = (bpnode *)((uint64_t)current->hdr.sibling_ptr + base);
+        } else {
+          break;
         }
     }
     size = off;
@@ -350,7 +354,7 @@ char *btree::btree_search(entry_key_t key){
 }
 
 void btree::btreeInsert(entry_key_t key, char* right) {
-    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 5) {
+    if (!flag && !flag2 && /*total_size >= MAX_DRAM_BTREE_SIZE*/ ((bpnode *)root)->hdr.level == 4) {
        CalcuRootLevel();
        deform();
     }
@@ -608,7 +612,7 @@ void btree::PrintInfo() {
 }
 
 void btree::CalcuRootLevel() {
-    tar_level = 5;
+    tar_level = 4;
 }
 
 void btree::deform() {
@@ -694,22 +698,27 @@ void btree::scan_all_leaf() {
     }
     subtree* sub_root = (subtree *)p;
     bpnode* leaf = nullptr;
+    int dram_num = 0,nvm_num = 0;
     if (sub_root->flag) {
       leaf = sub_root->getFirstDDataNode();
+      dram_num++;
     } else {
       leaf = (bpnode *)sub_root->getFirstNDataNode();
       leaf = (bpnode *)((uint64_t)leaf + (uint64_t)pop);
+      nvm_num++;
     }
     int totul_num = 0;
     while (leaf != nullptr) {
       totul_num += leaf->hdr.last_index + 1;
       if (IS_VALID_PTR(leaf->hdr.sibling_ptr)) {
         leaf = leaf->hdr.sibling_ptr;
-      } else {
+      } else if (leaf->hdr.sibling_ptr != nullptr) {
         leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + (uint64_t)pop);
+      } else {
+        break;
       }
     }
-    cout << "total_nnum:" <<totul_num<<endl;
+    cout << "total_nnum:" <<totul_num<<"dram_num:"<<dram_num<<"nvmnum: "<<nvm_num<<endl;
 }
 
 bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock, subtree* sub_root) {
