@@ -1721,7 +1721,8 @@ void MyBtree::Redistribute() {
 
   // subtree node 优先队列 前subtree_num个 作为dram节点 其他的作为nvm节点
   std::priority_queue<subtree *, vector<subtree *>, cmp> q;
-  subtree *ptr = to_nvmptr(head);
+  //subtree *ptr = to_nvmptr(head);
+  subtree *ptr = head;
   int i = 0, j = 0;
   while (ptr != nullptr) {
     i++;

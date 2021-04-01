@@ -539,7 +539,7 @@ class MyBtree{
 
     void setHead(subtree * head) {
       this->head = head;
-      pmemobj_persist(pop, &(this->head), sizeof(subtree *));
+      pmemobj_persist(pop, &(this->head), sizeof(this->head));
     }
 
     inline subtree *to_nvmptr(subtree *off) {
