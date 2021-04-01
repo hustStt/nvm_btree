@@ -17,7 +17,7 @@ using namespace std;
 #define PATH "/mnt/pmem1/ycsb"
 #define NODEPATH   "/mnt/pmem1/persistent"
 
-const uint64_t NVM_LOG_SIZE = 10 * (1ULL << 30);
+const uint64_t NVM_LOG_SIZE = 20 * (1ULL << 30);
 const uint64_t NVM_NODE_SIZE = 20 * (1ULL << 30);
 
 const char *workloads[] = {
@@ -263,7 +263,8 @@ int main(int argc, const char *argv[])
     }
     db->Info();
     for(size_t i = 1; i < ArrayLen(workloads); i ++) {
-      if (i == 1) {
+      if (i == 2) {
+        sleep(60);
         db->Close();
       }
       // cout << "Loads[" << i << "]: " << workloads[i] << endl;
@@ -292,7 +293,7 @@ int main(int argc, const char *argv[])
       cout << "# Transaction throughput (KTPS)" << endl;
       cout << props["dbname"] << '\t' << workloads[i] << '\t' << num_threads << '\t';
       cout << total_ops / duration / 1000 << endl << endl;
-      db->Info();
+      //db->Info();
     }
     delete db;
     return 0;

@@ -693,14 +693,15 @@ void btree::scan_all_leaf() {
       leaf = sub_root->getFirstDDataNode();
     } else {
       leaf = (bpnode *)sub_root->getFirstNDataNode();
+      leaf = (bpnode *)((uint64_t)leaf + (uint64_t)pop);
     }
     int totul_num = 0;
     while (leaf != nullptr) {
       totul_num += leaf->hdr.last_index + 1;
       if (IS_VALID_PTR(leaf->hdr.sibling_ptr)) {
-        leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + (uint64_t)pop);
-      } else {
         leaf = leaf->hdr.sibling_ptr;
+      } else {
+        leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + (uint64_t)pop);
       }
     }
     cout << "total_nnum:" <<totul_num<<endl;

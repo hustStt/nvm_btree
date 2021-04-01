@@ -1740,7 +1740,7 @@ void MyBtree::Redistribute() {
 
   while(ptr != nullptr) {
     ptr->lock = false;
-    ptr->heat /= 2;
+    ptr->setHeat(ptr->heat / 2);
     ptr = to_nvmptr(ptr->sibling_ptr);
   }
   printf("\nredistribute end all: %d dram: %d \n\n", i, j);

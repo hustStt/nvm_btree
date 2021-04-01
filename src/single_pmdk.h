@@ -31,7 +31,7 @@
 
 #include "nvm_common.h"
 
-#define PAGESIZE 512
+#define PAGESIZE 256
 
 #define CACHE_LINE_SIZE 64
 
@@ -688,7 +688,7 @@ class subtree {
     }
 
     void increaseHeat() {
-      ++heat;
+       heat = heat + 1;
       //persist
     }
 
