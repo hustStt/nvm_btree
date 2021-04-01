@@ -292,6 +292,7 @@ int main(int argc, const char *argv[])
       cout << "# Transaction throughput (KTPS)" << endl;
       cout << props["dbname"] << '\t' << workloads[i] << '\t' << num_threads << '\t';
       cout << total_ops / duration / 1000 << endl << endl;
+      sleep(60);
       db->Info();
     }
     delete db;

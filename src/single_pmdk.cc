@@ -1768,7 +1768,7 @@ void MyBtree::later() {
 
 void MyBtree::exitBtree() {
   switch_ = false;
-  subtree *ptr = to_nvmptr(head);
+  subtree *ptr = head;//to_nvmptr(head);
   while (ptr != nullptr) {
     nvmpage *pre = nullptr;
     if (ptr->getPrePtr() != nullptr) {
@@ -1782,7 +1782,7 @@ void MyBtree::exitBtree() {
 }
 
 void MyBtree::clearHeat() {
-  subtree *ptr = to_nvmptr(head);
+  subtree *ptr = head;//to_nvmptr(head);
   while (ptr != nullptr) {
     ptr->setHeat(0);
     ptr = ptr->getSiblingPtr();
