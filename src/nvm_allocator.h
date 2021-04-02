@@ -132,7 +132,7 @@ public:
         printf("%s: begin_addr at %p \n", __FUNCTION__, begin_addr);
         capacity_ = size;
         if (exist != 0) {
-            pmem_memset_persist(pmemaddr_, 0, 512);
+            pmem_memset_persist(pmemaddr_, 0, 1024);
         }
     }
 
