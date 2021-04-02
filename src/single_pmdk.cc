@@ -971,10 +971,10 @@ void subtree::nvm_to_dram(bpnode **pre) {
   }
   flag = true;
   uint64_t start_time, end_time;
-  start_time = get_now_micros();
+  //start_time = get_now_micros();
   dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
-  end_time = get_now_micros();
-  printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
+  //end_time = get_now_micros();
+  //printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
   // nvm_ptr = nullptr;
   log_off = getNewLogAllocator();
   log_alloc = node_alloc->getNVMptr(log_off);
@@ -986,10 +986,10 @@ void subtree::dram_recovery(bpnode **pre) {
   }
   flag = true;
   uint64_t start_time, end_time;
-  start_time = get_now_micros();
+  //start_time = get_now_micros();
   dram_ptr = (bpnode *)DFS(nvm_ptr, pre);
-  end_time = get_now_micros();
-  printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
+  //end_time = get_now_micros();
+  //printf("subtree to dram  time: %f s\n", (end_time - start_time) * 1e-6);
 }
 
 char* subtree::DFS(nvmpage* root, bpnode **pre) {
@@ -1037,12 +1037,12 @@ void subtree::dram_to_nvm(nvmpage **pre) {
   }
 
   uint64_t start_time, end_time;
-  start_time = get_now_micros();
+  //start_time = get_now_micros();
   transing = true;
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre);
   transing = false;
-  end_time = get_now_micros();
-  printf("subtree to nvm  time: %f s\n", (end_time - start_time) * 1e-6);
+  //end_time = get_now_micros();
+  //printf("subtree to nvm  time: %f s\n", (end_time - start_time) * 1e-6);
   dram_ptr = nullptr;
   flag = false;
   // delete log
@@ -1056,12 +1056,12 @@ void subtree::sync_subtree(nvmpage **pre) {
     return ;
   }
   uint64_t start_time, end_time;
-  start_time = get_now_micros();
+  //start_time = get_now_micros();
   transing = true;
   nvm_ptr = (nvmpage *)DFS((char *)dram_ptr, pre, false);
   transing = false;
-  end_time = get_now_micros();
-  printf("subtree sync  time: %f s\n", (end_time - start_time) * 1e-6);
+  //end_time = get_now_micros();
+  //printf("subtree sync  time: %f s\n", (end_time - start_time) * 1e-6);
   // delete log
   if (log_alloc) log_alloc->DeleteLog();
   log_off = getNewLogAllocator();
