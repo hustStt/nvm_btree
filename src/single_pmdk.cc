@@ -1739,10 +1739,12 @@ void MyBtree::Redistribute() {
     ptr->change = false;
     ptr = ptr->getSiblingPtr();;
   }
+  uint64_t tot_heat = 0;
 
   while(!q.empty()) {
     j++;
     q.top()->change = true;
+    tot_heat += q.top()->heat;
     q.top()->PrintInfo();
     q.pop();
   }
@@ -1751,10 +1753,10 @@ void MyBtree::Redistribute() {
 
   while(ptr != nullptr) {
     ptr->lock = false;
-    ptr->setHeat(ptr->heat / 2);
+    // ptr->setHeat(ptr->heat / 2);
     ptr = ptr->getSiblingPtr();;
   }
-  printf("\nredistribute end all: %d dram: %d \n\n", i, j);
+  printf("\nredistribute end all: %d dram: %d  tot_heat %lu\n\n", i, j, tot_heat);
 }
 
 void MyBtree::later() {
