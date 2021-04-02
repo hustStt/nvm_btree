@@ -181,7 +181,7 @@ private:
 
 class TestDb : public ycsbc::KvDB {
 public:
-    TestDb(): tree(nullptr) {}
+    TestDb(){}
     virtual ~TestDb() {
 
     }
@@ -203,7 +203,7 @@ public:
     }
     int Get(uint64_t key, uint64_t &value)
     {
-        std::count<<key<<endl;
+        printf("key: %lx\n",key);
         return 1;
     }
     int Update(uint64_t key, uint64_t value) {
