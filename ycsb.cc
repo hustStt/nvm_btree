@@ -165,12 +165,14 @@ public:
     }
     int Update(uint64_t key, uint64_t value) {
         //tree->update(key, value);
+        tree->btree_delete(key);
+        tree->btree_insert(key,value);
         return 1;
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
     {
         //tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
-        //tree->scan(start_key, UINT64_MAX)
+        tree->scan(start_key, UINT64_MAX,results,len);
         return 1;
     }
 private:

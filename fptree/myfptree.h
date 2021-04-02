@@ -75,6 +75,7 @@ class btree {
     void btree_search_range(entry_key_t, entry_key_t, std::vector<pair<entry_key_t, uint64_t>> &result, int &size); 
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
     void scan(entry_key_t min, entry_key_t max, void **values, int &size);
+    void scan(entry_key_t min, entry_key_t max, std::vector<pair<uint64_t, uint64_t>> &result,int &size);
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
@@ -1515,6 +1516,31 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, void **values, 
     }
 }
 
+void btree::scan(entry_key_t min, entry_key_t max, std::vector<pair<uint64_t, uint64_t>> &result, int &size) {
+    page* p = (page*)root;
+
+    while(p->hdr.leftmost_ptr != NULL){
+        p = (page*) p->linear_search(min);
+    }
+
+    LeafNode* current = reinterpret_cast<LeafNode *>(p);
+    
+    int off = 0;
+    while (current) {
+        for(int i = 0;i < cardinality; ++i){
+            if(current->getBit(i)==1 && (current->records[i].key > min)){
+                result.push_back({current->records[i].key, (uint64_t)current->records[i].ptr});
+                off++;
+                if(off >= size) {
+                    return ;
+                }
+            }
+        }
+        current = (LeafNode *)current->hdr.sibling_ptr;
+    }
+    size = off;
+}
+
 void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
     page* p = (page*)root;
 
@@ -1535,7 +1561,9 @@ void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
         if (tmp.size() == 0) {
             break;
         }
-        sort(tmp.begin(),tmp.end(),cmp_kv);
+        if (off + tmp.size() > size) {
+            sort(tmp.begin(),tmp.end(),cmp_kv);
+        }
         for (int i = 0; i < tmp.size(); i++) {
             values[off] = (char *)(tmp[i].ptr);
             off++;
