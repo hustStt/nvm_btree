@@ -303,9 +303,6 @@ int main(int argc, const char *argv[])
     }
     db->Info();
     for(size_t i = 1; i < ArrayLen(workloads); i ++) {
-      if (i == 1) {
-        db->Close();
-      }
       if (i == 2) {
         sleep(60);
       } 
@@ -336,6 +333,9 @@ int main(int argc, const char *argv[])
       cout << props["dbname"] << '\t' << workloads[i] << '\t' << num_threads << '\t';
       cout << total_ops / duration / 1000 << endl << endl;
       // db->Info();
+      if (i == 2) {
+        db->Close();
+      }
     }
     delete db;
     return 0;
