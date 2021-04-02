@@ -35,8 +35,6 @@ const char *workloads[] = {
    "workloadb.spec",
    "workloadc.spec",
    "workloadd.spec",
-   "workloadd.spec",
-   "workloadd.spec",
    "workloade.spec",
    "workloadf.spec",
 };
@@ -305,10 +303,12 @@ int main(int argc, const char *argv[])
     }
     db->Info();
     for(size_t i = 1; i < ArrayLen(workloads); i ++) {
-      if (i == 1 || i == 8) {
-        sleep(60);
+      if (i == 1) {
         db->Close();
       }
+      if (i == 2) {
+        sleep(60);
+      } 
       // cout << "Loads[" << i << "]: " << workloads[i] << endl;
       string workload = workdloads_dir + "/" + workloads[i];
       LoadWorkLoad(props, workload);
