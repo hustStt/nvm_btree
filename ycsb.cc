@@ -179,6 +179,43 @@ private:
     FPTree::btree *tree;
 };
 
+class TestDb : public ycsbc::KvDB {
+public:
+    TestDb(): tree(nullptr) {}
+    virtual ~TestDb() {
+
+    }
+    void Init()
+    {
+      
+    }
+
+    void Info()
+    {
+    }
+
+    void Close() { 
+
+    }
+    int Put(uint64_t key, uint64_t value) 
+    {
+        return 1;
+    }
+    int Get(uint64_t key, uint64_t &value)
+    {
+        std::count<<key<<endl;
+        return 1;
+    }
+    int Update(uint64_t key, uint64_t value) {
+        return 1;
+    }
+    int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
+    {
+        return 1;
+    }
+private:
+};
+
 void UsageMessage(const char *command);
 bool StrStartWith(const char *str, const char *pre);
 string ParseCommandLine(int argc, const char *argv[], utils::Properties &props);
@@ -238,6 +275,8 @@ int main(int argc, const char *argv[])
       db = new FPTreeDb();
     } else if(dbName == "fastfair") {
       db = new FastFairDb();
+    } else if(dbName == "test") {
+      db = new TestDb();
     }
     db->Init();
 
