@@ -76,6 +76,7 @@ class btree {
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
     void scan(entry_key_t min, entry_key_t max, void **values, int &size);
     void scan(entry_key_t min, entry_key_t max, std::vector<pair<uint64_t, uint64_t>> &result,int &size);
+    void update(entry_key_t key, char* value);
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
@@ -1584,6 +1585,17 @@ void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
         current = (LeafNode *)current->hdr.sibling_ptr;
     }
     size = off;
+}
+
+void btree::update(entry_key_t key, char* value) {
+    page* p = (page*)root;
+
+    while(p->hdr.leftmost_ptr != NULL){
+        p = (page*) p->linear_search(key);
+    }
+
+    LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
+    leaf_ptr->update(key,value);
 }
 
 
