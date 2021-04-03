@@ -221,7 +221,8 @@ inline std::string CoreWorkload::NextTransactionKey() {
 
 inline uint64_t CoreWorkload::NextSequenceIntKey() {
   uint64_t key_num = key_generator_->Next();
-  return utils::Hash(key_num);
+  //return utils::Hash(key_num);
+  return key_num;
 }
 
 inline uint64_t CoreWorkload::NextTransactionIntKey() {
@@ -229,12 +230,14 @@ inline uint64_t CoreWorkload::NextTransactionIntKey() {
   do {
     key_num = key_chooser_->Next();
   } while (key_num > insert_key_sequence_.Last());
-  return utils::Hash(key_num);
+  //return utils::Hash(key_num);
+  return key_num;
 }
 
 inline std::string CoreWorkload::BuildKeyName(uint64_t key_num) {
   if (!ordered_inserts_) {
-    key_num = utils::Hash(key_num);
+    //key_num = utils::Hash(key_num);
+    return key_num;
   }
   return std::string("user").append(std::to_string(key_num));
 }

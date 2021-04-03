@@ -55,6 +55,7 @@ public:
     {
       mybt = MyBtree::getInitial(PATH);
       tree_ = mybt->getBt();
+      //NVM::data_init();
     }
 
     void Info()
@@ -67,6 +68,8 @@ public:
     }
     int Put(uint64_t key, uint64_t value) 
     {
+        //char* v = NVM::data_alloc->alloc(256);
+        //pmem_memcpy_persist(v,&value,256);
         tree_->btreeInsert(key, (char *)value);
         return 1;
     }
