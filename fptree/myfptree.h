@@ -1536,9 +1536,7 @@ void btree::scan(entry_key_t min, entry_key_t max, std::vector<pair<uint64_t, ui
             if (tmp.size() == 0) {
                 break;
             }
-            if (off + tmp.size() > size) {
-                sort(tmp.begin(),tmp.end(),cmp_kv);
-            }
+            sort(tmp.begin(),tmp.end(),cmp_kv);
             for (int i = 0; i < tmp.size();i++) {
                 result.push_back({tmp[i].key, (uint64_t)tmp[i].ptr});
                 off++;
@@ -1572,9 +1570,7 @@ void btree::scan(entry_key_t min, entry_key_t max, void **values, int &size) {
         if (tmp.size() == 0) {
             break;
         }
-        if (off + tmp.size() > size) {
-            sort(tmp.begin(),tmp.end(),cmp_kv);
-        }
+        sort(tmp.begin(),tmp.end(),cmp_kv);
         for (int i = 0; i < tmp.size(); i++) {
             values[off] = (char *)(tmp[i].ptr);
             off++;

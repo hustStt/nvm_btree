@@ -45,7 +45,8 @@ inline uint64_t ScrambledZipfianGenerator::Scramble(uint64_t value) const {
 
 inline uint64_t ScrambledZipfianGenerator::Next() {
   //return Scramble(generator_.Next());
-  return generator_.Next();
+  uint64_t s = generator_.Next();
+  return 
 }
 
 inline uint64_t ScrambledZipfianGenerator::Last() {
