@@ -1274,20 +1274,7 @@ class LeafNode :public page {
     }
 
     bool update(const entry_key_t& k, char* v) {
-        bool ifUpdate = false;
-        // TODO
-        int hash = keyHash(k);
-        for(int i=0;i<cardinality;++i){
-            if(getBit(i)==1&&(fingerprints[i]==hash)){
-                if(getKey(i)==k){
-                    records[i].ptr=v;
-                    ifUpdate=true;
-                    pmem_persist(&(records[i].ptr),sizeof(records[i].ptr));
-                    break;
-                }
-            }
-        } 
-        //persist();
+        
         return ifUpdate;
     }
 
@@ -1591,7 +1578,10 @@ void btree::update(entry_key_t key, char* value) {
     }
 
     LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
-    leaf_ptr->update(key,value);
+    //leaf_ptr->update(key,value);
+    leaf_ptr->insert(this, nullptr,key, value);
+    bool ifDelete = false;
+    leaf_ptr->remove(this, key, ifDelete);
 }
 
 

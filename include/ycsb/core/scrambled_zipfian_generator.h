@@ -45,6 +45,7 @@ inline uint64_t ScrambledZipfianGenerator::Scramble(uint64_t value) const {
 
 inline uint64_t ScrambledZipfianGenerator::Next() {
   //return Scramble(generator_.Next());
+  double u = utils::RandomDouble();
   return generator_.Next();
 }
 
