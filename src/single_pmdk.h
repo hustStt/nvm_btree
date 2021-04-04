@@ -560,6 +560,10 @@ class MyBtree{
       this->subtree_num = num;
       pmemobj_persist(pop, &(this->subtree_num), sizeof(subtree_num));
     }
+
+    PMEMobjpool * getPoolPtr() {
+      return this->pop;
+    }
 };
 
 class subtree {

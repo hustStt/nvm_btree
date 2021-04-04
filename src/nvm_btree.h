@@ -61,7 +61,7 @@ public:
     }
 
     void recovery() {
-        mybt->Recover(mybt->pop);
+        mybt->Recover(mybt->getPoolPtr());
     }
 
 private:
