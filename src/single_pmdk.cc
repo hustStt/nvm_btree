@@ -1676,6 +1676,7 @@ void MyBtree::constructor(PMEMobjpool * pool) {
 
 void MyBtree::Recover(PMEMobjpool *pool) {
   pop = pool;
+  this->switch_ = false;
   if (head == nullptr) { // 没有进行转换 读log恢复
     bt = new btree(pop);
     // 进行相关操作
