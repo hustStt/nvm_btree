@@ -80,6 +80,7 @@ class btree {
     void printAll();
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
+    void recovery();
 
     friend class page;
     friend class LeafNode;
@@ -1627,6 +1628,17 @@ void btree::PrintInfo() {
     printf("This is a b+ tree.\n");
     printf("Node size is %lu, M path is %d.\n", sizeof(page), cardinality);
     printf("Tree height is %d.\n", height);
+
+}
+
+void btree::recovery() {
+    page* p = (page*)root;
+
+    while(p->hdr.leftmost_ptr != NULL){
+        p = (page*) p->hdr.leftmost_ptr;
+    }
+
+    LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
 }
 

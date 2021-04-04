@@ -60,6 +60,10 @@ public:
         bt->scan_all_leaf();
     }
 
+    void recovery() {
+        mybt->Recover(mybt->pop);
+    }
+
 private:
     btree *bt;
     MyBtree *mybt;
