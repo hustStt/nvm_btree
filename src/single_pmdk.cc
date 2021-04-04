@@ -1709,8 +1709,8 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     bt->setFlag(true);
     bt->setFlag2(false);
     bt->CalcuRootLevel();
-    switch_ = true;
-    this->later();
+    //switch_ = true;
+    //this->later();
 
     end_time = get_now_micros();
     printf("recover btree time: %f s\n", (end_time - start_time) * 1e-6);
