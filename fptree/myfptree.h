@@ -1666,14 +1666,17 @@ void btree::recovery() {
     }
 
     root = (char *)new page();
+    int leaf_num = 0;
 
     LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
     while(leaf_ptr != nullptr) {
+        leaf_num++;
         entry_key_t key = leaf_ptr->findLittleKey();
         //this->btree_insert_internal(key,(char *)leaf_ptr);
         this->btree_insert_internal(nullptr,key,(char*)leaf_ptr,0);
         leaf_ptr = (LeafNode *)leaf_ptr->hdr.sibling_ptr;
     }
+    printf("------------ fptree leaf_node num: %d -----------\n\n",leaf_num);
 }
 
 } // namespace FastFair
