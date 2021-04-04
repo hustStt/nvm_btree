@@ -1676,6 +1676,8 @@ void btree::recovery() {
         this->btree_insert_internal(nullptr,key,(char*)leaf_ptr,0);
         leaf_ptr = (LeafNode *)leaf_ptr->hdr.sibling_ptr;
     }
+
+    printf("------------     fptree level: %d     -----------\n\n",((page *)root)->GetLevel());
     printf("------------ fptree leaf_node num: %d -----------\n\n",leaf_num);
 }
 
