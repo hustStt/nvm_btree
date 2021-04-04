@@ -1686,7 +1686,7 @@ void MyBtree::Recover(PMEMobjpool *pool) {
     uint64_t start_time, end_time;
     start_time = get_now_micros();
 
-    subtree *ptr = to_nvmptr(head);
+    subtree *ptr = head;//to_nvmptr(head);
     if (ptr == nullptr) {
       bt = new btree(pop);
       return;
@@ -1704,7 +1704,7 @@ void MyBtree::Recover(PMEMobjpool *pool) {
       bt->btreeInsert(ptr->getFirstKey(), (char *)ptr);
       ptr = ptr->getSiblingPtr();
     }
-    bt->setLeftmostPtr((bpnode *)to_nvmptr(head));
+    bt->setLeftmostPtr(head/*(bpnode *)to_nvmptr(head)*/);
     bt->setFlag(true);
     bt->setFlag2(false);
     bt->CalcuRootLevel();
