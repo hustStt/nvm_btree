@@ -60,6 +60,7 @@ class btree {
   private:
     int height;
     char* root;
+    char* recovery_root;
 
   public:
     btree();
@@ -1336,6 +1337,7 @@ class LeafNode :public page {
 
 btree::btree(){
     root = (char *) new LeafNode();
+    recovery_root = (char *)new page();
   //root = (char*)new page();
   printf("[Fast-Fair]: root is %p, btree is %p.\n", root, this);
   height = 1;
