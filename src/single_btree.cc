@@ -1297,10 +1297,10 @@ bpnode *bpnode::store(btree* bt, char* left, entry_key_t key, char* right,
     if (sub_root != NULL && hdr.level == sub_root->dram_ptr->hdr.level) { // subtree root
       subtree* next = newSubtreeRoot(bt->pop, sibling, sub_root);
       // sync
-      // nvmpage *pre = nullptr;
-      // next->sync_subtree(&pre);
-      // pre = nullptr;
-      // sub_root->sync_subtree(&pre);
+      nvmpage *pre = nullptr;
+      next->sync_subtree(&pre);
+      pre = nullptr;
+      sub_root->sync_subtree(&pre);
 
       if (sub_root->getSiblingPtr()) {
         //sub_root->getSiblingPtr()->setPrePtr((subtree *)pmemobj_oid(next).off);

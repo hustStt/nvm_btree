@@ -82,6 +82,7 @@ class btree {
     void PrintInfo();
     void CalculateSapce(uint64_t &space);
     void recovery();
+    void btree_insert_internal(entry_key_t key, char *right);
 
     friend class page;
     friend class LeafNode;
@@ -1160,6 +1161,16 @@ class LeafNode :public page {
         pmem_persist(this,sizeof(LeafNode));
     }
 
+    entry_key_t findLittleKey() {
+        entry_key_t min_key = UINT64_MAX;
+        for(int i = 0;i < cardinality; ++i){
+            if (getBit(i) == 1 && getKey(i) < min_key) {
+                min_key = getKey(i);
+            }
+        }
+        return min_key;
+    }
+
     entry_key_t findSplitKey() {
         entry_key_t midKey = 0;
         // TODO
@@ -1413,6 +1424,20 @@ void btree::btree_insert_internal
   }
 }
 
+void btree::btree_insert_internal(entry_key_t key, char *right) {
+  if(recovery_root == nullptr)
+    return;
+
+  page *p = (page *)this->recovery_root;
+
+  while(p->hdr.leftmost_ptr != nullptr) 
+    p = (page *)p->linear_search(key);
+
+  if(!p->store(this, NULL, key, right, true)) {
+    btree_insert_internal(key, right);
+  }
+}
+
 void btree::btree_delete(entry_key_t key) {
   page* p = (page*)root;
 
@@ -1641,7 +1666,11 @@ void btree::recovery() {
     }
 
     LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
-
+    while(leaf_ptr != nullptr) {
+        entry_key_t key = leaf_ptr->findLittleKey();
+        this->btree_insert_internal(key,leaf_ptr);
+        leaf_ptr = leaf_ptr->hdr.sibling_ptr;
+    }
 }
 
 } // namespace FastFair

@@ -1691,7 +1691,7 @@ void MyBtree::Recover(PMEMobjpool *pool) {
       bt = new btree(pop);
       return;
     }
-    bt = new btree(pop, 5);
+    bt = new btree(pop, 4);
     bt->setFlag2(true);
     ptr->pop = pool;
     //ptr->recover();
