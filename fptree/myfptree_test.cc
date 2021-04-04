@@ -22,6 +22,7 @@ uint64_t start_time, end_time, use_time;
 
 using FPTree::btree;
 
+void function_test(btree *bt, uint64_t ops);
 void motivationtest(btree* bt, uint64_t load_num);
 void nvm_print(int ops_num);
 int parse_input(int num, char **para);
@@ -48,7 +49,12 @@ int main(int argc, char *argv[]) {
     
     btree *bt = new btree();
     // bt->PrintInfo();
-    motivationtest(bt,ops_num);
+    if(test_type == 0) {
+        motivationtest(bt, ops_num);
+    } else if(test_type == 1) {
+        function_test(bt, ops_num);
+    }
+    
 
     NVM::env_exit();
     return 0;
@@ -60,6 +66,71 @@ int main(int argc, char *argv[]) {
 // const uint64_t DeleteOps = 100000;
 // const uint64_t ScanOps = 1000;
 // const uint64_t ScanCount = 100;
+
+void function_test(btree *bt, uint64_t load_num) {
+    uint64_t i;
+    uint64_t ops;
+    Statistic stats;
+    string value("value", NVM_ValueSize);
+    printf("Value size is %d\n", value.size());
+    //* 随机插入测试
+    uint64_t rand_seed = 0xdeadbeef;
+    vector<future<void>> futures(thread_num);
+
+    //*插入初始化数据
+    ops = load_num;
+    start_time = get_now_micros();
+    for(int tid = 0; tid < thread_num; tid ++) {
+        uint64_t from = (ops / thread_num) * tid;
+        uint64_t to = (tid == thread_num - 1) ? ops : from + (ops / thread_num);
+        auto f = async(launch::async, [&](int tid, uint64_t from, uint64_t to){
+            rocksdb::Random64 rnd_put(rand_seed * (tid + 1));
+            char valuebuf[NVM_ValueSize + 1];
+            for(uint64_t i = from; i < to; i ++) {
+                auto key = rnd_put.Next();
+                snprintf(valuebuf, sizeof(valuebuf), "%020llu", i * i);
+                string value(valuebuf, NVM_ValueSize);
+                stats.start();
+                // printf("Insert number %ld, key %llx.\n", i, key);
+
+                char *pvalue = (char *)key;
+                bt->btree_insert(key, pvalue);
+                stats.end();
+                stats.add_put();
+
+                if ((i % 50000) == 0) {
+                    cout<<"Put_test:"<<i;
+                    stats.print_latency();
+                    stats.clear_period();
+                    // stats_leaf.print_latency();
+                    // stats_leaf.clear_period();
+                }
+                // if ((i % 40000000) == 0) {
+                //     printf("Number %ld", i / 40000000);
+                //     bt->PrintStorage();
+                // }
+            }
+            printf("thread %d finished.\n", tid);
+        }, tid, from, to);
+
+        futures.push_back(move(f));
+    }
+    for(auto &&f : futures) {
+        if(f.valid()) {
+            f.get();
+        }
+    }
+    futures.clear();
+    end_time = get_now_micros();
+    use_time = end_time - start_time;
+    printf("Initial_insert test finished\n");
+    nvm_print(ops);
+
+    start_time = get_now_micros();
+    bt->recovery();
+    end_time = get_now_micros();
+    printf("recover fptree time: %f s\n", (end_time - start_time) * 1e-6);
+}
 
 void motivationtest(btree *bt, uint64_t load_num) {
     uint64_t i;
