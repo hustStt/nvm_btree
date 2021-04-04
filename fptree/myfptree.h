@@ -1668,8 +1668,8 @@ void btree::recovery() {
     LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
     while(leaf_ptr != nullptr) {
         entry_key_t key = leaf_ptr->findLittleKey();
-        this->btree_insert_internal(key,leaf_ptr);
-        leaf_ptr = leaf_ptr->hdr.sibling_ptr;
+        this->btree_insert_internal(key,(char *)leaf_ptr);
+        leaf_ptr = (LeafNode *)leaf_ptr->hdr.sibling_ptr;
     }
 }
 
