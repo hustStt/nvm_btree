@@ -5,7 +5,7 @@ NVMBtree::NVMBtree() {
     // btree tmpbtree = btree(root);
 }
 
-NVMBtree::Init(string &path, bool has_value) {
+void NVMBtree::Init(string &path, bool has_value) {
     if (has_value) {
         AllocatorInit(LOGPATH, NVM_LOG_SIZE, VALUEPATH, NVM_VALUE_SIZE, NODEPATH, NVM_NODE_SIZE);
     } else {

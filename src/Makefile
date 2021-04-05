@@ -25,7 +25,7 @@ LIBRARY = libnvmbtree.a
 default:  all
 
 # all:  clean single_test mult_test skiplist nvtree
-all: clean single_test
+all: clean hbtree
 
 cfile:
 	rm -f /mnt/pmem1/mytest
@@ -40,8 +40,8 @@ clean:
 	rm -f $(LIBOBJECTS)
 	rm -f pmdk_test
 
-pmdk_test:
-	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o pmdk_test $(LDFLAGS)
+hbtree:
+	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o hbtree $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
