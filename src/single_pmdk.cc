@@ -1390,7 +1390,7 @@ void subtree::subtree_search_range(entry_key_t min, entry_key_t max, std::vector
   }
 }
 
-void subtree::subtree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size) {
+void subtree::subtree_search_range(entry_key_t min, entry_key_t max, std::vector<std::string> &values, int &size) {
   if (flag) {
     bpnode* p = dram_ptr;
     while(p->hdr.leftmost_ptr != NULL) {
