@@ -64,7 +64,6 @@ int main(int argc, char *argv[]) {
     }
 
     delete bt;
-    AllocatorExit();
     return 0;
 }
 

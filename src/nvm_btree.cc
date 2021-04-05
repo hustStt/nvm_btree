@@ -23,6 +23,7 @@ void NVMBtree::Init(string &path, bool has_value) {
 NVMBtree::~NVMBtree() {
     if(bt) {
         mybt->exitBtree();
+        AllocatorExit();
     }
 }
     
