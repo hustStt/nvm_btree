@@ -15,9 +15,9 @@ SING_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc
 
 PMDK_LIB_SOURCES = nvm_allocator.cc single_btree.cc nvm_btree.cc single_pmdk.cc
 
-LIBOBJECTS = $(SING_LIB_SOURCES:.cc=.o)
+LIBOBJECTS = $(PMDK_LIB_SOURCES:.cc=.o)
 
-TARGET_OBJS = $(SING_LIB_SOURCES:.cc=)
+TARGET_OBJS = $(PMDK_LIB_SOURCES:.cc=)
 
 LIBRARY = libnvmbtree.a
 
