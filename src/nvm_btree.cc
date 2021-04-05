@@ -65,16 +65,17 @@ void NVMBtree::Delete(const unsigned long key) {
     }
 }
 
-const string NVMBtree::Get(const unsigned long key) {
+int NVMBtree::Get(const unsigned long key, string &value) {
     char *pvalue = NULL;
     if(bt) {
         pvalue = bt->btreeSearch(key);
     }
     if(pvalue) {
         // print_log(LV_DEBUG, "Get pvalue is %p.", pvalue);
-        return string(pvalue, NVM_ValueSize);
+        value = string(pvalue, NVM_ValueSize);
+        return 0;
     }
-    return "";
+    return 2;
 }
 
 int NVMBtree::Get(const unsigned long key, char *&pvalue) {

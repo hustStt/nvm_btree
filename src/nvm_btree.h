@@ -40,7 +40,7 @@ public:
 
     void Delete(const unsigned long key);
 
-    const std::string Get(const unsigned long key);
+    int Get(const unsigned long key, std::string &value);
 
     void GetRange(unsigned long key1, unsigned long key2, std::vector<std::string> &values, int &size);
 
