@@ -31,6 +31,7 @@ cfile:
 	rm -f /mnt/pmem1/mytest
 	rm -f /mnt/pmem1/persistent
 	rm -f /mnt/pmem1/log_persistent
+	rm -f /mnt/pmem1/data
 
 clean: 
 	rm -f /mnt/pmem1/mytest
@@ -38,7 +39,7 @@ clean:
 	rm -f /mnt/pmem1/log_persistent
 	rm -f $(LIBRARY)
 	rm -f $(LIBOBJECTS)
-	rm -f pmdk_test
+	rm -f hbtree
 
 hbtree:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o hbtree $(LDFLAGS)
