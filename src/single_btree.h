@@ -79,6 +79,8 @@ class btree{
     void btree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void btree_search_range(entry_key_t, entry_key_t, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size); 
     void btreeSearchRange(entry_key_t, entry_key_t, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size); 
+    void btree_search_range(entry_key_t, entry_key_t, std::vector<std::string> & results, int &size); 
+    void btreeSearchRange(entry_key_t, entry_key_t, std::vector<std::string> & results, int &size); 
     void btree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
     void btreeSearchRange(entry_key_t , entry_key_t , void **values, int &size);
     void printAll();

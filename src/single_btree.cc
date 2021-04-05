@@ -127,6 +127,127 @@ void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<s
     size = off;
 }
 
+void bpnode::linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string>& results, int &size, uint64_t base) {
+    int i, off = 0;
+    uint8_t previous_switch_counter;
+    bpnode *current = this;
+
+    while(current) {
+        int old_off = off;
+        do {
+            previous_switch_counter = current->hdr.switch_counter;
+            off = old_off;
+
+            entry_key_t tmp_key;
+            char *tmp_ptr;
+
+            if(IS_FORWARD(previous_switch_counter)) {
+                if((tmp_key = current->records[0].key) > min) {
+                    if(tmp_key < max) {
+                        if((tmp_ptr = current->records[0].ptr) != NULL) {
+                            if(tmp_key == current->records[0].key) {
+                                if(tmp_ptr) {
+                                    // buf[off++] = (unsigned long)tmp_ptr;
+                                    // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    results.push_back(std::string(current->records[0].ptr, NVM_ValueSize));
+                                    off++;
+                                    if(off >= size) {
+                                        return ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        size = off;
+                        return;
+                    }
+                }
+
+                for(i=1; current->records[i].ptr != NULL; ++i) { 
+                    if((tmp_key = current->records[i].key) > min) {
+                        if(tmp_key < max) {
+                            if((tmp_ptr = current->records[i].ptr) != current->records[i - 1].ptr) {
+                                if(tmp_key == current->records[i].key) {
+                                    if(tmp_ptr) {
+                                        // buf[off++] = (unsigned long)tmp_ptr;
+                                        // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        results.push_back(std::string(current->records[i].ptr, NVM_ValueSize));
+                                        off++;
+                                        if(off >= size) {
+                                            return ;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            size = off;
+                            return;
+                        }
+                    }
+                }
+            }
+            else {
+                for(i=count() - 1; i > 0; --i) { 
+                    if((tmp_key = current->records[i].key) > min) {
+                        if(tmp_key < max) {
+                            if((tmp_ptr = current->records[i].ptr) != current->records[i - 1].ptr) {
+                                if(tmp_key == current->records[i].key) {
+                                    if(tmp_ptr) {
+                                        // buf[off++] = (unsigned long)tmp_ptr;
+                                        // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                        results.push_back(std::string(current->records[i].ptr, NVM_ValueSize));
+                                        off++;
+                                        if(off >= size) {
+                                            return ;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            size = off;
+                            return;
+                        }
+                    }
+                }
+
+                if((tmp_key = current->records[0].key) > min) {
+                    if(tmp_key < max) {
+                        if((tmp_ptr = current->records[0].ptr) != NULL) {
+                            if(tmp_key == current->records[0].key) {
+                                if(tmp_ptr) {
+                                    // buf[off++] = (unsigned long)tmp_ptr;
+                                    // values.push_back(string(tmp_ptr, NVM_ValueSize));
+                                    results.push_back(std::string(current->records[0].ptr, NVM_ValueSize));
+                                    off++;
+                                    if(off >= size) {
+                                        return ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        size = off;
+                        return;
+                    }
+                }
+            }
+        } while(previous_switch_counter != current->hdr.switch_counter);
+
+        if (IS_VALID_PTR(current->hdr.sibling_ptr) || base == 0) {
+          current = current->hdr.sibling_ptr;
+        } else if (current->hdr.sibling_ptr != nullptr){
+          current = (bpnode *)((uint64_t)current->hdr.sibling_ptr + base);
+        } else {
+          break;
+        }
+    }
+    size = off;
+}
+
 void bpnode::linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base) {
     int i, off = 0;
     uint8_t previous_switch_counter;
@@ -521,6 +642,15 @@ void btree::btree_search_range
 }
 
 void btree::btreeSearchRange(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size) {
+    if (flag) {
+        subtree* sub_root = (subtree*)findSubtreeRoot(min);
+        sub_root->subtree_search_range(min, max, results, size);
+    } else {
+        btree_search_range(min, max, results, size);
+    }
+}
+
+void btree::btreeSearchRange(entry_key_t min, entry_key_t max, std::vector<std::string>& results, int &size) {
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(min);
         sub_root->subtree_search_range(min, max, results, size);

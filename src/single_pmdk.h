@@ -224,6 +224,7 @@ public:
   // Search keys with linear search
   void linear_search_range(entry_key_t min, entry_key_t max, void **values, int &size, uint64_t base = 0);
   void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size, uint64_t base);
+  void linear_search_range(entry_key_t min, entry_key_t max, std::vector<std::string>& results, int &size, uint64_t base);
 
   void linear_search_range(entry_key_t min, entry_key_t max,
                             unsigned long *buf, uint64_t base = 0) {
@@ -652,6 +653,7 @@ class subtree {
     void subtree_search_range(entry_key_t, entry_key_t, unsigned long *); 
     void subtree_search_range(entry_key_t, entry_key_t, std::vector<std::pair<uint64_t, uint64_t>>& results, int &size); 
     void subtree_search_range(entry_key_t, entry_key_t, void **values, int &size); 
+    void subtree_search_range(entry_key_t, entry_key_t, std::vector<std::string> &values, int &size); 
 
     void btree_insert_internal(char *left, entry_key_t key, char *right, uint32_t level, btree* bt);
     void btree_delete_internal(entry_key_t key, char *ptr, uint32_t level, entry_key_t *deleted_key, 
