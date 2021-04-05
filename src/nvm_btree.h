@@ -19,6 +19,12 @@
 #include "single_pmdk.h"
 using namespace std;
 
+#define NODEPATH   "/mnt/pmem1/persistent"
+#define LOGPATH "/mnt/pmem1/log_persistent"
+
+const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
+const uint64_t NVM_LOG_SIZE = 30 * (1ULL << 30);
+
 class NVMBtree{
 public:
     NVMBtree(string &path);

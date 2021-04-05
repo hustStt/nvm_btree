@@ -1,6 +1,7 @@
 #include "nvm_btree.h"
 
 NVMBtree::NVMBtree(string &path) {
+    AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE);
     mybt = MyBtree::getInitial(path.c_str());
     bt = mybt->getBt();
     if(!bt) {

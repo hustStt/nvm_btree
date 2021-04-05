@@ -333,6 +333,8 @@ extern NVMLogPool *log_alloc_pool;
 
 int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &allocator_path, 
                 uint64_t allocator_size);
+int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &valuepath, uint64_t valuesize, const std::string &allocator_path, 
+                uint64_t allocator_size);
 void AllocatorExit();
 
 static uint64_t getNewLogAllocator() {

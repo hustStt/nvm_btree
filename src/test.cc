@@ -10,13 +10,7 @@
 #include "statistic.h"
 #include "single_pmdk.h"
 
-#define NODEPATH   "/mnt/pmem1/persistent"
-#define LOGPATH "/mnt/pmem1/log_persistent"
-
 extern Statistic stats_leaf;
-
-const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
-const uint64_t NVM_LOG_SIZE = 30 * (1ULL << 30);
 
 int using_existing_data = 0;
 int test_type = 1;
@@ -33,11 +27,6 @@ int parse_input(int num, char **para);
 
 int main(int argc, char *argv[]) {
     if(parse_input(argc, argv) != 0) {
-        return 0;
-    }
-
-    if(AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE) < 0) {
-        print_log(LV_ERR, "Initial allocator failed");
         return 0;
     }
 

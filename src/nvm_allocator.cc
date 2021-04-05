@@ -23,6 +23,27 @@ int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::strin
     return 0;
 }
 
+int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::string &valuepath, uint64_t valuesize, const std::string &allocator_path, 
+                uint64_t allocator_size) {
+    log_alloc_pool = new NVMLogPool(logpath, logsize);
+    if(log_alloc_pool == nullptr) {
+        delete log_alloc_pool;
+        return -1;
+    }
+    value_alloc = new NVMAllocator(valuepath, valuesize);
+    if(node_alloc == nullptr) {
+        delete node_alloc;
+        return -1;
+    }
+    node_alloc = new NVMAllocator(allocator_path, allocator_size);
+    if(node_alloc == nullptr) {
+        delete node_alloc;
+        return -1;
+    }
+    // perist_data = 0;
+    return 0;
+}
+
 void AllocatorExit() {
     if(node_alloc) {
         delete node_alloc;
