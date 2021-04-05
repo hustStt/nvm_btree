@@ -41,59 +41,6 @@ const char *workloads[] = {
 
 #define ArrayLen(arry) (sizeof(arry) / sizeof(arry[0]))
 
-class HBKV : public ycsbc::KvDB {
-public:
-    HBKV(): tree_(nullptr) {
-      AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE);
-    }
-    HBKV(btree *tree): tree_(tree) {}
-    virtual ~HBKV() {
-      mybt->exitBtree();
-      AllocatorExit();
-    }
-    void Init()
-    {
-      mybt = MyBtree::getInitial(PATH);
-      tree_ = mybt->getBt();
-      NVM::data_init();
-    }
-
-    void Info()
-    {
-      mybt->clearHeat();
-    }
-
-    void Close() { 
-      mybt->closeChange();
-    }
-    int Put(uint64_t key, uint64_t value) 
-    {
-        char* v = (char *)NVM::data_alloc->alloc(1024);
-        pmem_memcpy_persist(v,&value,1024);
-        tree_->btreeInsert(key, v);
-        return 1;
-    }
-    int Get(uint64_t key, uint64_t &value)
-    {
-        value = (uint64_t)tree_->btreeSearch(key);
-        return 1;
-    }
-    int Update(uint64_t key, uint64_t value) {
-        //tree_->btreeDelete(key);
-        char* v = (char *)NVM::data_alloc->alloc(1024);
-        pmem_memcpy_persist(v,&value,1024);
-        tree_->btreeUpdate(key, v);
-        return 1;
-    }
-    int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
-    {
-        tree_->btreeSearchRange(start_key, UINT64_MAX, results, len);
-        return 1;
-    }
-private:
-    btree *tree_;
-    MyBtree *mybt;
-};
 
 class HBTree : public ycsbc::KvDB {
 public:
@@ -323,17 +270,15 @@ int main(int argc, const char *argv[])
     int sum = 0;
 
     std::cout << "YCSB test:" << dbName << std::endl;
-    if(dbName == "hbkv") {
-      db = new HBKV();
+    if(dbName == "hbtree") {
+      db = new HBTree();
     } else if(dbName == "fptree") {
       db = new FPTreeDb();
     } else if(dbName == "fastfair") {
       db = new FastFairDb();
     } else if(dbName == "test") {
       db = new TestDb();
-    } else if (dbName == "hbtree") {
-      db = new HBTree();
-    }
+    } 
     db->Init();
 
     {

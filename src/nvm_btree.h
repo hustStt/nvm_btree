@@ -36,6 +36,8 @@ public:
 
     void Insert(const unsigned long key, const string &value);
 
+    void Update(const unsigned long key, const string &value);
+
     void Delete(const unsigned long key);
 
     const std::string Get(const unsigned long key);

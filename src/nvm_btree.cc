@@ -28,9 +28,17 @@ NVMBtree::~NVMBtree() {
     
 void NVMBtree::Insert(const unsigned long key, const string &value) {
     if(bt) {
-        // char *pvalue = value_alloc->Allocate(value.size());
-        // nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
-        // bt->btree_insert(key, pvalue);
+        char *pvalue = value_alloc->Allocate(value.size());
+        nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
+        bt->btree_insert(key, pvalue);
+    }
+}
+
+void NVMBtree::Update(const unsigned long key, const string &value) {
+    if(bt) {
+        char *pvalue = value_alloc->Allocate(value.size());
+        nvm_memcpy_persist(pvalue, value.c_str(), value.size(), false);
+        bt->btree_update(key, pvalue);
     }
 }
 
