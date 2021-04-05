@@ -676,6 +676,24 @@ void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std
     }
 }
 
+void btree::btree_search_range(entry_key_t min, entry_key_t max, std::vector<std::string>& results, int &size) {
+    bpnode *p = (bpnode *)root;
+
+    while(p) {
+        if(p->hdr.leftmost_ptr != NULL) {
+        // The current bpnode is internal
+            p = (bpnode *)p->linear_search(min);
+        }
+        else {
+        // Found a leaf
+            p->linear_search_range(min, max, results, size);
+
+        break;
+        }
+    }
+}
+
+
 void btree::btreeSearchRange(entry_key_t min, entry_key_t max, void **values, int &size) {
     if (flag) {
         subtree* sub_root = (subtree*)findSubtreeRoot(min);
