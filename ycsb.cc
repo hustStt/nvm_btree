@@ -70,7 +70,7 @@ public:
     {
         char* v = NVM::data_alloc->alloc(1024);
         pmem_memcpy_persist(v,&value,1024);
-        tree_->btreeInsert(key, v);
+        tree_->btreeInsert(key, (char *)v);
         return 1;
     }
     int Get(uint64_t key, uint64_t &value)
@@ -82,7 +82,7 @@ public:
         //tree_->btreeDelete(key);
         char* v = NVM::data_alloc->alloc(1024);
         pmem_memcpy_persist(v,&value,1024);
-        tree_->btreeUpdate(key, v);
+        tree_->btreeUpdate(key, (char *)v);
         return 1;
     }
     int Scan(uint64_t start_key, int len, std::vector<std::pair<uint64_t, uint64_t>>& results) 
