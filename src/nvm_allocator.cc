@@ -31,8 +31,8 @@ int AllocatorInit(const std::string &logpath, uint64_t logsize, const std::strin
         return -1;
     }
     value_alloc = new NVMAllocator(valuepath, valuesize);
-    if(node_alloc == nullptr) {
-        delete node_alloc;
+    if(value_alloc == nullptr) {
+        delete value_alloc;
         return -1;
     }
     node_alloc = new NVMAllocator(allocator_path, allocator_size);
