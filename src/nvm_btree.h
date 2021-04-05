@@ -21,14 +21,18 @@ using namespace std;
 
 #define NODEPATH   "/mnt/pmem1/persistent"
 #define LOGPATH "/mnt/pmem1/log_persistent"
+#define VALUEPATH "/mnt/pmem1/data"
 
 const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
 const uint64_t NVM_LOG_SIZE = 30 * (1ULL << 30);
+const uint64_t NVM_VALUE_SIZE = 100 * (1ULL << 30);
 
 class NVMBtree{
 public:
-    NVMBtree(string &path);
+    NVMBtree();
     ~NVMBtree();
+
+    void Init(string &path, bool has_value);
 
     void Insert(const unsigned long key, const string &value);
 

@@ -53,7 +53,8 @@ int main(int argc, char *argv[]) {
     //     //D_RW(nvmbt)->setPMEMobjpool(pop);
     // }
 
-    NVMBtree *bt = new NVMBtree(persistent_path);
+    NVMBtree *bt = new NVMBtree();
+    bt->Init(persistent_path, false);
 
     // bt->PrintInfo();
     if(test_type == 0) {

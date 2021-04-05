@@ -1,7 +1,16 @@
 #include "nvm_btree.h"
 
-NVMBtree::NVMBtree(string &path) {
-    AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE);
+NVMBtree::NVMBtree() {
+    // bpnode *root = NewBpNode();
+    // btree tmpbtree = btree(root);
+}
+
+NVMBtree::Init(string &path, bool has_value) {
+    if (has_value) {
+        AllocatorInit(LOGPATH, NVM_LOG_SIZE, VALUEPATH, NVM_VALUE_SIZE, NODEPATH, NVM_NODE_SIZE);
+    } else {
+        AllocatorInit(LOGPATH, NVM_LOG_SIZE, NODEPATH, NVM_NODE_SIZE);
+    }
     mybt = MyBtree::getInitial(path.c_str());
     bt = mybt->getBt();
     if(!bt) {
