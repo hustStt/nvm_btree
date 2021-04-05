@@ -6,7 +6,7 @@ namespace NVM
 Alloc *data_alloc = nullptr;
 
 
-const size_t data_alloc_size = 50 * 1024 * 1024 * 1024UL;
+const size_t data_alloc_size = 100 * 1024 * 1024 * 1024UL;
 
 
 int data_init() {
