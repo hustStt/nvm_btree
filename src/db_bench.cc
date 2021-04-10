@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "nvm_btree.h"
+#include "lock.h"
 
 using namespace std;
 using namespace hbkv;
@@ -433,37 +434,6 @@ void RunBenchmark(NVMBtree *db, int n, char *name, void (*method)(ThreadState*))
     delete[] arg;
 }
 
-void DoRandomWrite(ThreadState* thread){
-    uint32_t seed = thread->tid + 1000;
-    uint64_t nums = FLAGS_nums / FLAGS_threads;
-
-    inode_id_t key;
-    char *fname = new char[FLAGS_value_size + 1];
-    inode_id_t value;
-    uint64_t id = 0;
-    uint64_t bytes = 0;
-    int ret = 0;
-    for(int i = 0; i < nums; i++){
-        //id = Random64(&seed);
-        id = Random64(&seed) % FLAGS_nums;
-        key = id;
-        value = id;
-        snprintf(fname, FLAGS_value_size + 1, "%0*llu", FLAGS_value_size, id);
-
-        //ret = thread->db->DirPut(key, Slice(fname, FLAGS_value_size), value);
-
-        if(ret != 0){
-            fprintf(stderr, "dir put error! key:%lu fname:%.*s value:%lu\n", key, FLAGS_value_size, fname, value);
-            fflush(stderr);
-            exit(1);
-        }
-        bytes += (FLAGS_key_size + FLAGS_value_size + FLAGS_key_size);
-        thread->stats.FinishedOp(1, kBenchmarkWriteType);
-    }
-    delete fname;
-    thread->stats.AddBytes(bytes);
-}
-
 void ReadSeq(ThreadState* thread){
 
 }
@@ -528,7 +498,7 @@ void ReadRandom(ThreadState* thread){
     delete fname;
     thread->stats.AddBytes(bytes);
   }
-  
+
   void WriteSeq(ThreadState* thread) { DoWrite(thread, true); }
 
   void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
