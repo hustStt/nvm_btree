@@ -25,7 +25,7 @@ using namespace std;
 
 const uint64_t NVM_NODE_SIZE = 1 * (1ULL << 30);
 const uint64_t NVM_LOG_SIZE = 30 * (1ULL << 30);
-const uint64_t NVM_VALUE_SIZE = 100 * (1ULL << 30);
+const uint64_t NVM_VALUE_SIZE = 60 * (1ULL << 30);
 
 class NVMBtree{
 public:
