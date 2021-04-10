@@ -44,6 +44,9 @@ clean:
 hbtree:
 	$(CXX) $(SING_CXXFLAGS) test.cc $(PMDK_LIB_SOURCES) -o hbtree $(LDFLAGS)
 
+db_bench:
+	$(CXX) $(SING_CXXFLAGS) db_bench.cc $(PMDK_LIB_SOURCES) -o db_bench $(LDFLAGS)
+
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
 	$(CXX) $(SING_CXXFLAGS) $(LDFLAGS) -c $$sou_file.cc -o $$sou_file.o; \
