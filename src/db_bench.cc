@@ -20,7 +20,10 @@
 #include <stdint.h>
 
 #include "nvm_btree.h"
-#include "lock.h"
+#include "../include/lock.h"
+#include "../include/slice.h"
+#include "../include/histogram.h"
+#include "../include/threadpool.h"
 
 using namespace std;
 using namespace hbkv;
