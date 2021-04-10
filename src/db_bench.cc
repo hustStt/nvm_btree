@@ -470,8 +470,6 @@ void ReadRandom(ThreadState* thread){
         thread->stats.FinishedOp(1, kBenchmarkReadType);
     }
 
-    delete fname;
-
     char msg[100];
     snprintf(msg, sizeof(msg), "(%lu of %lu found)", found, nums);
     thread->stats.AddMessage(msg);
@@ -514,9 +512,9 @@ void PrintStats(NVMBtree *db) {
 }
 
 void RunTest(){
-    NVMBtree *db;
-    
-    SetOption(option);
+    NVMBtree *db = new NVMBtree();
+    string persistent_path("/mnt/pmem1/mytest");
+    db->Init(persistent_path, true);
 
     PrintHeader();
 
