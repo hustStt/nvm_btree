@@ -465,16 +465,16 @@ void DoRandomWrite(ThreadState* thread){
 }
 
 void ReadSeq(ThreadState* thread){
-    
+
 }
 
 void ReadRandom(ThreadState* thread){
     uint32_t seed = thread->tid + 1000;
     uint64_t nums = (FLAGS_reads == 0) ? FLAGS_nums / FLAGS_threads : FLAGS_reads / FLAGS_threads;
 
-    inode_id_t key;
+    uint64_t key;
     string fname;
-    inode_id_t value;
+    uint64_t value;
     uint64_t id = 0;
     uint64_t found = 0;
     int ret = 0;
@@ -504,10 +504,6 @@ void ReadRandom(ThreadState* thread){
     thread->stats.AddMessage(msg);
 }
 
-  void WriteSeq(ThreadState* thread) { DoWrite(thread, true); }
-
-  void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
-
   void DoWrite(ThreadState* thread, bool seq) {
     uint32_t seed = thread->tid + 1000;
     uint64_t nums = FLAGS_nums / FLAGS_threads;
@@ -532,6 +528,12 @@ void ReadRandom(ThreadState* thread){
     delete fname;
     thread->stats.AddBytes(bytes);
   }
+  
+  void WriteSeq(ThreadState* thread) { DoWrite(thread, true); }
+
+  void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
+
+  
 
 
 void PrintStats(NVMBtree *db) {
