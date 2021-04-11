@@ -376,6 +376,7 @@ btree::btree(PMEMobjpool *pool){
   log_off = getNewLogAllocator();
   log_alloc = node_alloc->getNVMptr(log_off);
   log_alloc->setCapacity(BigLogSize);
+  it = nullptr;
 }
 
 btree::btree(PMEMobjpool *pool, uint32_t level){
@@ -386,6 +387,7 @@ btree::btree(PMEMobjpool *pool, uint32_t level){
   flag2 = false;
   total_size = 0;
   pop = pool;
+  it = nullptr;
 }
 
 btree::btree(bpnode *root_) {
@@ -447,6 +449,28 @@ char *btree::findSubtreeRoot(entry_key_t key) {
       tmp->sync_subtree(&pre);
     }
     return ret;
+}
+
+void btree::seak_to_first() {
+  bpnode* p;
+  if (flag) {
+      subtree* sub_root = (subtree*)findSubtreeRoot(0);
+      p = (bpnode*)sub_root->getFirstLeafNode();
+  } else {
+    p = (bpnode *)root;
+    while (p->hdr.leftmost_ptr != nullptr) {
+        p = (bpnode *)p->hdr.leftmost_ptr;
+    }
+  }
+  it = p;
+}
+
+void* btree::get_next_ptr() {
+  if (it == nullptr) {
+    cout<< "please seak to first\n";
+    return nullptr;
+  }
+  return nullptr;
 }
 
 char *btree::btreeSearch(entry_key_t key) {

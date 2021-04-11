@@ -46,6 +46,7 @@ public:
 
     void Insert(const unsigned long key, char *pvalue);
     int Get(const unsigned long key, char *&pvalue);
+    string GetNext();
 
     void GetRange(unsigned long key1, unsigned long key2, void ** pvalues, int &size);
 

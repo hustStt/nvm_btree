@@ -58,6 +58,7 @@ class btree{
     LogAllocator* log_alloc;
     bool flag;
     bool flag2;
+    bpnode* it;
 
   public:
     PMEMobjpool *pop;
@@ -89,6 +90,9 @@ class btree{
     void deform();
     void CalcuRootLevel();
     void scan_all_leaf();
+
+    void seak_to_first();
+    void* get_next_ptr();
 
     char* findSubtreeRoot(entry_key_t);
     void to_nvm();

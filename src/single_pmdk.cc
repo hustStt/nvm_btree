@@ -1477,6 +1477,14 @@ nvmpage *subtree::getFirstNDataNode() {
   return ret;
 }
 
+void *subtree::getFirstLeafNode() {
+  if (flag) {
+    return (void *)getFirstDDataNode();
+  } else {
+    return (void *)getFirstNDataNode();
+  }
+}
+
 void *subtree::getLastLeafNode() {
   if (flag) {
     return (void *)getLastDDataNode();

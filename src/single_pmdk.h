@@ -774,6 +774,7 @@ class subtree {
     bpnode *getFirstDDataNode();
     nvmpage *getFirstNDataNode();
     void *getLastLeafNode();
+    void *getFirstLeafNode();
     bpnode *getDramDataNode(char *ptr);
     nvmpage *getNvmDataNode(char *ptr);
     entry_key_t getFirstKey();
