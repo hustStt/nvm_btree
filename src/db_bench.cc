@@ -506,7 +506,7 @@ void ReadRandom(ThreadState* thread){
 
 
 void PrintStats(NVMBtree *db) {
-    
+    db->PrintInfo();
 }
 
 void RunTest(){
