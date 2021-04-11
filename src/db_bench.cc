@@ -441,6 +441,7 @@ void ReadSeq(ThreadState* thread){
     int scan_num = FLAGS_reads;
     vector<std::string> value;
     thread->db->GetRange(0, UINT64_MAX, value, scan_num);
+    cout<<"scan_num: "<<scan_num<<endl;
     thread->stats.FinishedOp(FLAGS_reads, kBenchmarkReadType);
 }
 
@@ -483,12 +484,12 @@ void ReadRandom(ThreadState* thread){
     uint64_t nums = FLAGS_nums / FLAGS_threads;
 
     uint64_t key;
-    string fname = string(FLAGS_value_size,'a');
     uint64_t value;
     uint64_t id = 0;
     uint64_t bytes = 0;
     for(int i = 0; i < nums; i++){
         //id = Random64(&seed);
+        string fname = string(FLAGS_value_size,'a');
         id = seq ? i : (Random64(&seed) % FLAGS_nums);
         key = id;
         value = id;
