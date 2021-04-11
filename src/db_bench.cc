@@ -480,7 +480,7 @@ void ReadRandom(ThreadState* thread){
     uint64_t nums = FLAGS_nums / FLAGS_threads;
 
     uint64_t key;
-    string fname = to_string(key);
+    string fname = string(FLAGS_value_size,'a');
     uint64_t value;
     uint64_t id = 0;
     uint64_t bytes = 0;
@@ -492,7 +492,7 @@ void ReadRandom(ThreadState* thread){
 
         //ret = thread->db->DirPut(key, Slice(fname, FLAGS_value_size), value);
         thread->db->Insert(key, fname);
-        bytes += (FLAGS_key_size + FLAGS_value_size + FLAGS_key_size);
+        bytes += (FLAGS_key_size + FLAGS_value_size);
         thread->stats.FinishedOp(1, kBenchmarkWriteType);
     }
     thread->stats.AddBytes(bytes);

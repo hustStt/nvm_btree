@@ -524,10 +524,12 @@ class MyBtree{
                                 0666); // make 30GB memory pool
             nvmbt = POBJ_ROOT(pop, MyBtree);
             D_RW(nvmbt)->constructor(pop);
+            printf("create pmemobjpool: %p\n\n",pop);
         } else {
             pop = pmemobj_open(persistent_path.c_str(), "btree");
             nvmbt = POBJ_ROOT(pop, MyBtree);
             D_RW(nvmbt)->Recover(pop);
+            printf("open pmemobjpool: %p\n\n",pop);
         }
         mybt = D_RW(nvmbt);
       }
