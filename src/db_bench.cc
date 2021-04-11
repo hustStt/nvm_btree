@@ -438,8 +438,9 @@ void RunBenchmark(NVMBtree *db, int n, char *name, void (*method)(ThreadState*))
 }
 
 void ReadSeq(ThreadState* thread){
+    int scan_num = FLAGS_reads;
     vector<std::string> value;
-    thread->db->GetRange(0, UINT64_MAX, value, FLAGS_reads)
+    thread->db->GetRange(0, UINT64_MAX, value, scan_num)
     thread->stats.FinishedOp(FLAGS_reads, kBenchmarkReadType);
 }
 
