@@ -893,6 +893,40 @@ void btree::scan_all_leaf() {
     cout << "total_nnum:" <<totul_num<<"dram_num:"<<dram_num<<"nvmnum: "<<nvm_num<<endl;
 }
 
+void btree::seq_read(std::vector<std::string> &values, int &size) {
+  bpnode* p = (bpnode *)root;
+  while (p->hdr.level != tar_level && p->hdr.leftmost_ptr != nullptr) {
+      p = (bpnode *)p->hdr.leftmost_ptr;
+  }
+  subtree* sub_root = (subtree *)p;
+  bpnode* leaf = nullptr;
+  if (sub_root->flag) {
+    leaf = sub_root->getFirstDDataNode();
+  } else {
+    leaf = (bpnode *)sub_root->getFirstNDataNode();
+    leaf = (bpnode *)((uint64_t)leaf + (uint64_t)pop);
+  }
+  int count = 0;
+  while (leaf != nullptr) {
+    for (int i = 0; i < leaf->hdr.last_index; ++i) {
+      values.push_back(std::string(current->records[i].ptr, NVM_ValueSize));
+      count++;
+      if (count >= size) {
+        return;
+      }
+    }
+
+    if (IS_VALID_PTR(leaf->hdr.sibling_ptr)) {
+      leaf = leaf->hdr.sibling_ptr;
+    } else if (leaf->hdr.sibling_ptr != nullptr) {
+      leaf = (bpnode *)((uint64_t)leaf->hdr.sibling_ptr + (uint64_t)pop);
+    } else {
+      break;
+    }
+  }
+  size = count;
+}
+
 bool bpnode::remove(btree* bt, entry_key_t key, bool only_rebalance, bool with_lock, subtree* sub_root) {
   if(!only_rebalance) {
     register int num_entries_before = count();

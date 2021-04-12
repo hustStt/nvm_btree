@@ -91,8 +91,9 @@ int NVMBtree::Get(const unsigned long key, char *&pvalue) {
 
 }
 
-string NVMBtree::GetNext() {
-    
+string NVMBtree::SeqRead(std::vector<std::string> &values, int &size) {
+    bt->seq_read(values, size);
+    cout<<"seq_read keys: " <<size<<endl;
 }
 
 void NVMBtree::GetRange(unsigned long key1, unsigned long key2, std::vector<std::string> &values, int &size) {

@@ -89,7 +89,8 @@ class btree{
     void CalculateSapce(uint64_t &space);
     void deform();
     void CalcuRootLevel();
-    void scan_all_leaf();
+    void scan_all_leaf(std::vector<std::string> &values, int &size);
+    void seq_read();
 
     void seak_to_first();
     void* get_next_ptr();

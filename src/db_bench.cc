@@ -440,8 +440,8 @@ void RunBenchmark(NVMBtree *db, int n, char *name, void (*method)(ThreadState*))
 void ReadSeq(ThreadState* thread){
     int scan_num = FLAGS_reads;
     vector<std::string> value;
-    thread->db->GetRange(0, UINT64_MAX, value, scan_num);
-    cout<<"scan_num: "<<scan_num<<endl;
+    thread->db->SeqRead(value, scan_num);
+    cout<<"seqread_num: "<<scan_num<<endl;
     thread->stats.FinishedOp(FLAGS_reads, kBenchmarkReadType);
 }
 
@@ -457,7 +457,7 @@ void ReadRandom(ThreadState* thread){
     int ret = 0;
     for(int i = 0; i < nums; i++){
         //id = Random64(&seed);
-        id = Random64(&seed) % FLAGS_nums;
+        id = Random64(&seed);
         key = id;
         value = 0;
         //snprintf(fname, FLAGS_value_size + 1, "%0*llu", FLAGS_value_size, id);
@@ -484,15 +484,15 @@ void ReadRandom(ThreadState* thread){
     uint64_t nums = FLAGS_nums / FLAGS_threads;
 
     uint64_t key;
-    uint64_t value;
+    char *value = new char[FLAGS_value_size + 1];
     uint64_t id = 0;
     uint64_t bytes = 0;
     for(int i = 0; i < nums; i++){
         //id = Random64(&seed);
-        string fname = string(FLAGS_value_size,'a');
-        id = seq ? i : (Random64(&seed) % FLAGS_nums);
+        id = seq ? i : (Random64(&seed));
         key = id;
-        value = id;
+        snprintf(value, FLAGS_value_size + 1, "%0*llu", FLAGS_value_size, id);
+        string fname = string(value,FLAGS_value_size);
 
         //ret = thread->db->DirPut(key, Slice(fname, FLAGS_value_size), value);
         thread->db->Insert(key, fname);
