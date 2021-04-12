@@ -909,7 +909,7 @@ void btree::seq_read(std::vector<std::string> &values, int &size) {
   int count = 0;
   while (leaf != nullptr) {
     for (int i = 0; i < leaf->hdr.last_index; ++i) {
-      values.push_back(std::string(leaf->records[i].ptr, NVM_ValueSize));
+      std::string tmp = std::string(leaf->records[i].ptr, NVM_ValueSize);
       count++;
       if (count >= size) {
         return;
