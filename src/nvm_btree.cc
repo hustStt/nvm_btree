@@ -91,7 +91,7 @@ int NVMBtree::Get(const unsigned long key, char *&pvalue) {
 
 }
 
-string NVMBtree::SeqRead(std::vector<std::string> &values, int &size) {
+void NVMBtree::SeqRead(std::vector<std::string> &values, int &size) {
     bt->seq_read(values, size);
     cout<<"seq_read keys: " <<size<<endl;
 }
