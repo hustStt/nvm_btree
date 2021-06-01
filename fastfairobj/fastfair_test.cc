@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <thread>
+#include <sys/time.h>
 
 #include "fastfair.h"
 #include "../src/random.h"
@@ -21,6 +22,8 @@ uint64_t start_time, end_time, use_time;
 
 void motivationtest(TOID(btree) bt);
 void nvm_print(int ops_num);
+
+static inline int file_exists_(char const *file) { return access(file, F_OK); }
 
 int main(int argc, char *argv[]) {
 
