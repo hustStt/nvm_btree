@@ -31,7 +31,6 @@ static inline uint64_t get_now_micros(){
     return (tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
-using FastFairObj::btree;
 
 int main(int argc, char *argv[]) {
 

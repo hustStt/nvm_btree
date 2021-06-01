@@ -36,8 +36,7 @@ using entry_key_t = int64_t;
 
 using namespace std;
 
-namespace FastFairObj
-{
+
 class btree;
 class page;
 
@@ -1028,5 +1027,4 @@ void btree::randScounter() {
       leftmost.oid.off = (uint64_t)D_RO(leftmost)->hdr.leftmost_ptr;
     } while (leftmost.oid.off != 0);
   }
-}
 }
