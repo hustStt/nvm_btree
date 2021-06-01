@@ -25,6 +25,12 @@ void nvm_print(int ops_num);
 
 static inline int file_exists_(char const *file) { return access(file, F_OK); }
 
+static inline uint64_t get_now_micros(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec) * 1000000 + tv.tv_usec;
+}
+
 int main(int argc, char *argv[]) {
 
 #ifdef NO_VALUE
