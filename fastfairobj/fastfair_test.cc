@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
     //btree *bt = new btree();
 
-    char* persistent_path = "/mnt/pmem0/mytest";
+    char* persistent_path = "/mnt/pmem1/mytest";
 
     TOID(btree) bt = TOID_NULL(btree);
     PMEMobjpool *pop;
