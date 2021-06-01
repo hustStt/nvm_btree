@@ -35,7 +35,7 @@ clean:
 	rm -f fastfair
 
 fastfair:
-	$(CXX) $(SING_CXXFLAGS) nvm_allocator.cc fastfair_test.cc -o fastfair $(LDFLAGS)
+	$(CXX) $(SING_CXXFLAGS) ../src/nvm_allocator.cc fastfair_test.cc -o fastfair $(LDFLAGS)
 
 $(LIBOBJECTS): 
 	for sou_file in $(TARGET_OBJS) ; do \
