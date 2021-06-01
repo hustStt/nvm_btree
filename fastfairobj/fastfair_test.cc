@@ -31,6 +31,8 @@ static inline uint64_t get_now_micros(){
     return (tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
+using FastFairObj::btree;
+
 int main(int argc, char *argv[]) {
 
 #ifdef NO_VALUE
@@ -83,7 +85,7 @@ void motivationtest(TOID(btree) bt) {
     vector<future<void>> futures(thread_num);
 
     //*插入初始化数据
-    ops = 400000000;
+    ops = 200000000;
     start_time = get_now_micros();
     for(int tid = 0; tid < thread_num; tid ++) {
         uint64_t from = (ops / thread_num) * tid;

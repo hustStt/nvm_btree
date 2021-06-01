@@ -32,6 +32,12 @@
 
 #define IS_FORWARD(c) (c % 2 == 0)
 
+using entry_key_t = int64_t;
+
+using namespace std;
+
+namespace FastFairObj
+{
 class btree;
 class page;
 
@@ -39,10 +45,6 @@ POBJ_LAYOUT_BEGIN(btree);
 POBJ_LAYOUT_ROOT(btree, btree);
 POBJ_LAYOUT_TOID(btree, page);
 POBJ_LAYOUT_END(btree);
-
-using entry_key_t = int64_t;
-
-using namespace std;
 
 class btree {
 private:
@@ -1026,4 +1028,5 @@ void btree::randScounter() {
       leftmost.oid.off = (uint64_t)D_RO(leftmost)->hdr.leftmost_ptr;
     } while (leftmost.oid.off != 0);
   }
+}
 }
