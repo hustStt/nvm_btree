@@ -904,7 +904,7 @@ void btree::seq_read(std::vector<std::string> &values, int &size) {
     leaf = sub_root->getFirstDDataNode();
   } else {
     leaf = (bpnode *)sub_root->getFirstNDataNode();
-    leaf = (bpnode *)((uint64_t)leaf + (uint64_t)pop);
+    //leaf = (bpnode *)((uint64_t)leaf + (uint64_t)pop);
   }
   int count = 0;
   while (leaf != nullptr) {
