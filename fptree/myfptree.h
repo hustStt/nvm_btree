@@ -1395,7 +1395,7 @@ char *btree::btree_search(entry_key_t key){
   char *t = leaf_ptr->find(key);
   stats.end();
   stats.add_put();
-  if (read_nums % 1000 = 0) {
+  if (read_nums % 1000 == 0) {
     stats.print_latency();
     stats.clear_period();
   }
