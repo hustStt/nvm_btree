@@ -24,6 +24,7 @@
 #include <future>
 #include <mutex>
 #include <queue>
+#include <sys/time.h>
 
 #include "../fastfair/nvm_alloc.h"
 #include "../include/ycsb/core/utils.h"
@@ -44,6 +45,11 @@ inline void clflush(char *data, int len)
 
 }
 
+static inline uint64_t get_micros(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec) * 1000000 + tv.tv_usec;
+}
 
 static void alloc_memalign(void **ret, size_t alignment, size_t size) {
 #ifdef USE_MEM
@@ -1372,6 +1378,8 @@ void btree::setNewRoot(char *new_root) {
 }
 
 char *btree::btree_search(entry_key_t key){
+  uint64_t start_time, end_time1, end_time2;
+  start_time = get_micros();
   page* p = (page*)root;
 
   while(p->hdr.leftmost_ptr != NULL) {
@@ -1380,7 +1388,10 @@ char *btree::btree_search(entry_key_t key){
 
   LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
+  end_time1 = get_micros();
   char *t = leaf_ptr->find(key);
+  end_time2 = get_micros();
+  printf("innernode: %lu   leadnode: %lu \n", end_time1 - start_time, end_time2 - end_time1);
   return t;
 }
 
