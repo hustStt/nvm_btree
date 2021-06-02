@@ -67,6 +67,8 @@ class btree {
     int height;
     char* root;
     char* recovery_root;
+    Statistic stats;
+    uint64_t read_nums;
 
   public:
     btree();
@@ -1355,6 +1357,7 @@ class LeafNode :public page {
 btree::btree(){
     root = (char *) new LeafNode();
     recovery_root = (char *)new page();
+    read_nums = 0;
   //root = (char*)new page();
   printf("[Fast-Fair]: root is %p, btree is %p.\n", root, this);
   height = 1;
@@ -1378,7 +1381,7 @@ void btree::setNewRoot(char *new_root) {
 }
 
 char *btree::btree_search(entry_key_t key){
-  Statistic stats;
+  
   page* p = (page*)root;
 
   while(p->hdr.leftmost_ptr != NULL) {
@@ -1388,11 +1391,14 @@ char *btree::btree_search(entry_key_t key){
   LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
   stats.start();
+  read_nums++;
   char *t = leaf_ptr->find(key);
   stats.end();
   stats.add_put();
-  stats.print_latency();
-  stats.clear_period();
+  if (read_nums % 1000 = 0) {
+    stats.print_latency();
+    stats.clear_period();
+  }
   return t;
 }
 
