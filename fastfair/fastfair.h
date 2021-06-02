@@ -25,6 +25,7 @@
 #include <mutex>
 
 #include "nvm_alloc.h"
+#include "../src/statistic.h"
 
 #define PAGESIZE 512
 #define CACHE_LINE_SIZE 64 
@@ -59,6 +60,8 @@ class btree {
   private:
     int height;
     char* root;
+    Statistic stats;
+    uint64_t read_nums;
 
   public:
     btree();
@@ -1098,6 +1101,7 @@ void page::linear_search_range(entry_key_t min, entry_key_t max, void **values, 
 
 btree::btree(){
   root = (char*)new page();
+  read_nums = 0;
   printf("[Fast-Fair]: root is %p, btree is %p.\n", root, this);
   height = 1;
 }
@@ -1126,6 +1130,8 @@ char *btree::btree_search(entry_key_t key){
     p = (page *)p->linear_search(key);
   }
 
+  stats.start();
+  read_nums++;
   page *t;
   while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
     p = t;
@@ -1134,6 +1140,12 @@ char *btree::btree_search(entry_key_t key){
     }
   }
 
+  stats.end();
+  stats.add_put();
+  if (read_nums % 1000 = 0) {
+    stats.print_latency();
+    stats.clear_period();
+  }
   if(!t) {
     // printf("NOT FOUND %llx, t = %x\n", key, t);
     return NULL;
