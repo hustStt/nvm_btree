@@ -24,7 +24,7 @@
 #include <future>
 #include <mutex>
 #include <queue>
-#include <sys/time.h>
+#include "../src/statistic.h"
 
 #include "../fastfair/nvm_alloc.h"
 #include "../include/ycsb/core/utils.h"
@@ -1378,8 +1378,7 @@ void btree::setNewRoot(char *new_root) {
 }
 
 char *btree::btree_search(entry_key_t key){
-  uint64_t start_time, end_time1, end_time2;
-  start_time = get_micros();
+  Statistic stats;
   page* p = (page*)root;
 
   while(p->hdr.leftmost_ptr != NULL) {
@@ -1388,10 +1387,12 @@ char *btree::btree_search(entry_key_t key){
 
   LeafNode* leaf_ptr = reinterpret_cast<LeafNode *>(p);
 
-  end_time1 = get_micros();
+  stats.start();
   char *t = leaf_ptr->find(key);
-  end_time2 = get_micros();
-  printf("innernode: %lu   leadnode: %lu \n", end_time1 - start_time, end_time2 - end_time1);
+  stats.end();
+  stats.add_put();
+  stats.print_latency();
+  stats.clear_period();
   return t;
 }
 
