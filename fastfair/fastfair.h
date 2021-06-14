@@ -1130,7 +1130,7 @@ char *btree::btree_search(entry_key_t key){
     p = (page *)p->linear_search(key);
   }
 
-  stats.start();
+  //stats.start();
   read_nums++;
   page *t;
   while((t = (page *)p->linear_search(key)) == p->hdr.sibling_ptr) {
@@ -1140,12 +1140,12 @@ char *btree::btree_search(entry_key_t key){
     }
   }
 
-  stats.end();
-  stats.add_put();
-  if (read_nums % 1000 == 0) {
-    stats.print_latency();
-    stats.clear_period();
-  }
+  //stats.end();
+  //stats.add_put();
+  //if (read_nums % 1000 == 0) {
+  //  stats.print_latency();
+  //  stats.clear_period();
+  //}
   if(!t) {
     // printf("NOT FOUND %llx, t = %x\n", key, t);
     return NULL;
